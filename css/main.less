@@ -3,7 +3,15 @@
 /* ==========================================================================
    Author's custom styles, using CSS LESS syntax
    ========================================================================== */
-
+ // Core variables and mixins
+@import "vendor/variables.less"; // Modify this for custom colors, font-sizes, etc
+@import "vendor/mixins.less"; 
+  
+.gallery {
+  height: 720px;
+  background-color: @grayLighter;
+  .border-radius(20px);
+}
 
 
 

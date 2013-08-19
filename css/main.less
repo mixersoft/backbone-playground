@@ -6,16 +6,62 @@
  // Core variables and mixins
 @import "vendor/variables.less"; // Modify this for custom colors, font-sizes, etc
 @import "vendor/mixins.less"; 
-  
+
+@galleryH : 720px;
 .gallery {
-  height: 720px;
+  min-height: @galleryH;
   background-color: @grayLighter;
+  margin: 20px;     /* undo body {padding-left/right} */
+  padding: 0 20px;
   .border-radius(20px);
+  .body {
+    margin: 20px auto;
+    min-height: @galleryH - (2*20);
+  }
 }
 
 
 
 
+// for flickr-style layout
+.gallery {
+  &, & .body {
+    position: relative; /* for position:absolute within */
+    overflow: hidden; /* Stretch to fit floated content */
+   }
+}
+
+
+/*
+ * view=Thumbnail
+ * .thumb = .photo
+ * .photo_container_th = .crop-wrap
+ * .photoLink = .crop
+ */
+.thumb {
+  &, &.crop-wrap {
+    width:auto;
+    height:auto;  
+  }
+  float: left;
+  margin:0;
+  .flickrd & {    // for flickr style absolute positioning
+    float: none;
+    position: absolute;
+  }
+  .crop {
+    display:block;
+    position:relative;
+    overflow:hidden;
+    img {
+      display:block;
+      position:relative;
+      margin: 0 !important;
+      /* reset */
+      max-width: none;
+    }
+  }
+}
 
 
 

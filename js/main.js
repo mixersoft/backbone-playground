@@ -12,14 +12,15 @@ $(function() {
 	/*
 	 * test, render some thumbnails
 	 */
-	shots = [];
+	_shots = [];
 	_.each(SNAPPI.Auditions, function(v,k,l){
-		shots.push(new snappi.Shot(v));	
+		_shots.push(new snappi.Shot(v));	
 	});
-
+	
 	// gallery = new snappi.GalleryCollection(shots);
-	gallery = new snappi.GalleryView();
-	gallery.collection.reset(shots);
+	_gallery = new snappi.GalleryView();
+	_gallery.collection.reset(_shots);
+	
 	
 });
 

@@ -31,7 +31,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </a>
-                    <a class="brand" href="#">Project name</a>
+                    <a class="brand" href="#">Backbone.js Playground</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
                             <li class="active"><a href="#">Home</a></li>
@@ -61,18 +61,44 @@
         </div>
 
         <div class="container">
+		</div> <!-- /container -->
+        <div class='gallery'>
+        	<div class='body'>
+        		
+	<div id="51cadb5e-36dc-4fd1-a9e6-1bd30afc6d44" class="thumb" style="top: 0px; left: 0px;"><div class="crop-wrap"><div class="crop" style="height: 165px; width: 247px;"><img class="" src="http://thats-me/svc/STAGING/stage4/.thumbs/bm~51cadb5e-36dc-4fd1-a9e6-1bd30afc6d44.jpg" title="" width="240" height="160.125" data-datetaken="Fri May 31 2013 13GMT-0400 (Eastern Daylight Time)" data-batchid="1372248972" data-score="5" data-caption="P1000304" data-orig-width="3776" data-orig-height="2520" style="top: 0px; width: 247px; height: 165px; left: 0px;"></div></div></div>
+	<div id="51cadb8a-7f00-4d36-80f0-1bd30afc6d44" class="thumb" style="top: 0px; left: 262.37741046831957px;"><div class="crop-wrap"><div class="crop" style="height: 165px; width: 220px;"><img class="" src="http://thats-me/svc/STAGING/stage6/.thumbs/bs~51cadb8a-7f00-4d36-80f0-1bd30afc6d44.jpg" title="" width="240" height="180" data-datetaken="Fri May 31 2013 14GMT-0400 (Eastern Daylight Time)" data-batchid="1372248972" data-score="5" data-caption="P1000320" data-orig-width="3648" data-orig-height="2736" style="top: 0px; width: 220px; height: 165px; left: 0px;"></div></div></div>
+	<div id="51cadbad-1bac-4456-b30c-1bd30afc6d44" class="thumb" style="top: 0px; left: 497.5013774104683px;"><div class="crop-wrap"><div class="crop" style="height: 165px; width: 293px;"><img class="" src="http://thats-me/svc/STAGING/stage0/.thumbs/bm~51cadbad-1bac-4456-b30c-1bd30afc6d44.jpg" title="" width="240" height="135" data-datetaken="Fri May 31 2013 14GMT-0400 (Eastern Daylight Time)" data-batchid="1372248972" data-score="5" data-caption="P1000332" data-orig-width="3968" data-orig-height="2232" style="top: 0px; width: 293px; height: 165px; left: 0px;"></div></div></div>
+	        	
+        	</div>
+        </div>   <!-- /.gallery -->
 
-            <div class='gallery'>
-            	
-            </div>
-
+		<div class="container">
             <hr>
-
             <footer>
                 <p>&copy; Company 2012</p>
             </footer>
-
-        </div> <!-- /container -->
+		</div> <!-- /container -->
+        
+        <div id="markup" class="hide">
+        	<script id="ThumbTemplate" class='handlebars' type="text/x-handlebars-template">
+	        	<div id="{{id}}" class="thumb {{orientationLabel}}" style="{{position}}">
+	        		<div class="crop-wrap">
+	        			<div class="crop" style="{{crop}}">
+	        				<img class="" src="{{src}}" 
+	        					data-datetaken="{{dateTaken}}" 
+	        					data-batchid="" 
+	        					data-rating="{{rating}}" 
+	        					data-score="{{score}}" 
+	        					data-caption="{{caption}}" 
+	        					data-orig-width="{{origW}}" 
+	        					data-orig-height="{{origH}}" 
+	        					style="{{scale}}"
+	        				>
+	    				</div>
+	    			</div>
+				</div>
+			</script>
+        </div>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
@@ -81,6 +107,12 @@
         <script src="js/vendor/underscore.js"></script>
         <script src="js/vendor/handlebars.js"></script>
         <script src="js/vendor/backbone.js"></script>
+        <script src="js/models/photo.js"></script>
+        <script src="js/models/shot.js"></script>
+        <script src="js/models/rating.js"></script>
+        <script src="js/views/thumbnail.js"></script>
+        <script src="js/views/gallery.js"></script>
+		<script src="js/collections/gallery.js"></script>
 		<script src="js/snappi.js"></script>
         <script src="js/main.js"></script>
     </body>

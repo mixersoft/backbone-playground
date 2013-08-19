@@ -7,6 +7,20 @@ $(function() {
 	var thumbnails = SNAPPI.parseCC(cc);
 	var check;
 	
+	
+	
+	/*
+	 * test, render some thumbnails
+	 */
+	shots = [];
+	_.each(SNAPPI.Auditions, function(v,k,l){
+		shots.push(new snappi.Shot(v));	
+	});
+
+	// gallery = new snappi.GalleryCollection(shots);
+	gallery = new snappi.GalleryView();
+	gallery.collection.reset(shots);
+	
 });
 
 

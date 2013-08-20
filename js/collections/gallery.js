@@ -25,7 +25,8 @@ collections.GalleryCollection = paginator.clientPager.extend({
 	
 	reset: function(new_models){
 		var models, args=[];
-		if (this.length) { 
+		// update this.information with serverPaging
+		if (this.currentPage > 1) { 
 			// append to current page
 			models = this.models.slice(0, this.length-1).concat(new_models);
 			args.push(models);
@@ -35,6 +36,12 @@ collections.GalleryCollection = paginator.clientPager.extend({
 			});
 			// note, only render NEW models
 			this.length = models.length;
+			
+			/*
+			 * TODO: clientPager.reset() should append
+			 * 	- keep track of rendered pages
+			 *  - prevPage() should scrollTo() prev page 
+			 */
 			paginator.clientPager.prototype.reset.apply(this, args);
 		} else 
 			paginator.clientPager.prototype.reset.apply(this, arguments);
@@ -63,28 +70,28 @@ collections.GalleryCollection = paginator.clientPager.extend({
 	},
 
 	paginator_core : {
-		// // the type of the request (GET by default)
-		// type : 'GET',
-// 
-		// // the type of reply (jsonp by default)
-		// dataType : 'jsonp',
-// 
-		// // the URL (or base URL) for the service
-		// // if you want to have a more dynamic URL, you can make this a function
-		// // that returns a string
-		// // template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
-		// url : function(){
-			// var request = {
-				// ownerid : "51cad9fb-d130-4150-b859-1bd00afc6d44",	
-			// }
-			// var request_template = 'http://snappi-dev/person/odesk_photos/{{ownerid}}/sort:score/direction:desc/.json?debug=0'; 
-			// return _.template(request_template, request);
-		// }
+		// the type of the request (GET by default)
+		type : 'GET',
+
+		// the type of reply (jsonp by default)
+		dataType : 'jsonp',
+
+		// the URL (or base URL) for the service
+		// if you want to have a more dynamic URL, you can make this a function
+		// that returns a string
+		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
+		url : function(){
+			var request = {
+				ownerid : "51cad9fb-d130-4150-b859-1bd00afc6d44",
+			}
+			var request_template = 'http://snappi-dev/person/odesk_photos/<%=ownerid%>/perpage:80/sort:score/direction:desc/.json?'; 
+			return _.template(request_template, request);
+		}
 	},
 	
 	parse : function(response) {
 		var paging = response.response.castingCall.CastingCall.Auditions,
-			cfg = {
+			serverPaging = {
 				page: paging.Page,
 				perpage: paging.Perpage,
 				pages: paging.Pages,
@@ -92,39 +99,31 @@ collections.GalleryCollection = paginator.clientPager.extend({
 				count: paging.Audition.length,
 				targetHeight: 160,
 			};
-		this.perpage = cfg.perpage;	
-		this.currentPage = cfg.page;
-		this.totalPages = cfg.pages; 
-		return paging.Audition;
+		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
+		this.paginator_ui.serverPaging = serverPaging;
+		var parsed = SNAPPI.parseCC(response.response.castingCall, 'force'),
+			shots = [];
+		_.each(parsed, function(v, k, l) {
+			shots.push(new snappi.models.Shot(v));
+		});
+		return shots;
 	},
 	
-	server_api : {
-		// // the query field in the request
-		// '$filter' : 'substringof(\'america\',Name)',
-// 
-		// // number of items to return per request/page
-		// '$top' : function() {
-			// return this.perPage
-		// },
-// 
-		// // how many results the request should skip ahead to
-		// // customize as needed. For the Netflix API, skipping ahead based on
-		// // page * number of results per page was necessary.
-		// '$skip' : function() {
-			// return this.currentPage * this.perPage
-		// },
-// 
-		// // field to sort by
-		// '$orderby' : 'score',
-// 
-		// // what format would you like to request results in?
-		// '$format' : 'json',
-// 
-		// // custom parameters
-		// '$inlinecount' : 'allpages',
-		// '$callback' : 'callback'
-	},
+	server_api: {
+			// number of items to return per request/page
+			'perpage': function() { 
+				return this.perPage 
+			},
 
+			// how many results the request should skip ahead to
+			'page': function() { return this.currentPage },
+
+			// field to sort by
+			// 'sort': 'created',
+
+			// custom parameters
+			'callback': '?'
+		},
 
 });
 

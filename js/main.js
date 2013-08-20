@@ -32,23 +32,24 @@
 		snappi.views.pager = new snappi.views.PagerView({
 			collection : snappi.collections.paginatedGallery
 		});
+		
+		return;
 
 		/*
 		 * get models from raw data
 		 */
-		var bootstrap_shots = [];
-		_.each(SNAPPI.Auditions, function(v, k, l) {
-			bootstrap_shots.push(new snappi.models.Shot(v));
-		});
-
-		var myCollection = snappi.collections.paginatedGallery;
-		if (myCollection  instanceof Backbone.Paginator.clientPager) {
-			myCollection.bootstrap({
-				models : bootstrap_shots
-			});
-		} else {
-			myCollection.reset(bootstrap_shots);
-		}
+		// var bootstrap_shots = [];
+		// _.each(SNAPPI.Auditions, function(v, k, l) {
+			// bootstrap_shots.push(new snappi.models.Shot(v));
+		// });
+		// var myCollection = snappi.collections.paginatedGallery;
+		// if (myCollection  instanceof Backbone.Paginator.clientPager) {
+			// myCollection.bootstrap({
+				// models : bootstrap_shots
+			// });
+		// } else {
+			// myCollection.reset(bootstrap_shots);
+		// }
 
 	});
 })();

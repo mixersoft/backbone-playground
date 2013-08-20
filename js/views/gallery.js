@@ -22,6 +22,13 @@ views.GalleryView = Backbone.View.extend({
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
 		
+		collection.fetch({
+			success: function(){
+				collection.pager();
+			},
+			silent: true,	// true will not trigger collection('reset')
+		})
+		
 		var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
 			paginator_ui = this.collection.paginator_ui;
 		paginator_ui.totalPages = Math.ceil(serverPaging.Total / paginator_ui.perPage);

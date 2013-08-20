@@ -30,24 +30,30 @@
 
 		},
 		render: function () {
-			_.templateSettings.interpolate = _.templateSettings.erb_interpolate;  
-			var html = this.template(this.collection.info());
+			var paging = this.collection.info();
+			
+			// manually adjust paging attrs to match server values
+			paging.totalRecords = this.collection.paginator_ui.serverPaging.total;
+			paging.totalPages = this.collection.paginator_ui.totalPages;
+			paging.pageSet = this.collection.setPagination(paging);
+			
+			var html = this.template(paging);
 			this.$el.html(html);
 		},
 
 		gotoFirst: function (e) {
 			e.preventDefault();
-			this.collection.goTo(1);
+			this.collection.goTo(1,{ update: true, remove: false });
 		},
 
 		gotoPrev: function (e) {
 			e.preventDefault();
-			this.collection.previousPage();
+			this.collection.previousPage({ update: true, remove: false });
 		},
 
 		gotoNext: function (e) {
 			e.preventDefault();
-			this.collection.nextPage();
+			this.collection.nextPage({ update: true, remove: false });
 		},
 
 		gotoLast: function (e) {
@@ -58,7 +64,7 @@
 		gotoPage: function (e) {
 			e.preventDefault();
 			var page = $(e.target).text();
-			this.collection.goTo(page);
+			this.collection.goTo(page,{ update: true, remove: false });
 		},
 
 		changeCount: function (e) {

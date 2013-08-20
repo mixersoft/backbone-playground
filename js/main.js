@@ -19,9 +19,9 @@ $(function() {
 	
 	// gallery = new snappi.GalleryCollection(shots);
 	_gallery = new snappi.GalleryView();
-	_gallery.collection.reset(_shots);
-	
-	
+	if (_gallery.collection instanceof Backbone.Paginator.clientPager) {
+		_gallery.collection.bootstrap({models: _shots});
+	} else _gallery.collection.reset(_shots);
 	
 });
 

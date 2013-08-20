@@ -53,10 +53,10 @@ snappi.Shot = snappi.Photo.extend({
 			bestshotId: attributes.bestshotId,
 			count: attributes.count,
 			stale: attributes.stale,
-			scale: attributes.scale,
+			// scale: attributes.scale,
 		});
-		var position = {x:'auto',y:'auto',w:attributes.width, h:attributes.height};
-		this.set('crop', this.templates.rect(position));
+		// var position = {x:'auto',y:'auto',w:attributes.width, h:attributes.height};
+		// this.set('crop', this.templates.rect(position));
 		snappi.Photo.prototype.initialize.apply(this, arguments);
 	},
 	

@@ -44,7 +44,7 @@ snappi.Photo = Backbone.Model.extend({
 					h: o.height*scale,
 				}
 				scaled.x = (scaled.w - o.width)/2;
-				scaled.y = (scaled.h - o.width)/2;
+				scaled.y = (scaled.h - o.height)/2;
 			} catch (ex) {
 				return {w:o.width, h:o.height, x:0, y:0 };
 			}
@@ -55,7 +55,7 @@ snappi.Photo = Backbone.Model.extend({
 	// backbone methods
 	parse: function( response ){
 		// for testing only, scale IMG to 1/2 of 640px
-		response.scale = this.templates.rect(this.helper.scaleImg(1.2, response));
+		// response.scale = this.templates.rect(this.helper.scaleImg(1, response));
 		return response
 	},
 	

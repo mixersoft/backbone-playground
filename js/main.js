@@ -4,9 +4,9 @@ $(function() {
 		response: JSON.parse(SNAPPI.CFG.JSON.raw),
 	}
 	var cc = json.response['response'].castingCall;
+	SNAPPI.CFG.JSON.data = cc;		// for introspection
 	var thumbnails = SNAPPI.parseCC(cc);
 	var check;
-	
 	
 	
 	/*
@@ -20,6 +20,7 @@ $(function() {
 	// gallery = new snappi.GalleryCollection(shots);
 	_gallery = new snappi.GalleryView();
 	_gallery.collection.reset(_shots);
+	
 	
 	
 });

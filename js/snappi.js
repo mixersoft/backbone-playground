@@ -26,7 +26,7 @@ $(function() {
 		else if (CFG.TARGET_THUMB_SIZE <= 240) thumb_size='bs';
 		else if (CFG.TARGET_THUMB_SIZE <= 320) thumb_size='bm';	
 		
-		var scale_lookup = {'bp':640, 'bm':320, 'bs':240, 'tn':120},
+		var lookup_scale = {'bp':640, 'bm':320, 'bs':240, 'tn':120},
 			scale,
 			maxDim;
 			
@@ -50,11 +50,6 @@ $(function() {
 				src: SNAPPI.getImgSrcBySize(baseurl + auditions[i].Photo.Img.Src.rootSrc, thumb_size),
 			};
 			
-			maxDim = Math.max(audition.H, audition.W);
-			scale = scale_lookup[thumb_size]/maxDim; 
-			audition.width = audition.W * scale; 	// natural dim of IMG.src 
-			audition.height = audition.H * scale;
-			
 			// adjust for ExifOrientation
 			if (audition.exifOrientation < 4) {
 				audition.origW = auditions[i].Photo.W;
@@ -69,10 +64,16 @@ $(function() {
 			} else { // ExifOrientation = 6|8 means the bp~ image is rotated
 				audition.origH = auditions[i].Photo.W;
 				audition.origW = auditions[i].Photo.H;
-				audition.H = audition.W;
+				audition.H = auditions[i].Photo.Img.Src.W;
 				audition.W = auditions[i].Photo.Img.Src.H
 			}
-			// add IMG properties
+			
+			// add IMG properties, moved to ImageMontage
+			// maxDim = Math.max(audition.H, audition.W);
+			// scale = lookup_scale[thumb_size]/maxDim; 
+			// audition.width = audition.W * scale; 	// natural dim of IMG.src 
+			// audition.height = audition.H * scale;
+			
 			audition.orientationLabel =  (audition.H > audition.W) ? 'portrait' : '';
 			parsedAuditions[id] = audition;
 		}

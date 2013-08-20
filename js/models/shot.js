@@ -1,17 +1,13 @@
+// /js/models/shot.js
 
-// /js/models/photo.js
-
-// user {{}} for underscore templates
-_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
-
+(function ( models ) {
+	
 
 /*
  * notes from Robert
  * - Shot wrapper around each Photo/bestshot
  * - use something like Shot.photos.fetch() to get hiddenshots
  */ 
-
-var snappi = snappi || {};
 
 /*
  * Model: Shot, a wrapper around bestshot/photo
@@ -32,12 +28,12 @@ var snappi = snappi || {};
  * 	- rotate()
  */
 
-snappi.Shot = snappi.Photo.extend({
+models.Shot = models.Photo.extend({
 	
 	// backbone methods
 	parse: function( response ){
-		response = snappi.Photo.prototype.parse.call(this, response);	// manually call for static JSON
-		// convert snappi.Photo into snappi.Shot
+		response = models.Photo.prototype.parse.call(this, response);	// manually call for static JSON
+		// convert models.Photo into snappi.Shot
 		response.id = response.shotId || response.photoId;
 		response.bestshotId = response.photoId;
 		response.count = response.shotId  ? parseInt(response.shotCount) : 1;
@@ -57,7 +53,7 @@ snappi.Shot = snappi.Photo.extend({
 		});
 		// var position = {x:'auto',y:'auto',w:attributes.width, h:attributes.height};
 		// this.set('crop', this.templates.rect(position));
-		snappi.Photo.prototype.initialize.apply(this, arguments);
+		models.Photo.prototype.initialize.apply(this, arguments);
 	},
 	
 	// public methods
@@ -70,3 +66,7 @@ snappi.Shot = snappi.Photo.extend({
 	}
 	
 })
+
+
+
+})( snappi.models );

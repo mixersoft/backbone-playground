@@ -1,4 +1,4 @@
-$(function() {
+(function() {
 	SNAPPI = (typeof SNAPPI == 'undefined')? {} : SNAPPI; 
 	
 	// CFG constants
@@ -123,4 +123,4 @@ $(function() {
 	        return name;
 	};
 	
-});
+})();

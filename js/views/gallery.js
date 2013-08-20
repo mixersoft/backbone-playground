@@ -1,6 +1,6 @@
 // /js/views/gallery.js
 
-var snappi = snappi || {};
+(function ( views ) {
 
 /*
  * View: Gallery (same as App?)
@@ -8,8 +8,10 @@ var snappi = snappi || {};
  * methods:
  */
 
-snappi.GalleryView = Backbone.View.extend({
+views.GalleryView = Backbone.View.extend({
 	el: ".gallery .body",
+	
+	collection: null,
 	
 	events: {
 		
@@ -17,30 +19,40 @@ snappi.GalleryView = Backbone.View.extend({
 	
 	initialize: function(attributes, options){
 		// _.bindAll(this);	// ???: what does this do?
-		this.collection = new snappi.GalleryCollection();
-		this.listenTo(this.collection, 'reset', this.reset);
+		var collection = this.collection;
+		this.listenTo(collection, 'reset', this.addAll);
+		this.listenTo(collection, 'all', this.render);
 	},
 	
-	reset: function() {
-		this.render.apply(this, arguments);
+	// called by paginator.nextPage() > paginator.pager()
+	addAll : function() {
+		var options = {
+			offscreen : $('<div></div>'),
+			defer: true,
+		}
+		this.$el.empty();
+		this.collection.each(function(item){
+			this.addOne(item, options);
+		}, this);
+		this.render(options.offscreen);
+	},
+	
+	/**
+	 * @param models.Shot item
+	 * @param options { 
+	 * 		container: jquery container to append rendered view 
+	 * 		defer: boolean, default false, do NOT call this.render() if true
+	 * }  
+	 */
+	addOne : function( item, options ) {
+		var container = !!options && options.offscreen || this.$el,
+			thumb = new views.ThumbView({model:item});
+		container.append(thumb.render().el);
+		if (!!options && !options.defer) this.render(container);
 	},
 	
 	renderers: {
-		flickr: function(){
-			var thumb,
-				orphan = $('<div></div>');
-			_.each(this.collection.models, function(v,k,l){
-				// ???: render each ThumbView individually, or iterate in handlebars?
-				thumb = new snappi.ThumbView({model:v});
-				// ???: why are we serializing a rendered element
-				// markup += thumb.$el.html();
-				
-				// ???: can't we just append jquery() objects
-				// 		are ThumbView objects still valid after serializing?
-				orphan.append(thumb.$el);
-			}, this);
-			// this.$el.html(markup);
-			
+		flickr: function(parent){
 			// add flickr style from flickr.js
 			var paging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
 				cfg = {
@@ -51,15 +63,17 @@ snappi.GalleryView = Backbone.View.extend({
 					count: paging.Audition.length,
 					targetHeight: 160,
 				};
-			snappi.ImageMontage.render(orphan.children(), cfg);
+			snappi.ImageMontage.render(parent.children(), cfg);
 			
 			// for debugging
 			this.introspect();
 		},
 	},
-	
-	render: function(){
-		// TODO: move to GalleryCollection.render()
+	/**
+ 	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
+	 */
+	render: function(container){
+		container = container || this.$el;	
 		var layout = 'flickr';
 		this.renderers[layout].apply(this, arguments);
 	},
@@ -77,3 +91,6 @@ snappi.GalleryView = Backbone.View.extend({
 		}, this);
 	},
 });
+
+
+})( snappi.views );

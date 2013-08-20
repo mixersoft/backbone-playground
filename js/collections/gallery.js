@@ -1,5 +1,7 @@
 // /js/collections/gallery.js
 
+(function (collections, model, paginator) {
+
 /*
  * notes from Robert
  * - GalleryCollection extends paginator
@@ -7,7 +9,6 @@
  * - should auto render grid of Thumbs
  *
  */
-var snappi = snappi || {};
 
 /*
  * Collection: GalleryCollection
@@ -18,8 +19,9 @@ var snappi = snappi || {};
  * - nextPage()
  * - prevPage()
  */
-snappi.GalleryCollection = Backbone.Paginator.clientPager.extend({
-	model : snappi.Shot,
+collections.GalleryCollection = paginator.clientPager.extend({
+	
+	model : model,	// snappi.models.Shot	
 
 
 	paginator_ui : {
@@ -109,3 +111,6 @@ snappi.GalleryCollection = Backbone.Paginator.clientPager.extend({
 
 
 });
+
+
+})( snappi.collections, snappi.models.Shot, Backbone.Paginator);

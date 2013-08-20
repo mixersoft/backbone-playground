@@ -1,10 +1,6 @@
 // /js/models/photo.js
-
-// user {{}} for underscore templates
-_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
-
-
-var snappi = snappi || {};
+(function ( models ) {
+	
 
 /*
  * Model: Photo
@@ -26,7 +22,7 @@ var snappi = snappi || {};
  * 	- rotate()
  */
 
-snappi.Photo = Backbone.Model.extend({
+models.Photo = Backbone.Model.extend({
 	defaults: {
 		
 	}, 
@@ -72,3 +68,6 @@ snappi.Photo = Backbone.Model.extend({
 	}
 	
 })
+
+
+})( snappi.models );

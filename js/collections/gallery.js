@@ -22,7 +22,23 @@
 collections.GalleryCollection = paginator.clientPager.extend({
 	
 	model : model,	// snappi.models.Shot	
-
+	
+	reset: function(new_models){
+		var models, args=[];
+		if (this.length) { 
+			// append to current page
+			models = this.models.slice(0, this.length-1).concat(new_models);
+			args.push(models);
+			args.push({ 
+				skip: this.length-1,
+				length: models.length
+			});
+			// note, only render NEW models
+			this.length = models.length;
+			paginator.clientPager.prototype.reset.apply(this, args);
+		} else 
+			paginator.clientPager.prototype.reset.apply(this, arguments);
+	},
 
 	paginator_ui : {
 		// the lowest page index your API allows to be accessed

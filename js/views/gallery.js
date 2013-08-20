@@ -11,7 +11,7 @@
 views.GalleryView = Backbone.View.extend({
 	el: ".gallery .body",
 	
-	collection: null,
+	collection: null,	// Backbone.Paginator
 	
 	events: {
 		
@@ -21,17 +21,28 @@ views.GalleryView = Backbone.View.extend({
 		// _.bindAll(this);	// ???: what does this do?
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
-		this.listenTo(collection, 'all', this.render);
+		
+		var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
+			paginator_ui = this.collection.paginator_ui;
+		paginator_ui.totalPages = Math.ceil(serverPaging.Total / paginator_ui.perPage);
+		// this.listenTo(collection, 'all', this.render);
 	},
 	
 	// called by paginator.nextPage() > paginator.pager()
-	addAll : function() {
-		var options = {
+	addAll : function(models, options) {
+		options = $.extend(options || {}, {
 			offscreen : $('<div></div>'),
 			defer: true,
-		}
-		this.$el.empty();
-		this.collection.each(function(item){
+		});
+		
+		/*
+		 * TODO: do NOT empty page
+		 * preserve collection models in GalleryCollection.reset()
+		 * then render NEW ThumbViews BELOW current page
+		 */
+		if (!options.skip) this.$el.empty();
+		_.each(this.collection.models, function(item,k,l){
+			if (k < (options.skip||0)) return; 
 			this.addOne(item, options);
 		}, this);
 		this.render(options.offscreen);
@@ -54,16 +65,20 @@ views.GalleryView = Backbone.View.extend({
 	renderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
-			var paging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
+			var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
+				paginator_ui = this.collection.paginator_ui,
 				cfg = {
-					page: paging.Page,
-					perpage: paging.Perpage,
-					pages: paging.Pages,
-					total: paging.Total,
-					count: paging.Audition.length,
+					page: paginator_ui.currentPage,
+					perpage: paginator_ui.perPage,
+					pages:  Math.ceil(serverPaging.Total / paginator_ui.perPage),
+					total: serverPaging.Total,			// total count on server
+					count: parent.children().length,	// count in this request
 					targetHeight: 160,
 				};
 			snappi.ImageMontage.render(parent.children(), cfg);
+			// update after request/render
+			paginator_ui.totalPages = cfg.pages;
+			paginator_ui.currentPage = snappi.ImageMontage.instance.cfg.page;
 			
 			// for debugging
 			this.introspect();
@@ -83,7 +98,7 @@ views.GalleryView = Backbone.View.extend({
 		_.each(this.$('div.thumb'), function(el,k,l) {
 			var id = $(el).attr('id'),
 				models;
-			models = (_gallery.collection instanceof Backbone.Paginator.clientPager)
+			models = (this.collection instanceof Backbone.Paginator.clientPager)
 				? this.collection.origModels
 				: this.collection.models;
 			$(el).find('img').get(0).raw = _.findWhere(auditions, {id: id});

@@ -156,25 +156,32 @@ ImageMontage.render = function(thumbs, cfg){
 	/*
 	 * this is the entrypoint into the imagemontage render
 	 */
-	var PERPAGE = 32; // set in flickr.ctp
-	// called once, use xhr_fetch
-	var defaults = {
-		url: window.location.pathname, 
-		container: '.gallery',
-		perpage: PERPAGE,
-	};
-	cfg = $.extend(defaults, cfg);
-
+	if (!!ImageMontage.instance) {
+		ImageMontage.instance.cfg.initialThumbs = thumbs;
+		ImageMontage.instance.renderAll(cfg.page+1, false, ImageMontage.instance);
+		ImageMontage.instance.cfg.page = cfg.page+1; 
+	} else {
+		var PERPAGE = 32; 
+		// called once, use xhr_fetch
+		var defaults = {
+			url: window.location.pathname, 
+			container: '.gallery',
+			perpage: cfg.perpage || PERPAGE,
+		};
+		cfg = $.extend(defaults, cfg);
 	
-	var named = Util.getNamedParams(cfg.url);
-	if (named.page) cfg.page = named.page;
-	if (named.perpage) cfg.perpage = named.perpage;
-	if (named.size) cfg.targetHeight = named.size;
+		
+		var named = Util.getNamedParams(cfg.url);
+		if (named.page) cfg.page = named.page;
+		if (named.perpage) cfg.perpage = named.perpage;
+		if (named.size) cfg.targetHeight = named.size;
 	
-	cfg.initialThumbs = thumbs;	// from GalleryView.render(0)
-	ImageMontage.instance = new ImageMontage(cfg);
-	ImageMontage.instance.show();
+		cfg.initialThumbs = thumbs;	// from GalleryView.render(0)
+		ImageMontage.instance = new ImageMontage(cfg);
+		ImageMontage.instance.show();  // calls renderAll(1)	
+	}
 }
+
 
 ImageMontage.prototype = {
 	init: function(cfg){
@@ -473,10 +480,19 @@ ImageMontage.prototype = {
 			        var photosRemaining = 0;
 			        
 			        _totalNumberOfThumbs = parseInt(this.cfg.total);
-			        _currentPage = parseInt(this.cfg.page);
-			        // _imageIDs = pageDetails.imageIDs;
+			        // _currentPage = parseInt(this.cfg.page);
 			        _totalNumberOfPages = parseInt(this.cfg.pages);
-			        _thumbsOnCurrentPage += parseInt(this.cfg.count);
+			        
+			        if (!addedThumbs) {
+			        	addedThumbs = _thumbsContainer.find('.thumb'); 
+			        } else {
+			        	if(_newAlbum) {
+			                _thumbsContainer.html('');
+			            }
+			            addedThumbs.appendTo(_thumbsContainer);
+			        }
+			        
+			        _thumbsOnCurrentPage += addedThumbs.length;
 			        photosRemaining = _totalNumberOfThumbs-_thumbsOnCurrentPage;
 			        _requestInProgress = false;
 			        
@@ -485,14 +501,6 @@ ImageMontage.prototype = {
 			        }
 			        else {
 			            _thumbsMessageContainer.html('');
-			        }
-			        if (!addedThumbs) {
-			        	addedThumbs = _thumbsContainer.find('.thumb'); 
-			        } else {
-			        	if(_newAlbum) {
-			                _thumbsContainer.html('');
-			            }
-			            addedThumbs.appendTo(_thumbsContainer);
 			        }
 			        if(addedThumbs.length) {
 			            
@@ -532,10 +540,11 @@ ImageMontage.prototype = {
                     'scope': that
                 };
                 
-                if (this.cfg.initialThumbs && _currentPage == parseInt(this.cfg.page)) {
+                if (this.cfg.initialThumbs) {
                 	// first load from static JSON, 
                 	// markup rendered by GalleryView.render()
 					callback.success.call(callback.scope, this.cfg.initialThumbs);
+					delete this.cfg.initialThumbs;
                 }
                 else {
                 	_thumbsMessageContainer.append( ' Loading more thumbnails...');
@@ -647,7 +656,7 @@ ImageMontage.prototype = {
 	            _resizeHandlerInitialized = true;
 	        }
 	        
-	        if(!_paginated && !_scrolledToEnd && !_scrollHandlerInitialized) {
+	        if(0 && !_paginated && !_scrolledToEnd && !_scrollHandlerInitialized) {
 	            if(_constrainedWithinWindow) {
 	                // YAHOO.util.Event.addListener(window, 'scroll', this.onContainerScroll, this);
 	                $(window).on('scroll',$.proxy(this.onContainerScroll, this));
@@ -733,7 +742,7 @@ ImageMontage.prototype = {
         this.changePage = function(page) {
         	if (_paginated && _getScrollTop() > _getContainerHeight())
         		_setScrollTop(0);
-        	if (PAGE.fetch == 'iframe') {
+        	if (0) {
         		// fetch BEFORE renderAll(), before _currentPage updated
         		if (!_requestInProgress) ImageMontage.iframe_fetch({page:page});
         	}  

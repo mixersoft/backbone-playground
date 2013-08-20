@@ -22,9 +22,6 @@
 	snappi.models = {};
 	snappi.views = {};
 	snappi.mixins = {};
-	
-	// use {{}} for underscore templates
-	_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
 
 	// Defer initialization until doc ready.
 	$(function() {
@@ -32,9 +29,9 @@
 		snappi.views.app = new snappi.views.GalleryView({
 			collection : snappi.collections.paginatedGallery
 		});
-		// snappi.views.pagination = new snappi.views.PaginationView({
-		// collection : snappi.collections.paginatedGallery
-		// });
+		snappi.views.pager = new snappi.views.PagerView({
+			collection : snappi.collections.paginatedGallery
+		});
 
 		/*
 		 * get models from raw data

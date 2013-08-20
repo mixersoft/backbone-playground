@@ -28,7 +28,7 @@ models.Photo = Backbone.Model.extend({
 	}, 
 	
 	templates: {
-		rect: _.template('top:{{y}}px;left:{{x}}px;width:{{w}}px;height:{{h}}px'),
+		rect: _.template('top:<%=y%>px;left:<%x%>px;width:<%w%>px;height:<%h%>px'),
 	},
 	
 	// helper functions

@@ -187,14 +187,13 @@ ImageMontage.prototype = {
 	init: function(cfg){
 		/*
 		 * p-code
-		 * - call ImageMontage.render() 
-		 * - call show()
+		 * - snappi.ImageMontage.render(parent.children(), cfg);
 		 * - call renderAll()
-		 * - call xhr_fetch on new page
-		 * - getCC/parseCC JSON reponse
-		 * - auditions2objects()
-		 * - _layoutThumbs()
-		 * 
+		 * - if cfg.initialThumbs, or  xhr_fetch on new page
+		 * 		_prepareLayout()
+		 * 		_layoutThumbs()
+		 * 			lineBreak()
+		 * 			lines.forEach()
 		 * onContainerScroll
 		 * - changePage()
 		 * - renderAll()
@@ -276,12 +275,26 @@ ImageMontage.prototype = {
     			images = [],
     			i, point, r, lineStart = 0,
     			x;
+    			
+    		var collection = snappi.collections.paginatedGallery;	
     	
     		for (i = 0; i < layout_images.length; i++) {
     			var img_tag = layout_images.get(i);
+    			
+    			/*
+    			 * get related model
+    			 */
+    			try {
+    				var model = collection.findWhere({id:img_tag.parentNode.parentNode.parentNode.id});
+    					thumb = model.toJSON();
+    			} catch (ex) {
+    				console.error('Model not found for img='+img_tag);
+    			}
+    			
+    				
     			    			
     			var image = {
-    				width: img_tag.getAttribute('data-orig-width') / img_tag.getAttribute('data-orig-height') * targetHeight, 
+    				width: thumb.origW / thumb.origH * targetHeight, 
     				height: targetHeight, 
     				tag: img_tag
     			};

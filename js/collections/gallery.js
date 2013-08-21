@@ -66,7 +66,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 				page: this.currentPage,
 				perpage: this.perPage, 
 			}
-			var request_template = 'http://snappi-dev/person/odesk_photos/<%=ownerid%>/perpage:<%=perpage%>/page:<%=page%>/sort:score/direction:desc/.json?'; 
+			var request_template = 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%>/perpage:<%=perpage%>/page:<%=page%>/sort:score/direction:desc/.json'; 
 			return _.template(request_template, request);
 		}
 	},

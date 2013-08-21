@@ -99,48 +99,6 @@ Util.getNamedParams = function(url){
 	}	
     return named;
 };	
-Util.getImgSrcBySize = function(src, size){
-    size = size || 'tn';
-    var parts = Util.parseSrcString(src);
-    if (size && !parts.dirname.match(/.thumbs\/$/)) 
-        parts.dirname += '.thumbs/';
-    return parts.dirname + (size ? size + '~' : '') + parts.filename + (parts.crop ? '~' + parts.crop : '');
-};
-Util.parseSrcString = function(src){
-    var i = src.lastIndexOf('/');
-    var name = {
-        dirname: '',
-        size: '',
-        filename: '',
-        crop: ''
-    };
-    name.dirname = src.substring(0, i + 1);
-    var parts = src.substring(i + 1).split('~');
-        switch (parts.length) {
-            case 3:
-                name.size = parts[0];
-                name.filename = parts[1];
-                name.crop = parts[2];
-                break;
-            case 2:
-                if (parts[0].length == 2) {
-                    name.size = parts[0];
-                    name.filename = parts[1];
-                }
-                else {
-                    name.filename = parts[0];
-                    name.crop = parts[1];
-                }
-                break;
-            case 1:
-                name.filename = parts[0];
-                break;
-            default:
-                name.filename = src.substring(i + 1);
-                break;
-        }
-        return name;
-};
 
 
 
@@ -277,6 +235,8 @@ ImageMontage.prototype = {
     			x;
     			
     		var collection = snappi.collections.paginatedGallery;	
+    		
+    		_outerContainer.addClass('flickrd');
     	
     		for (i = 0; i < layout_images.length; i++) {
     			var img_tag = layout_images.get(i);
@@ -296,6 +256,7 @@ ImageMontage.prototype = {
     			var image = {
     				width: thumb.origW / thumb.origH * targetHeight, 
     				height: targetHeight, 
+    				model: thumb, 
     				tag: img_tag
     			};
     			
@@ -439,7 +400,7 @@ ImageMontage.prototype = {
 							else if (maxDim <= 240) THUMB_SIZE='bs';
 							else if (maxDim <= 320) THUMB_SIZE='bm';
 							else THUMB_SIZE='bp';
-							image.tag.src = Util.getImgSrcBySize(image.tag.src,THUMB_SIZE);
+							image.tag.src = snappi.mixins.Href.getImgSrc(image.model, THUMB_SIZE, i);
 		
     						border.style.height = Math.round(image.height - totalVertCrop) + "px";
     						border.style.width = Math.round(image.width - imageHorzCrop) + "px";
@@ -457,7 +418,6 @@ ImageMontage.prototype = {
     				
     		container.css('height',_layout_y + "px");
     		
-    		_outerContainer.addClass('flickrd');
     	};		
     	
     	

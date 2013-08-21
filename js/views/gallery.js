@@ -78,7 +78,7 @@ views.GalleryView = Backbone.View.extend({
 	renderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
-			var qs = snappi.mixins.util.parseQueryString();
+			var qs = snappi.mixins.Href.parseQueryString();
 
 			// requestPager
 			var collection = this.collection,
@@ -115,7 +115,7 @@ views.GalleryView = Backbone.View.extend({
 			// paginator_ui.currentPage = snappi.ImageMontage.instance.cfg.page;
 			
 			// for debugging
-			this.introspect();
+			if (_DEBUG) this.introspect();
 		},
 	},
 	/**
@@ -128,14 +128,14 @@ views.GalleryView = Backbone.View.extend({
 	},
 	// debugging
 	introspect: function() {
-		var auditions = SNAPPI.CFG.JSON.data.CastingCall.Auditions.Audition;
+		var auditions = SNAPPI.Auditions;
 		_.each(this.$('div.thumb'), function(el,k,l) {
 			var id = $(el).attr('id'),
 				models;
 			models = (this.collection instanceof Backbone.Paginator.clientPager)
 				? this.collection.origModels
 				: this.collection.models;
-			$(el).find('img').get(0).raw = _.findWhere(auditions, {id: id});
+			$(el).find('img').get(0).raw = auditions[id];
 			$(el).find('img').get(0).parsed = _.findWhere(models, {id: id}).toJSON();
 		}, this);
 	},

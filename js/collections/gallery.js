@@ -82,7 +82,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// that returns a string
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
-			var qs = snappi.mixins.util.parseQueryString();
+			var qs = snappi.mixins.Href.parseQueryString();
 			if (qs.perpage) this.perPage = parseInt(qs.perpage);
 			var request = {
 				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
@@ -104,6 +104,12 @@ collections.GalleryCollection = paginator.requestPager.extend({
 				count: paging.Audition.length,
 				targetHeight: 160,
 			};
+			
+		// config image server for this request
+		snappi.mixins.Href.imgServer({
+			baseurl: paging.Baseurl,
+		});
+			
 		// for clientPaging	
 		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
 		this.paginator_ui.serverPaging = serverPaging;
@@ -112,7 +118,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		
-		var parsed = SNAPPI.parseCC(response.response.castingCall, 'force'),
+		var parsed = snappi.mixins.RestApi.parseShot(response.response.castingCall),
 			shots = [];
 		_.each(parsed, function(v, k, l) {
 			shots.push(new snappi.models.Shot(v));

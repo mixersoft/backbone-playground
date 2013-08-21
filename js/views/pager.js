@@ -13,10 +13,12 @@
 			'click a.sortDsc': 'sortByDescending',
 			'click a.filter': 'filter'
 		},
-
-		tagName: 'aside',
 		
-		template_source: "#markup #PagerTemplate.underscore",
+		el: '#pager',
+
+		// tagName: 'aside',
+		
+		template_source: "#markup #PagerBootstrap.underscore",
 
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
@@ -37,52 +39,42 @@
 		},
 		render: function () {
 			var paging = this.collection.info();
-			
-			// for clientPaging template with requestPaging
-			paging.startRecord = paging.totalRecords === 0 ? 0 : (paging.currentPage - 1) * paging.perPage + 1,
-			paging.endRecord = Math.min(paging.totalRecords, paging.currentPage * paging.perPage); 
-
-			
-			// for clientPaging, manually adjust paging attrs to match server values
-			// paging.totalRecords = this.collection.paginator_ui.serverPaging.total;
-			// paging.totalPages = this.collection.paginator_ui.totalPages;
-			// paging.pageSet = this.collection.setPagination(paging);
-			
+			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
 		},
 
 		gotoFirst: function (e) {
 			e.preventDefault();
-			this.collection.goTo(this.collection.information.firstPage, { update: true, remove: false });
+			this.collection.goTo(this.collection.information.firstPage, { merge: true, remove: false });
 		},
 
 		gotoPrev: function (e) {
 			e.preventDefault();
-			this.collection.previousPage({ update: true, remove: false });
+			this.collection.previousPage({ merge: true, remove: false });
 		},
 
 		gotoNext: function (e) {
 			e.preventDefault();
-			this.collection.nextPage({ update: true, remove: false });
+			this.collection.nextPage({ merge: true, remove: false });
 		},
 
 		gotoLast: function (e) {
 			e.preventDefault();
-			this.collection.goTo(this.collection.information.lastPage, { update: true, remove: false });
+			this.collection.goTo(this.collection.information.lastPage, { merge: true, remove: false });
 		},
 
 		gotoPage: function (e) {
 			e.preventDefault();
 			var page = $(e.target).text();
-			this.collection.goTo(page,{ update: true, remove: false });
+			this.collection.goTo(page,{ merge: true, remove: false });
 		},
 
 		changeCount: function (e) {
 			e.preventDefault();
 			var per = $(e.target).text();
 			this.collection.rendered = {};		// reset
-			this.collection.howManyPer(per);
+			this.collection.howManyPer(per, { merge: true, remove: false });
 		},
 
 		sortByAscending: function (e) {

@@ -22,30 +22,6 @@
 collections.GalleryCollection = paginator.requestPager.extend({
 	
 	model : model,	// snappi.models.Shot	
-	// reset works with clientPager
-	reset: function(new_models){
-		var models, args=[];
-		// update this.information with serverPaging
-		if (0 && this.length) { 
-			// append to current page
-			models = this.models.slice(0, this.length-1).concat(new_models);
-			args.push(models);
-			args.push({ 
-				skip: this.length-1,
-				length: models.length
-			});
-			// note, only render NEW models
-			this.length = models.length;
-			
-			/*
-			 * TODO: clientPager.reset() should append
-			 * 	- keep track of rendered pages
-			 *  - prevPage() should scrollTo() prev page 
-			 */
-			paginator.clientPager.prototype.reset.apply(this, args);
-		} else 
-			paginator.clientPager.prototype.reset.apply(this, arguments);
-	},
 	// sync works with requestPager
 		
 	paginator_ui : {
@@ -83,7 +59,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
 			var qs = snappi.mixins.Href.parseQueryString();
-			if (qs.perpage) this.perPage = parseInt(qs.perpage);
+			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
 			var request = {
 				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
 				page: this.currentPage,

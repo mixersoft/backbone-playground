@@ -25,19 +25,6 @@ views.GalleryView = Backbone.View.extend({
 		collection.pager({ remove: false });
 		
 		return;
-		
-		
-		
-		collection.fetch({
-			success: function(){
-				collection.pager();
-			},
-			silent: true,	// true will not trigger collection('reset')
-		})
-		
-		var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
-			paginator_ui = this.collection.paginator_ui;
-		paginator_ui.totalPages = Math.ceil(serverPaging.Total / paginator_ui.perPage);
 		// this.listenTo(collection, 'all', this.render);
 	},
 	
@@ -97,22 +84,6 @@ views.GalleryView = Backbone.View.extend({
 			} else {
 				console.log("page already rendered, scroll to page location");
 			}
-			
-			// clientPager
-			// var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
-				// paginator_ui = this.collection.paginator_ui,
-				// cfg = {
-					// page: paginator_ui.currentPage,
-					// perpage: paginator_ui.perPage,
-					// pages:  Math.ceil(serverPaging.Total / paginator_ui.perPage),
-					// total: serverPaging.Total,			// total count on server
-					// count: parent.children().length,	// count in this request
-					// targetHeight: 160,
-				// };
-			// snappi.ImageMontage.render(parent.children(), cfg);
-			// // update after request/render
-			// paginator_ui.totalPages = cfg.pages;
-			// paginator_ui.currentPage = snappi.ImageMontage.instance.cfg.page;
 			
 			// for debugging
 			if (_DEBUG) this.introspect();

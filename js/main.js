@@ -3,6 +3,7 @@
 (function() {
 
 	_DEBUG = 0;
+	window.SNAPPI = window.SNAPPI || {};
 	
 	/*
 	 * setup snappi namespace
@@ -16,7 +17,6 @@
 	// Defer initialization until doc ready.
 	$(function() {
 		
-		
 		// config image server
 		snappi.mixins.Href.imgServer({
 			hostname: 'snaphappi.com',
@@ -24,17 +24,6 @@
 			baseurl: '/svc/STAGING/',
 			template: 'http://{{subdomain}}.{{hostname}}{{baseurl}}{{stage}}/.thumbs/{{size}}~{{filename}}',
 		});
-		
-		if (false) {	
-			/*
-			*  Playground setup using bootstrapped JSON data
-			*/
-			// same as json.response from $ajax({dataType: 'json'}).success.call(this, json, status, o);
-			var json = {
-				response : JSON.parse(SNAPPI.CFG.JSON.raw),
-			}
-			SNAPPI.CFG.JSON.data = json.response['response'].castingCall;
-		}
 		
 		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();
 		snappi.views.app = new snappi.views.GalleryView({

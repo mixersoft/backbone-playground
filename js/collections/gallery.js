@@ -51,7 +51,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		type : 'GET',
 
 		// the type of reply (jsonp by default)
-		dataType : 'jsonp',
+		dataType : 'json',
 
 		// the URL (or base URL) for the service
 		// if you want to have a more dynamic URL, you can make this a function
@@ -106,7 +106,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 	
 	server_api: {
 		// custom parameters
-		'callback': '?',
+		// 'callback': '?',
 	},
 
 });

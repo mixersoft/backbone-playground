@@ -51,7 +51,7 @@
 
 		gotoPrev: function (e) {
 			e.preventDefault();
-			this.collection.previousPage({ merge: true, remove: false });
+			this.collection.prevPage({ merge: true, remove: false });
 		},
 
 		gotoNext: function (e) {

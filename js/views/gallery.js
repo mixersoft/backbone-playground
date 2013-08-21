@@ -79,8 +79,8 @@ views.GalleryView = Backbone.View.extend({
         ) {
         	// $(window).off('scroll',self.onContainerScroll);
         	$(window).off('scroll');
+        	console.info("fetch next, page="+(collection.currentPage+1));
             self.collection.nextPage({ merge: true, remove: false });
-            console.info("fetch next, page="+(collection.currentPage+1));
         }
         
         if((collection.currentPage+1) > collection.totalPages

@@ -19,14 +19,14 @@
  * - nextPage()
  * - prevPage()
  */
-collections.GalleryCollection = paginator.clientPager.extend({
+collections.GalleryCollection = paginator.requestPager.extend({
 	
 	model : model,	// snappi.models.Shot	
-	
+	// reset works with clientPager
 	reset: function(new_models){
 		var models, args=[];
 		// update this.information with serverPaging
-		if (this.currentPage > 1) { 
+		if (this.length) { 
 			// append to current page
 			models = this.models.slice(0, this.length-1).concat(new_models);
 			args.push(models);
@@ -46,7 +46,8 @@ collections.GalleryCollection = paginator.clientPager.extend({
 		} else 
 			paginator.clientPager.prototype.reset.apply(this, arguments);
 	},
-
+	// sync works with requestPager
+		
 	paginator_ui : {
 		// the lowest page index your API allows to be accessed
 		firstPage : 1,
@@ -83,8 +84,10 @@ collections.GalleryCollection = paginator.clientPager.extend({
 		url : function(){
 			var request = {
 				ownerid : "51cad9fb-d130-4150-b859-1bd00afc6d44",
+				page: this.currentPage,
+				perpage: this.perPage, 
 			}
-			var request_template = 'http://snappi-dev/person/odesk_photos/<%=ownerid%>/perpage:80/sort:score/direction:desc/.json?'; 
+			var request_template = 'http://snappi-dev/person/odesk_photos/<%=ownerid%>/perpage:<%=perpage%>/page:<%=page%>/sort:score/direction:desc/.json?'; 
 			return _.template(request_template, request);
 		}
 	},
@@ -99,8 +102,14 @@ collections.GalleryCollection = paginator.clientPager.extend({
 				count: paging.Audition.length,
 				targetHeight: 160,
 			};
+		// for clientPaging	
 		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
 		this.paginator_ui.serverPaging = serverPaging;
+		
+		// for requestPaging template
+		this.totalRecords = serverPaging.total;
+		this.totalPages = serverPaging.pages;
+		
 		var parsed = SNAPPI.parseCC(response.response.castingCall, 'force'),
 			shots = [];
 		_.each(parsed, function(v, k, l) {
@@ -110,20 +119,9 @@ collections.GalleryCollection = paginator.clientPager.extend({
 	},
 	
 	server_api: {
-			// number of items to return per request/page
-			'perpage': function() { 
-				return this.perPage 
-			},
-
-			// how many results the request should skip ahead to
-			'page': function() { return this.currentPage },
-
-			// field to sort by
-			// 'sort': 'created',
-
-			// custom parameters
-			'callback': '?'
-		},
+		// custom parameters
+		'callback': '?',
+	},
 
 });
 

@@ -158,8 +158,8 @@ ImageMontage.render = function(thumbs, cfg){
 	 */
 	if (!!ImageMontage.instance) {
 		ImageMontage.instance.cfg.initialThumbs = thumbs;
-		ImageMontage.instance.renderAll(cfg.page+1, false, ImageMontage.instance);
-		ImageMontage.instance.cfg.page = cfg.page+1; 
+		ImageMontage.instance.renderAll(cfg.page, cfg.page===1, ImageMontage.instance);
+		ImageMontage.instance.cfg.page = cfg.page; 
 	} else {
 		var PERPAGE = 32; 
 		// called once, use xhr_fetch
@@ -479,6 +479,7 @@ ImageMontage.prototype = {
          */
 	    var _renderAll = function(pageNumber, resize, that) {
             _customStartingImageID = '';
+            if (resize) _layout_y = 0;
             		            		            
             if((!resize || _firstShow || pageNumber != _currentPage || _newAlbum) && pageNumber <= _totalNumberOfPages && !_requestInProgress) {
             	_firstShow = false;

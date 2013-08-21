@@ -116,11 +116,14 @@
 
 			<span class="cell howmany">
 				Show
-				<a href="#" class="selected">20</a>
-				|
-				<a href="#" class="">50</a>
-				|
-				<a href="#" class="">100</a>
+				<% _.each ([20,50,100], function (p,i) { %>
+					<% if (i) { %> | <% } %>
+					<% if (perPage == p) { %>
+						<span class="selected"><%= p %></span>
+					<% } else { %>
+						<a href="#" class=""><%= p %></a>
+					<% } %>
+				<% }); %>
 			</span>
 
 			<span class="divider">/</span>

@@ -24,6 +24,12 @@
 				// compile once, add to Class
 				views.PagerView.prototype.template = _.template(source);
 		    }
+		    var collection = this.collection;
+		    // this.listenTo(collection, 'reset', this.render);
+		    this.listenTo(collection, 'sync', this.render);
+		    this.$el.appendTo('#pager');
+		    
+		    return;
 
 			this.collection.on('reset', this.render, this);
 			this.$el.appendTo('#pager');
@@ -32,10 +38,15 @@
 		render: function () {
 			var paging = this.collection.info();
 			
-			// manually adjust paging attrs to match server values
-			paging.totalRecords = this.collection.paginator_ui.serverPaging.total;
-			paging.totalPages = this.collection.paginator_ui.totalPages;
-			paging.pageSet = this.collection.setPagination(paging);
+			// for clientPaging template with requestPaging
+			paging.startRecord = paging.totalRecords === 0 ? 0 : (paging.currentPage - 1) * paging.perPage + 1,
+			paging.endRecord = Math.min(paging.totalRecords, paging.currentPage * paging.perPage); 
+
+			
+			// for clientPaging, manually adjust paging attrs to match server values
+			// paging.totalRecords = this.collection.paginator_ui.serverPaging.total;
+			// paging.totalPages = this.collection.paginator_ui.totalPages;
+			// paging.pageSet = this.collection.setPagination(paging);
 			
 			var html = this.template(paging);
 			this.$el.html(html);
@@ -43,7 +54,7 @@
 
 		gotoFirst: function (e) {
 			e.preventDefault();
-			this.collection.goTo(1,{ update: true, remove: false });
+			this.collection.goTo(this.collection.information.firstPage, { update: true, remove: false });
 		},
 
 		gotoPrev: function (e) {
@@ -58,7 +69,7 @@
 
 		gotoLast: function (e) {
 			e.preventDefault();
-			this.collection.goTo(this.collection.information.lastPage);
+			this.collection.goTo(this.collection.information.lastPage, { update: true, remove: false });
 		},
 
 		gotoPage: function (e) {
@@ -70,6 +81,7 @@
 		changeCount: function (e) {
 			e.preventDefault();
 			var per = $(e.target).text();
+			this.collection.rendered = {};		// reset
 			this.collection.howManyPer(per);
 		},
 

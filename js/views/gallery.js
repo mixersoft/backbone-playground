@@ -20,7 +20,13 @@ views.GalleryView = Backbone.View.extend({
 	initialize: function(attributes, options){
 		// _.bindAll(this);	// ???: what does this do?
 		var collection = this.collection;
-		this.listenTo(collection, 'reset', this.addAll);
+		// this.listenTo(collection, 'reset', this.addAll);
+		this.listenTo(collection, 'sync', this.addAll);
+		collection.pager({ remove: false });
+		
+		return;
+		
+		
 		
 		collection.fetch({
 			success: function(){
@@ -43,10 +49,10 @@ views.GalleryView = Backbone.View.extend({
 		});
 		
 		/*
-		 * TODO: do NOT empty page
-		 * preserve collection models in GalleryCollection.reset()
-		 * then render NEW ThumbViews BELOW current page
+		 * NOTE: use collection.pager({remove: false}) to append new models 
 		 */
+		var collection = this.collection; 
+		options.skip = (collection.currentPage-1) * collection.perPage;
 		if (!options.skip) this.$el.empty();
 		_.each(this.collection.models, function(item,k,l){
 			if (k < (options.skip||0)) return; 
@@ -72,20 +78,40 @@ views.GalleryView = Backbone.View.extend({
 	renderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
-			var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
-				paginator_ui = this.collection.paginator_ui,
+			
+			// requestPager
+			var collection = this.collection,
+				paging = collection.info(),
 				cfg = {
-					page: paginator_ui.currentPage,
-					perpage: paginator_ui.perPage,
-					pages:  Math.ceil(serverPaging.Total / paginator_ui.perPage),
-					total: serverPaging.Total,			// total count on server
-					count: parent.children().length,	// count in this request
+					page: paging.currentPage,
+					perpage: paging.perPage,
+					pages: paging.totalPages,
+					total: paging.totalRecords,
 					targetHeight: 160,
 				};
-			snappi.ImageMontage.render(parent.children(), cfg);
-			// update after request/render
-			paginator_ui.totalPages = cfg.pages;
-			paginator_ui.currentPage = snappi.ImageMontage.instance.cfg.page;
+			collection.rendered = collection.rendered || {}; 
+			if (!collection.rendered[cfg.page]) {
+				snappi.ImageMontage.render(parent.children(), cfg);	
+				collection.rendered[cfg.page]=true;
+			} else {
+				console.log("page already rendered, scroll to page location");
+			}
+			
+			// clientPager
+			// var serverPaging = SNAPPI.CFG.JSON.data.CastingCall.Auditions,
+				// paginator_ui = this.collection.paginator_ui,
+				// cfg = {
+					// page: paginator_ui.currentPage,
+					// perpage: paginator_ui.perPage,
+					// pages:  Math.ceil(serverPaging.Total / paginator_ui.perPage),
+					// total: serverPaging.Total,			// total count on server
+					// count: parent.children().length,	// count in this request
+					// targetHeight: 160,
+				// };
+			// snappi.ImageMontage.render(parent.children(), cfg);
+			// // update after request/render
+			// paginator_ui.totalPages = cfg.pages;
+			// paginator_ui.currentPage = snappi.ImageMontage.instance.cfg.page;
 			
 			// for debugging
 			this.introspect();

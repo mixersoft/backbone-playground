@@ -61,10 +61,10 @@
         </div>
 
         <div class="container">
+        	<aside id='pager'></aside>
 		</div> <!-- /container -->
         <div class='gallery clearfix'>
         	<div class='body clearfix'></div>
-        	<div id='pager'></div>
         </div>   <!-- /.gallery -->
 
 		<div class="container">
@@ -89,55 +89,49 @@
 	    			</div>
 				</div>
 			</script>
-			
-			<!--sample template for pagination UI-->
-		<script id="PagerTemplate" class='underscore'  type="text/html">
-		 <div class="breadcrumb">
-			<span class="cell last pages">
-				<% if (currentPage != 1) { %>
-					<a href="#" class="first">First</a>
-					<a href="#" class="prev">Previous</a>
-				<% } %>
-				<% _.each (pageSet, function (p) { %>
-					<% if (currentPage == p) { %>
-						<span class="page selected"><%= p %></span>
-					<% } else { %>
-						<a href="#" class="page"><%= p %></a>
-					<% } %>
-				<% }); %>
-				<% if (lastPage != currentPage && lastPage != 0) { %>
-					<a href="#" class="next">Next</a>
-					<a href="#" class="last">Last</a>
-				<% } %>
-			</span>
-
-			<span class="divider">/</span>
-
-			<span class="cell howmany">
-				Show
-				<% _.each ([20,50,100], function (p,i) { %>
-					<% if (i) { %> | <% } %>
-					<% if (perPage == p) { %>
-						<span class="selected"><%= p %></span>
-					<% } else { %>
-						<a href="#" class=""><%= p %></a>
-					<% } %>
-				<% }); %>
-			</span>
-
-			<span class="divider">/</span>
-			
-			<span class="cell first records">
-				<span class="current"><%= startRecord %></span>
-				-
-				<span class="perpage"><%= endRecord %></span>
-				of
-				<span class="total"><%= totalRecords %></span>
-				shown
-			</span>
-		  </div>
-		</script>
-			
+			<script id="PagerBootstrap" class='underscore' type="text/html">
+				<div class='pagination pagination-center pagination-small'>
+					<ul>
+						<li><span class='pag-label'>Page</span></li>
+						<% var state = (currentPage == 1) ? 'disabled' : ''; %> 
+						<li class="<%= state %>">
+							<% if (state=='disabled') { %>
+								<span>&laquo;</span>
+							<% } else { %>
+								<a href="#" class='prev'>&laquo;</a>
+							<% }  %>
+						</li>
+						<% _.each (pageSet, function (p) { %>
+							<% if (currentPage == p) { %>
+								<li class="active"><span><%= p %></span></li>
+							<% } else { %>
+								<li><a href="#" class='page'><%= p %></a></li>
+							<% } %>
+						<% }); %>
+						<% var state = (lastPage != currentPage && lastPage != 0) ? '' : 'disabled'; %> 
+						<li class="<%= state %>">
+							<% if (state=='disabled') { %>
+								<span>&raquo;</span>
+							<% } else { %>
+								<a href="#" class='next'>&raquo;</a>
+							<% }  %>
+						</li>
+					</ul>
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<ul class='howmany'>
+						<li><span class='pag-label'>Per Page</span></li>
+						<% _.each ([20,50,100], function (p,i) { %>
+							<% if (perPage == p) { %>
+								<li class="active"><span><%= p %></span></li>
+							<% } else { %>
+								<li><a href="#" class=''><%= p %></a></li>
+							<% } %>
+						<% }); %>
+					</ul>
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<ul><li><span class='pag-label'><%= showing %>/<%= totalRecords %> Photos</span></li></ul>
+				</div>
+			</script>
         </div>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
@@ -149,7 +143,7 @@
         <script src="js/vendor/backbone.js"></script>
         
         <!-- demo bootstrap data -->
-        <script src="js/snappi.js"></script>
+        <!-- <script src="js/snappi.js"></script> -->
         
         <!-- main app -->
 		<script src="js/main.js"></script>

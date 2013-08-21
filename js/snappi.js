@@ -3,7 +3,7 @@
 	
 	// CFG constants
 	SNAPPI.CFG = {
-		IMG_SERVER: 'http://dev.snaphappi.com/',	
+		IMG_SERVER: ['http://snappi.snaphappi.com','http://snappi1.snaphappi.com','http://snappi2.snaphappi.com'],	
 		TARGET_THUMB_SIZE: 240,		// target max dim for IMG.src, i.e. 120px
 		JSON: {
 			url: 'http://dev.snaphappi.com/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/perpage:500/page:1/sort:score/direction:desc/.json',
@@ -19,7 +19,7 @@
 			CFG = SNAPPI.CFG,
 			parsedAuditions = {},
 			auditions = cc.CastingCall.Auditions.Audition,
-			baseurl = CFG.IMG_SERVER + cc.CastingCall.Auditions.Baseurl,
+			baseurl = cc.CastingCall.Auditions.Baseurl,
 			thumb_size = 'bp';		// IMG.src prefix to set IMG size, DEFAULT 640px, i.e. bp~FILE_NAME.jpg
 			
 		if (CFG.TARGET_THUMB_SIZE <= 120) thumb_size='tn';
@@ -28,10 +28,12 @@
 		
 		var lookup_scale = {'bp':640, 'bm':320, 'bs':240, 'tn':120},
 			scale,
-			maxDim;
+			maxDim,
+			host;
 			
 		for (i in auditions) {
 			id = auditions[i].Photo.id;
+			host = SNAPPI.CFG.IMG_SERVER[i%3];
 			audition = {
 				shotId: auditions[i].Shot.id || null ,
 				shotCount: auditions[i].Shot.count ? parseInt(auditions[i].Shot.count) : null,
@@ -47,7 +49,7 @@
 				W: auditions[i].Photo.Img.Src.W,
 				exifOrientation:  auditions[i].Photo.Img.Src.Orientation,	// ExifOrientation tag, [1,3,6,8]
 				rootSrc: auditions[i].Photo.Img.Src.rootSrc,
-				src: SNAPPI.getImgSrcBySize(baseurl + auditions[i].Photo.Img.Src.rootSrc, thumb_size),
+				src: SNAPPI.getImgSrcBySize(host + baseurl + auditions[i].Photo.Img.Src.rootSrc, thumb_size),
 			};
 			
 			// adjust for ExifOrientation

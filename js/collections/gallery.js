@@ -26,7 +26,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 	reset: function(new_models){
 		var models, args=[];
 		// update this.information with serverPaging
-		if (this.length) { 
+		if (0 && this.length) { 
 			// append to current page
 			models = this.models.slice(0, this.length-1).concat(new_models);
 			args.push(models);
@@ -82,8 +82,10 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// that returns a string
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
+			var qs = snappi.mixins.util.parseQueryString();
+			if (qs.perpage) this.perPage = parseInt(qs.perpage);
 			var request = {
-				ownerid : "51cad9fb-d130-4150-b859-1bd00afc6d44",
+				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
 				page: this.currentPage,
 				perpage: this.perPage, 
 			}

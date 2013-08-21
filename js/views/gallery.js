@@ -78,7 +78,8 @@ views.GalleryView = Backbone.View.extend({
 	renderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
-			
+			var qs = snappi.mixins.util.parseQueryString();
+
 			// requestPager
 			var collection = this.collection,
 				paging = collection.info(),
@@ -87,7 +88,7 @@ views.GalleryView = Backbone.View.extend({
 					perpage: paging.perPage,
 					pages: paging.totalPages,
 					total: paging.totalRecords,
-					targetHeight: 160,
+					targetHeight: qs.size || 160,
 				};
 			collection.rendered = collection.rendered || {}; 
 			if (!collection.rendered[cfg.page]) {

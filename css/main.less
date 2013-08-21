@@ -66,11 +66,20 @@
 
 
 
-
-.pagination {
-  span.pag-label {
-    background-color: @grayLighter;
-    color: #0088CC;
+#pager {
+  margin-top: -14px;
+  position: fixed;
+  z-index: 100;
+  width: 100%;
+  .pagination {
+    margin: 0;
+    li.disabled span {
+      background-color: #F5F5F5;
+    }
+    span.pag-label {
+      background-color: @grayLighter;
+      color: #0088CC;
+    }
   }
 }
 

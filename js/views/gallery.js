@@ -24,7 +24,6 @@ views.GalleryView = Backbone.View.extend({
 		this.listenTo(collection, 'sync', this.addAll);
 		collection.pager({ remove: false });
 		
-		return;
 		// this.listenTo(collection, 'all', this.render);
 	},
 	
@@ -46,6 +45,7 @@ views.GalleryView = Backbone.View.extend({
 			this.addOne(item, options);
 		}, this);
 		this.render(options.offscreen);
+		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 	},
 	
 	/**
@@ -62,14 +62,42 @@ views.GalleryView = Backbone.View.extend({
 		if (!!options && !options.defer) this.render(container);
 	},
 	
+	/**
+     * Called on the scroll event of the container element.  Used only in the non-paginated mode.
+     * When the scroll threshold is reached a new page of thumbs is requested.
+     * @param event e - the scroll event object
+     */
+    onContainerScroll : Cowboy.throttle( 250,function(e) {
+    	self = this;
+        var containerHeight = self.$el.outerHeight(), //_outerContainer.outerHeight;
+        	outerContainerHeight =  $(window).outerHeight(),
+       		scrollTop = $(window).scrollTop()
+       		collection = self.collection;
+        
+        if((containerHeight-scrollTop) <= outerContainerHeight 
+        	&& (collection.currentPage+1) <= collection.totalPages
+        ) {
+        	// $(window).off('scroll',self.onContainerScroll);
+        	$(window).off('scroll');
+            self.collection.nextPage({ merge: true, remove: false });
+            console.info("fetch next, page="+(collection.currentPage+1));
+        }
+        
+        if((collection.currentPage+1) > collection.totalPages
+        	&& collection.models.length  
+        ) {
+			// $(window).off('scroll',self.onContainerScroll);
+			$(window).off('scroll');
+	    }
+    }),
+	
 	renderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
 			var qs = snappi.mixins.Href.parseQueryString();
 
 			// requestPager
-			var collection = this.collection,
-				paging = collection.info(),
+			var paging = this.collection.info(),
 				cfg = {
 					page: paging.currentPage,
 					perpage: paging.perPage,
@@ -77,25 +105,31 @@ views.GalleryView = Backbone.View.extend({
 					total: paging.totalRecords,
 					targetHeight: qs.size || 160,
 				};
-			collection.rendered = collection.rendered || {}; 
-			if (!collection.rendered[cfg.page]) {
-				snappi.ImageMontage.render(parent.children(), cfg);	
-				collection.rendered[cfg.page]=true;
-			} else {
-				console.log("page already rendered, scroll to page location");
-			}
-			
-			// for debugging
-			if (_DEBUG) this.introspect();
+			snappi.ImageMontage.render(parent.children(), cfg);	
 		},
 	},
 	/**
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
 	 */
 	render: function(container){
-		container = container || this.$el;	
-		var layout = 'flickr';
-		this.renderers[layout].apply(this, arguments);
+		container = container || this.$el;
+		var collection = this.collection;	
+		collection.rendered = collection.rendered || {}; 
+		if (!collection.rendered[collection.currentPage]) {
+			/*
+			 * the actual render statement
+			 */
+			this.renderers['flickr'].apply(this, arguments);
+			/*
+			 */
+			collection.rendered[collection.currentPage]=true;
+			this.$el.css('min-height', $(window).outerHeight()-160);
+			
+			// for debugging
+			if (_DEBUG) this.introspect();
+		} else {
+			console.log("page already rendered, scroll to page location, page="+collection.currentPage);
+		}
 	},
 	// debugging
 	introspect: function() {

@@ -7,9 +7,12 @@
 @import "vendor/variables.less"; // Modify this for custom colors, font-sizes, etc
 @import "vendor/mixins.less"; 
 
+body.wait {
+  cursor: wait !important;
+}
+
 @galleryH : 720px;
 .gallery {
-  min-height: @galleryH;
   background-color: @grayLighter;
   margin: 20px;     /* undo body {padding-left/right} */
   padding: 0 20px;

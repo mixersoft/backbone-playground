@@ -58,6 +58,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// that returns a string
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
+			$('body').addClass('wait');
 			var qs = snappi.mixins.Href.parseQueryString();
 			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
 			var request = {
@@ -99,6 +100,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		_.each(parsed, function(v, k, l) {
 			shots.push(new snappi.models.Shot(v));
 		});
+		$('body').removeClass('wait');
 		return shots;
 	},
 	

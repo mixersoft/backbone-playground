@@ -69,23 +69,29 @@ body.wait {
 
 
 
-.gallery .pager {
-  margin-top: -14px;
+.gallery .header {
+  margin-top: -38px;
   position: fixed;
   z-index: 100;
   width: 100%;
-  .pagination {
-    margin: 0;
-    li.disabled span {
-      background-color: #F5F5F5;
+  .pager {
+    margin: 5px 0;
+    .pagination {
+      margin: 0;
+      li.disabled span {
+        background-color: #F5F5F5;
+      }
+      span.pag-label {
+        background-color: @grayLighter;
+        color: #0088CC;
+      }
+      li > a, li > span {
+        .border-radius(0);      // reset twbootstrap value
+      }
     }
-    span.pag-label {
-      background-color: @grayLighter;
-      color: #0088CC;
-    }
-    li > a, li > span {
-      .border-radius(0);      // reset twbootstrap value
-    }
+  }
+  .display-options {
+    
   }
 }
 

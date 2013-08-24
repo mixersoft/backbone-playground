@@ -23,10 +23,6 @@ views.GalleryView = Backbone.View.extend({
 		'click .layout' : 'onSetLayoutEngine',
 	},
 	
-	/*
-	 * ???: are the display option controls individual views?
-	 */
-	
 	initialize: function(attributes, options){
 		this.render();
 		
@@ -177,18 +173,6 @@ views.GalleryView = Backbone.View.extend({
 		container = container || this.$('.body');
 		var collection = this.collection;
 		
-		/*
-		 * create delegated views
-		 */
-		this.pager = new views.PagerView({
-			el: this.$('.header .pager'),
-			collection : collection,
-		});
-		// this.displayOptions = new views.GalleryDisplayOptionsView({
-			// el: this.$('.header .display-options'),
-		// });
-		
-			
 		collection.rendered = collection.rendered || {}; 	// keep track of pages rendered
 		if (!collection.rendered[collection.currentPage]) {
 			/*

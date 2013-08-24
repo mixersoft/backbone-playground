@@ -85,20 +85,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 (function() {//Closure, to not leak to the scope
 	
 	
-var Util = new function(){}
-Util.getNamedParams = function(url){
-	url = url || window.location.pathname;
-	var param, 
-		named = {},
-		parts = url.split('/');
-	for (var i in parts) {
-		if (parts[i].indexOf(':')>0) {
-			param = parts[i].split(':');
-			named[param[0]] = decodeURIComponent(param[1].replace(/\+/g, " ")) ;
-		} 
-	}	
-    return named;
-};	
+
 
 
 
@@ -129,7 +116,7 @@ ImageMontage.render = function(thumbs, cfg){
 		cfg = $.extend(defaults, cfg);
 	
 		
-		var named = Util.getNamedParams(cfg.url);
+		var named = snappi.mixins.Href.getNamedParams(cfg.url);
 		if (named.page) cfg.page = named.page;
 		if (named.perpage) cfg.perpage = named.perpage;
 		if (named.size) cfg.targetHeight = named.size;

@@ -9,29 +9,58 @@
  */
 
 views.GalleryView = Backbone.View.extend({
-	el: ".gallery .body",
+	el: ".gallery",
 	
 	collection: null,	// Backbone.Paginator
 	
 	events: {
-		
+		'keypress .body': 'onKeyPressNav',
+		'click .display-options': 'toggleDisplayOptions', 
+		'click .thumb-size': 'onSetThumbSize',
+		'click .filter' : 'onFilter',
+		'change select.sort' : 'onSort',
+		'scroll window': 'onContainerScroll',	// not sure this is valid 
+		'click .layout' : 'onSetLayoutEngine',
 	},
+	
+	/*
+	 * ???: are the display option controls individual views?
+	 */
 	
 	initialize: function(attributes, options){
-		// _.bindAll(this);	// ???: what does this do?
+		this.render();
+		
 		var collection = this.collection;
-		// this.listenTo(collection, 'reset', this.addAll);
-		this.listenTo(collection, 'sync', this.addAll);
+		this.listenTo(collection, 'reset', this.addAll);
+		this.listenTo(collection, 'sync', this.addPage);
+		
+		
+		// calls colletion.sync and makes request from DB
 		collection.pager({ remove: false });
 		
-		// this.listenTo(collection, 'all', this.render);
 	},
 	
-	// called by paginator.nextPage() > paginator.pager()
+	render: function(){
+		/*
+		 * create delegated views
+		 */
+		this.pager = new views.PagerView({
+			el: this.$('.header .pager'),
+			collection : this.collection,
+		});
+		this.displayOptions = new views.GalleryDisplayOptionsView({
+			el: this.$('.header .display-options'),
+		});
+	},
+	
+	
 	addAll : function(models, options) {
+	},
+	
+	// called by paginator.nextPage() > paginator.pager() > 'sync'
+	addPage : function(models, options) {
 		options = $.extend(options || {}, {
-			offscreen : $('<div></div>'),
-			defer: true,
+			offscreen : $('<div></div>'),	// build page in orphaned el
 		});
 		
 		/*
@@ -39,29 +68,61 @@ views.GalleryView = Backbone.View.extend({
 		 */
 		var collection = this.collection; 
 		options.skip = (collection.currentPage-1) * collection.perPage;
-		if (!options.skip) this.$el.empty();
+		if (!options.skip) {
+			// TODO: refactor. using options.skip to implement infinite scroll
+			// OR, destroy elements AFTER options.skip
+			// ???: should I destroy or empty?
+			this.$('.body').empty();
+		}
 		_.each(this.collection.models, function(item,k,l){
 			if (k < (options.skip||0)) return; 
 			this.addOne(item, options);
 		}, this);
-		this.render(options.offscreen);
+		this.renderBody(options.offscreen);
 		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 	},
 	
 	/**
 	 * @param models.Shot item
 	 * @param options { 
-	 * 		container: jquery container to append rendered view 
-	 * 		defer: boolean, default false, do NOT call this.render() if true
+	 * 		offscreen: jquery container to append rendered view 
 	 * }  
 	 */
 	addOne : function( item, options ) {
-		var container = !!options && options.offscreen || this.$el,
-			thumb = new views.ThumbView({model:item});
-		container.append(thumb.render().el);
-		if (!!options && !options.defer) this.render(container);
+		thumb = new views.ThumbView({model:item});
+		if (!!options && options.offscreen ){
+			// from addPage()
+			options.offscreen.append(thumb.render().el);
+		} else {
+			this.$('.body').append(thumb.render().el);
+		}
 	},
 	
+	onKeyPressNav: function(){
+		// PageDown call onContainerScroll?
+		
+	},
+	
+	onSetThumbSize: function(){
+		
+	},
+	
+	onSetLayoutEngine: function(){
+		// grid, flickr, isotope, or filmstrip layout
+	},
+	
+	onSetPerpage: function(){
+		// calls this.collection.howManyPer()
+		// also called from PagerView.changeCount()
+	},
+	
+	onFilter: function(){
+		// also check PagerView.getFilterField/getFilterValue()/filter()
+	},
+	
+	onSort: function(){
+		// also check PagerView.sortByAscending()
+	}, 
 	/**
      * Called on the scroll event of the container element.  Used only in the non-paginated mode.
      * When the scroll threshold is reached a new page of thumbs is requested.
@@ -91,7 +152,7 @@ views.GalleryView = Backbone.View.extend({
 	    }
     }),
 	
-	renderers: {
+	bodyRenderers: {
 		flickr: function(parent){
 			// add flickr style from flickr.js
 			var qs = snappi.mixins.Href.parseQueryString();
@@ -109,17 +170,31 @@ views.GalleryView = Backbone.View.extend({
 		},
 	},
 	/**
+	 * render gallery body  
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
 	 */
-	render: function(container){
-		container = container || this.$el;
-		var collection = this.collection;	
-		collection.rendered = collection.rendered || {}; 
+	renderBody: function(container){
+		container = container || this.$('.body');
+		var collection = this.collection;
+		
+		/*
+		 * create delegated views
+		 */
+		this.pager = new views.PagerView({
+			el: this.$('.header .pager'),
+			collection : collection,
+		});
+		// this.displayOptions = new views.GalleryDisplayOptionsView({
+			// el: this.$('.header .display-options'),
+		// });
+		
+			
+		collection.rendered = collection.rendered || {}; 	// keep track of pages rendered
 		if (!collection.rendered[collection.currentPage]) {
 			/*
 			 * the actual render statement
 			 */
-			this.renderers['flickr'].apply(this, arguments);
+			this.bodyRenderers['flickr'].apply(this, arguments);
 			/*
 			 */
 			collection.rendered[collection.currentPage]=true;

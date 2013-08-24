@@ -69,7 +69,7 @@ body.wait {
 
 
 
-#pager {
+.gallery .pager {
   margin-top: -14px;
   position: fixed;
   z-index: 100;
@@ -82,6 +82,9 @@ body.wait {
     span.pag-label {
       background-color: @grayLighter;
       color: #0088CC;
+    }
+    li > a, li > span {
+      .border-radius(0);      // reset twbootstrap value
     }
   }
 }

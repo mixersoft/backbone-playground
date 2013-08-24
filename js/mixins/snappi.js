@@ -112,6 +112,22 @@
 			};  
 			return imgServerCfg.template(o);
 		},
+		// extract cakephp named params into object hash, ex. /page:1/perpage:32
+		getNamedParams : function(url){
+			url = url || window.location.pathname;
+			var param, 
+				named = {},
+				parts = url.split('/');
+			for (var i in parts) {
+				if (parts[i].indexOf(':')>0) {
+					param = parts[i].split(':');
+					named[param[0]] = decodeURIComponent(param[1].replace(/\+/g, " ")) ;
+				} 
+			}	
+		    return named;
+		},
+		
+		// deprecate, use getImgSrc with template
 		getImgSrcBySize : function(src, size){
 		    size = size || 'tn';
 		    var parts = SNAPPI._parseSrcString(src);
@@ -119,7 +135,8 @@
 		        parts.dirname += '.thumbs/';
 		    return parts.dirname + (size ? size + '~' : '') + parts.filename + (parts.crop ? '~' + parts.crop : '');
 		},
-		parseSrcString : function(src){
+		// deprecate, use getImgSrc with template
+		_parseSrcString : function(src){
 		    var i = src.lastIndexOf('/');
 		    var name = {
 		        dirname: '',

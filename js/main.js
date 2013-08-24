@@ -29,9 +29,7 @@
 		snappi.views.app = new snappi.views.GalleryView({
 			collection : snappi.collections.paginatedGallery
 		});
-		snappi.views.pager = new snappi.views.PagerView({
-			collection : snappi.collections.paginatedGallery
-		});
+		
 	});
 })();
 

@@ -29,13 +29,6 @@
 		    var collection = this.collection;
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
-		    this.$el.appendTo('#pager');
-		    
-		    return;
-
-			this.collection.on('reset', this.render, this);
-			this.$el.appendTo('#pager');
-
 		},
 		render: function () {
 			var paging = this.collection.info();

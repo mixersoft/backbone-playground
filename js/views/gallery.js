@@ -13,6 +13,10 @@ views.GalleryView = Backbone.View.extend({
 	
 	collection: null,	// Backbone.Paginator
 	
+	templates: {
+		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
+	},
+	
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
@@ -150,6 +154,31 @@ views.GalleryView = Backbone.View.extend({
 	    }
     }),
 	bodyRenderers: {
+		Typeset: function(container, items){
+			var layoutState,
+				displayOptions = this.collection.gallery_display_options_ui,
+				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
+				
+			var layoutOptions = {
+				outerContainer: this.$el,
+				thumbsContainer: container || this.$('.body'),		// or .body .page[data-page=N]
+				targetHeight: displayOptionSize.size,
+				_layout_y: 0,			// start at top
+			}	 
+			var layout = snappi.mixins.LayoutEngine.Typeset.run.call(this, 
+				container, 
+				items,				// if null, will layout all .thumbs IMG in container
+				this.collection,
+				layoutOptions
+			);
+			// append, if necessary
+            if (!$.contains(container.get(0), layout.items.get(0))) {
+            	container.append(layout.items);
+            }
+            
+            return layout.state;
+		},
+		// deprecate
 		flickr: function(items, options){
 			// add flickr style from flickr.js
 			var qs = snappi.mixins.Href.parseQueryString();
@@ -173,22 +202,63 @@ views.GalleryView = Backbone.View.extend({
 	/**
 	 * render gallery body  
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
+ 	 * 		if offscreen, don't forget to append to this.$('.body')
 	 */
 	renderBody: function(container){
 		console.log('render Gallery Body');
-		container = container || this.$('.body');
-		var collection = this.collection,
-			container_count = container.children().length;
+		var collection = this.collection;
 		
+		var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
+		if (pageContainer.length && container.children().length == 0) {
+			// page rendered, just scroll
+			this.$el.scrollTop(pageContainer.position().top);
+			
+		} else if (pageContainer.length && container.children().length) {
+			// page rendered, add new items to page
+			
+		} else if (pageContainer.length==0) {
+			pageContainer = $(this.templates.pageTemplate(collection))
+			var p, 
+				currentPage = collection.currentPage,
+				body = this.$('.body'),
+				pages = body.find('.page');
+			for (var i=pages.length-1; i>-1 ; i--) {
+				if (pages.eq(i).data('page')<currentPage) {
+					body.append(pageContainer);
+					currentPage = 'inserted';
+					break;	
+				};
+			}	
+			if (currentPage != 'inserted') body.prepend(pageContainer);
+		} 
+		
+		/*
+		 * the actual render statement
+		 */
+		var layoutState = this.bodyRenderers['Typeset'].call(this, pageContainer, container.children());
+		/*
+		 * end
+		 */
+		this.$el.css('min-height', $(window).outerHeight()-160);
+			
+		// for debugging
+		if (_DEBUG) this.introspect();
+		return;
+		
+		// deprecate
 		collection.rendered = collection.rendered || {}; 	// keep track of pages rendered
 		if (!collection.rendered[collection.currentPage]) {
 			/*
 			 * the actual render statement
 			 */
-			this.bodyRenderers['flickr'].call(this, container.children());
+			var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
+			if (pageContainer.length==0) {
+				pageContainer = $(this.templates.pageTemplate(collection)).appendTo(this.$('.body'));
+			}
+			var layoutState = this.bodyRenderers['Typeset'].call(this, pageContainer, container.children());
 			/*
 			 */
-			collection.rendered[collection.currentPage]=container_count;
+			collection.rendered[collection.currentPage]=layoutState;
 			this.$el.css('min-height', $(window).outerHeight()-160);
 			
 			// for debugging

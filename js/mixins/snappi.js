@@ -99,15 +99,42 @@
 			}
 			return imgServerCfg;
 		},
-		getImgSrc: function(data, size, i ){
+		getThumbsizePrefix: function(mixed){
+			var THUMB_SIZE, 
+				maxDim = 640;
+			if (mixed.width || mixed.height){
+				maxDim = Math.max(mixed.width, mixed.height);
+			} else if (mixed.tagName == 'IMG') {
+				mixed = $(mixed);
+				maxDim = Math.max(mixed.width(), mixed.height());
+			} else if (mixed.jquery && mixed.attr('tagName') == 'IMG') {
+				maxDim = Math.max(mixed.width(), mixed.height());	
+			} else if (mixed.W || mixed.H){
+				maxDim = Math.max(mixed.W, mixed.H);
+			}
+			if (maxDim <= 120) THUMB_SIZE='tn';
+			else if (maxDim <= 240) THUMB_SIZE='bs';
+			else if (maxDim <= 320) THUMB_SIZE='bm';
+			else THUMB_SIZE='bp';
+			return THUMB_SIZE;
+		},
+		/**
+		 * 
+		 * @param {Object} data, {width:, height:}, IMG tag, or {w:, h:}
+		 * @param String prefix thumbnail size prefix, [bp|bm|bs|tn|ll|lm|sq]
+		 * @param Int i, index used to hash staging server subdomain
+		 * 		see imgServerCfg.subdomains
+		 */
+		getImgSrc: function(data, prefix, i ){
 			var parts = data.rootSrc.split('/',2),
 				imgServerCfg = mixins.Href.imgServer();
+				i = i || 0;
 			var o = {
 				subdomain: imgServerCfg.subdomains[i % imgServerCfg.subdomains.length],
 				hostname: imgServerCfg.hostname,
 				baseurl: imgServerCfg.baseurl,
 				stage: parts[0],
-				size: size || 'tn',
+				size: prefix || 'tn',
 				filename: parts[1],
 			};  
 			return imgServerCfg.template(o);

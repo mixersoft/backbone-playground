@@ -120,10 +120,10 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.imgSelector);
-            if (items.get(0).tagName != 'IMG') {
+            if (items.length && items.get(0).tagName != 'IMG') {
             	items = items.find(options.imgSelector);
             	if (items.get(0).tagName != 'IMG')  throw ('expecting IMG tags');
-            }
+            } else return [];
             
 			var nodes = [],
     			breaks = [],

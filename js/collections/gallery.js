@@ -4,7 +4,9 @@
 
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	var options = _.extend({}, mixins.Href, 
+	var options = _.extend({}, 
+		mixins.RestApi,
+		mixins.Href, 
 		classDef,
 		setup_Paginator, 
 		setup_DisplayOptions 
@@ -109,7 +111,7 @@ var setup_Paginator = {
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		
-		var parsed = snappi.mixins.RestApi.parseShot(response.response.castingCall),
+		var parsed = this.parseShot(response.response.castingCall),
 			shots = [];
 		_.each(parsed, function(v, k, l) {
 			shots.push(new snappi.models.Shot(v));

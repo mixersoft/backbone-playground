@@ -1,6 +1,18 @@
 // /js/views/gallery.js
 
-(function ( views ) {
+(function ( views, mixins ) {
+	
+// define Class hierarchy at the top, but use at the bottom
+var extend = function(classDef){
+	var options = _.extend({}, 
+		mixins.UiActions,
+		LayoutEngines, 
+		classDef
+	);
+	views.GalleryView = Backbone.View.extend(
+		options
+	);
+}	
 
 /*
  * View: Gallery (same as App?)
@@ -8,7 +20,39 @@
  * methods:
  */
 
-views.GalleryView = Backbone.View.extend({
+var LayoutEngines = {
+	layout: {
+		Typeset: function(container, items){
+			var layoutState,
+				displayOptions = this.collection.gallery_display_options_ui,
+				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
+				
+			var layoutOptions = {
+				outerContainer: this.$el,
+				thumbsContainer: container || this.$('.body'),		// or .body .page[data-page=N]
+				targetHeight: displayOptionSize.size,
+				_layout_y: 0,			// start at top
+			}	 
+			var layout = snappi.mixins.LayoutEngine.Typeset.run.call(this, 
+				container, 
+				items,				// if null, will layout all .thumbs IMG in container
+				this.collection,
+				layoutOptions
+			);
+			
+			if (layout) {
+				// append, if necessary
+		        if (!$.contains(container.get(0), layout.items.get(0))) {
+		        	container.append(layout.items);
+		        }
+		        
+		        return layout.state;
+			} else return false;
+		},  // end layout.Typeset
+	},
+}
+
+var GalleryView = {
 	el: ".gallery",
 	
 	collection: null,	// Backbone.Paginator
@@ -80,7 +124,7 @@ views.GalleryView = Backbone.View.extend({
 		
 	},
 	
-	// called by paginator.nextPage() > paginator.pager() > 'sync'
+	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, options) {
 		options = $.extend(options || {}, {
 			offscreen : $('<div></div>'),	// build page in orphaned el
@@ -89,14 +133,17 @@ views.GalleryView = Backbone.View.extend({
 		/*
 		 * NOTE: use collection.pager({remove: false}) to append new models 
 		 */
-		var collection = this.collection; 
-		if (typeof options.skip == 'undefined') options.skip = (collection.currentPage-1) * collection.perPage;
-		_.each(collection.models, function(item,k,l){
-			if (k < (options.skip||0)) return; 
+		var collection = this.collection,
+			start = (collection.currentPage-1) * collection.perPage,
+			end = Math.min(start + collection.perPage, collection.models.length);
+			
+		// use audition.requestPage to manage paging
+		var pageModels = collection.where({requestPage:collection.currentPage});
+		_.each(pageModels, function(item,k,l){
 			this.addOne(item, options);
 		}, this);
+			
 		this.renderBody(options.offscreen);
-		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 	},
 	
 	/**
@@ -106,12 +153,15 @@ views.GalleryView = Backbone.View.extend({
 	 * }  
 	 */
 	addOne : function( item, options ) {
-		thumb = new views.ThumbView({model:item});
-		if (!!options && options.offscreen ){
-			// from addPage()
-			options.offscreen.append(thumb.render().el);
-		} else {
-			this.$('.body').append(thumb.render().el);
+		var $thumb = this.$('#'+item.id+'.thumb');
+		if ($thumb.length==0) {
+			thumb = new views.ThumbView({model:item});
+			if (!!options && options.offscreen ){
+				// from addPage()
+				options.offscreen.append(thumb.render().el);
+			} else {
+				this.$('.body').append(thumb.render().el);
+			}
 		}
 	},
 	
@@ -134,9 +184,10 @@ views.GalleryView = Backbone.View.extend({
     	self = this;
         var containerHeight = self.$el.outerHeight(), //_outerContainer.outerHeight;
         	outerContainerHeight =  $(window).outerHeight(),
-       		scrollTop = $(window).scrollTop()
+       		scrollTop = $(window).scrollTop(),
        		collection = self.collection;
-        
+        // if pageContainer.bottom is in view, then fetch next page
+console.log("windowTop="+scrollTop+", windowH="+outerContainerHeight);        
         if((containerHeight-scrollTop) <= outerContainerHeight 
         	&& (collection.currentPage+1) <= collection.totalPages
         ) {
@@ -149,56 +200,12 @@ views.GalleryView = Backbone.View.extend({
         if((collection.currentPage+1) > collection.totalPages
         	&& collection.models.length  
         ) {
+        	// throttle
 			// $(window).off('scroll',self.onContainerScroll);
 			$(window).off('scroll');
 	    }
     }),
-	bodyRenderers: {
-		Typeset: function(container, items){
-			var layoutState,
-				displayOptions = this.collection.gallery_display_options_ui,
-				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
-				
-			var layoutOptions = {
-				outerContainer: this.$el,
-				thumbsContainer: container || this.$('.body'),		// or .body .page[data-page=N]
-				targetHeight: displayOptionSize.size,
-				_layout_y: 0,			// start at top
-			}	 
-			var layout = snappi.mixins.LayoutEngine.Typeset.run.call(this, 
-				container, 
-				items,				// if null, will layout all .thumbs IMG in container
-				this.collection,
-				layoutOptions
-			);
-			// append, if necessary
-            if (!$.contains(container.get(0), layout.items.get(0))) {
-            	container.append(layout.items);
-            }
-            
-            return layout.state;
-		},
-		// deprecate
-		flickr: function(items, options){
-			// add flickr style from flickr.js
-			var qs = snappi.mixins.Href.parseQueryString();
 
-			// requestPager
-			var paging = this.collection.info(),
-				cfg = {
-					page: paging.currentPage,
-					perpage: paging.perPage,
-					pages: paging.totalPages,
-					total: paging.totalRecords,
-				};
-			options = _.extend(options || {}, cfg);
-				
-			var displayOptions = this.collection.gallery_display_options_ui;
-			var active = _.findWhere(displayOptions.size, {active:'active'});
-			options.targetHeight = active.size;
-			snappi.ImageMontage.render(items, options);	
-		},
-	},
 	/**
 	 * render gallery body  
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
@@ -210,12 +217,18 @@ views.GalleryView = Backbone.View.extend({
 		
 		var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
 		if (pageContainer.length && container.children().length == 0) {
-			// page rendered, just scroll
-			this.$el.scrollTop(pageContainer.position().top);
-			
+			// page already rendered, just scroll
+			// refresh Layout?
+			mixins.UiActions.scrollTopIntoView(pageContainer);
+			return;
 		} else if (pageContainer.length && container.children().length) {
-			// page rendered, add new items to page
-			
+			// collection.sync() of rendered page
+			console.info("GalleryCollection.sync(): check if ThumbView model was merged. auto update?");
+			// do we need to render updated ThumbViews after sync?
+			// page already rendered, just scroll
+			// refresh Layout?
+			mixins.UiActions.scrollTopIntoView(pageContainer);
+			return;
 		} else if (pageContainer.length==0) {
 			pageContainer = $(this.templates.pageTemplate(collection))
 			var p, 
@@ -224,48 +237,30 @@ views.GalleryView = Backbone.View.extend({
 				pages = body.find('.page');
 			for (var i=pages.length-1; i>-1 ; i--) {
 				if (pages.eq(i).data('page')<currentPage) {
-					body.append(pageContainer);
+					pageContainer.insertAfter(pages.eq(i));
 					currentPage = 'inserted';
 					break;	
 				};
 			}	
 			if (currentPage != 'inserted') body.prepend(pageContainer);
+			
 		} 
 		
 		/*
-		 * the actual render statement
+		 * the actual layout render statement
 		 */
-		var layoutState = this.bodyRenderers['Typeset'].call(this, pageContainer, container.children());
+		var layoutState = this.layout['Typeset'].call(this, pageContainer, container.children());
 		/*
 		 * end
 		 */
+		
+		// a new page was added. cleanup GalleryView
 		this.$el.css('min-height', $(window).outerHeight()-160);
-			
+		mixins.UiActions.scrollTopIntoView(pageContainer);
+		// $(window).on('scroll', $.proxy(this.onContainerScroll, this));
 		// for debugging
 		if (_DEBUG) this.introspect();
 		return;
-		
-		// deprecate
-		collection.rendered = collection.rendered || {}; 	// keep track of pages rendered
-		if (!collection.rendered[collection.currentPage]) {
-			/*
-			 * the actual render statement
-			 */
-			var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-			if (pageContainer.length==0) {
-				pageContainer = $(this.templates.pageTemplate(collection)).appendTo(this.$('.body'));
-			}
-			var layoutState = this.bodyRenderers['Typeset'].call(this, pageContainer, container.children());
-			/*
-			 */
-			collection.rendered[collection.currentPage]=layoutState;
-			this.$el.css('min-height', $(window).outerHeight()-160);
-			
-			// for debugging
-			if (_DEBUG) this.introspect();
-		} else {
-			console.log("page already rendered, scroll to page location, page="+collection.currentPage);
-		}
 	},
 	// debugging
 	introspect: function() {
@@ -280,7 +275,10 @@ views.GalleryView = Backbone.View.extend({
 			$(el).find('img').get(0).parsed = _.findWhere(models, {id: id}).toJSON();
 		}, this);
 	},
-});
+};
 
 
-})( snappi.views );
+// put it all together at the bottom
+extend(GalleryView);
+
+})( snappi.views, snappi.mixins );

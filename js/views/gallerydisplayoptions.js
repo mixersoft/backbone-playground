@@ -23,8 +23,8 @@ var GalleryDisplayOptionsView = {
 	ui_defaults: {	// default settings, override in this.collection.gallery_display_options_ui
 		'style': [{label:'Gallery',active:'active'},{label:'Filmstrip'},{label:'Lightbox',disabled:'disabled'}],
 		'size': [
-			{label:'S', size: 100, },
-			{label:'M', size: 160, active:'active' },
+			{label:'S', size: 100, active:'active' },
+			{label:'M', size: 160, },
 			{label:'L', size: 240, },
 		],
 	},

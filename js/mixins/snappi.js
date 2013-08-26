@@ -6,6 +6,7 @@
 			
 			var i, oSrc, score, id, audition, 
 				parsedAuditions = {},
+				page = cc.CastingCall.Auditions.Page;
 				auditions = cc.CastingCall.Auditions.Audition;
 				
 			for (i in auditions) {
@@ -25,6 +26,8 @@
 					W: auditions[i].Photo.Img.Src.W,
 					exifOrientation:  auditions[i].Photo.Img.Src.Orientation,	// ExifOrientation tag, [1,3,6,8]
 					rootSrc: auditions[i].Photo.Img.Src.rootSrc,
+					// for collections page management
+					requestPage: page,
 				};
 				
 				// adjust for ExifOrientation

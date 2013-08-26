@@ -16,11 +16,7 @@ views.GalleryView = Backbone.View.extend({
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
-		'click .thumb-size': 'onSetThumbSize',
-		'click .filter' : 'onFilter',
-		'change select.sort' : 'onSort',
 		'scroll window': 'onContainerScroll',	// not sure this is valid 
-		'click .layout' : 'onSetLayoutEngine',
 	},
 	
 	initialize: function(attributes, options){
@@ -28,6 +24,7 @@ views.GalleryView = Backbone.View.extend({
 		
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
+		this.listenTo(collection, 'relayout', this.relayout);
 		this.listenTo(collection, 'sync', this.addPage);
 		
 		
@@ -46,11 +43,37 @@ views.GalleryView = Backbone.View.extend({
 		});
 		this.displayOptions = new views.GalleryDisplayOptionsView({
 			el: this.$('.header .display-options'),
+			collection : this.collection,
 		});
 	},
 	
+	relayout: function(options) {
+		options = options || {};
+		$(window).off('scroll');	// will enable after renderBody?
+		var displayOptions = this.collection.gallery_display_options_ui;
+			var active = _.findWhere(displayOptions.size, {active:'active'});
+		snappi.ImageMontage.instance.relayout(null, active.size);
+		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+		return;
+		
+		var thumbEls = this.$('.body .thumb');
+		var pages = _.keys(this.collection.rendered);
+		pages.sort();
+		var batch, count, 
+			start = 0;
+		_.each(pages, function(i){
+			count = this.collection.rendered[i];
+			batch = thumbEls.slice(start, count);
+			start = count;
+			// this.bodyRenderers['flickr'].call(this, batch, options);
+		}, this);
+		
+		// don't do this twice
+		// $(window).on('scroll', $.proxy(this.onContainerScroll, this));
+	},
 	
 	addAll : function(models, options) {
+		
 	},
 	
 	// called by paginator.nextPage() > paginator.pager() > 'sync'
@@ -63,14 +86,8 @@ views.GalleryView = Backbone.View.extend({
 		 * NOTE: use collection.pager({remove: false}) to append new models 
 		 */
 		var collection = this.collection; 
-		options.skip = (collection.currentPage-1) * collection.perPage;
-		if (!options.skip) {
-			// TODO: refactor. using options.skip to implement infinite scroll
-			// OR, destroy elements AFTER options.skip
-			// ???: should I destroy or empty?
-			this.$('.body').empty();
-		}
-		_.each(this.collection.models, function(item,k,l){
+		if (typeof options.skip == 'undefined') options.skip = (collection.currentPage-1) * collection.perPage;
+		_.each(collection.models, function(item,k,l){
 			if (k < (options.skip||0)) return; 
 			this.addOne(item, options);
 		}, this);
@@ -99,26 +116,11 @@ views.GalleryView = Backbone.View.extend({
 		
 	},
 	
-	onSetThumbSize: function(){
-		
-	},
-	
-	onSetLayoutEngine: function(){
-		// grid, flickr, isotope, or filmstrip layout
-	},
-	
 	onSetPerpage: function(){
 		// calls this.collection.howManyPer()
 		// also called from PagerView.changeCount()
 	},
 	
-	onFilter: function(){
-		// also check PagerView.getFilterField/getFilterValue()/filter()
-	},
-	
-	onSort: function(){
-		// also check PagerView.sortByAscending()
-	}, 
 	/**
      * Called on the scroll event of the container element.  Used only in the non-paginated mode.
      * When the scroll threshold is reached a new page of thumbs is requested.
@@ -147,9 +149,8 @@ views.GalleryView = Backbone.View.extend({
 			$(window).off('scroll');
 	    }
     }),
-	
 	bodyRenderers: {
-		flickr: function(parent){
+		flickr: function(items, options){
 			// add flickr style from flickr.js
 			var qs = snappi.mixins.Href.parseQueryString();
 
@@ -160,9 +161,13 @@ views.GalleryView = Backbone.View.extend({
 					perpage: paging.perPage,
 					pages: paging.totalPages,
 					total: paging.totalRecords,
-					targetHeight: qs.size || 160,
 				};
-			snappi.ImageMontage.render(parent.children(), cfg);	
+			options = _.extend(options || {}, cfg);
+				
+			var displayOptions = this.collection.gallery_display_options_ui;
+			var active = _.findWhere(displayOptions.size, {active:'active'});
+			options.targetHeight = active.size;
+			snappi.ImageMontage.render(items, options);	
 		},
 	},
 	/**
@@ -170,18 +175,20 @@ views.GalleryView = Backbone.View.extend({
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
 	 */
 	renderBody: function(container){
+		console.log('render Gallery Body');
 		container = container || this.$('.body');
-		var collection = this.collection;
+		var collection = this.collection,
+			container_count = container.children().length;
 		
 		collection.rendered = collection.rendered || {}; 	// keep track of pages rendered
 		if (!collection.rendered[collection.currentPage]) {
 			/*
 			 * the actual render statement
 			 */
-			this.bodyRenderers['flickr'].apply(this, arguments);
+			this.bodyRenderers['flickr'].call(this, container.children());
 			/*
 			 */
-			collection.rendered[collection.currentPage]=true;
+			collection.rendered[collection.currentPage]=container_count;
 			this.$el.css('min-height', $(window).outerHeight()-160);
 			
 			// for debugging

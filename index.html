@@ -138,13 +138,13 @@
 			</script>
 			<script id="GalleryDisplayOptions" class='underscore' type="text/html">
 				<div class='text-center'>
-					<div class="btn-group" class='style'>
+					<div class="btn-group style">
 						<button class="btn btn-small disabled">Style</button>
 						<% _.each(style, function(o){ 	%>
 							<button class="btn btn-primary btn-small {{o.active}} {{o.disabled}} ">{{o.label}}</button>
 						<% }); %>
 					</div>
-					<div class="btn-group" class='size'>
+					<div class="btn-group size">
 						<button class="btn btn-small disabled">Size</button>
 						<% _.each(size, function(o){ 	%>
 							<button class="btn btn-primary btn-small {{o.active}} {{o.disabled}} ">{{o.label}}</button>

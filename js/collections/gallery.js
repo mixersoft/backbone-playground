@@ -1,14 +1,18 @@
 // /js/collections/gallery.js
 
-(function (collections, model, paginator) {
+(function (collections, model, mixins, paginator) {
 
-/*
- * notes from Robert
- * - GalleryCollection extends paginator
- * - pass constructor array of Shots
- * - should auto render grid of Thumbs
- *
- */
+// define Class hierarchy at the top, but use at the bottom
+var extend = function(classDef){
+	var options = _.extend({}, mixins.Href, 
+		classDef,
+		setup_Paginator, 
+		setup_DisplayOptions 
+	);
+	collections.GalleryCollection = paginator.requestPager.extend(
+		options
+	);
+}
 
 /*
  * Collection: GalleryCollection
@@ -19,11 +23,21 @@
  * - nextPage()
  * - prevPage()
  */
-collections.GalleryCollection = paginator.requestPager.extend({
+	
+var GalleryCollection =	{
 	
 	model : model,	// snappi.models.Shot	
-	// sync works with requestPager
-		
+	
+};
+
+var setup_DisplayOptions = {
+	gallery_display_options_ui: {
+		// no overrides
+	}
+}
+
+var setup_Paginator = {
+	// properties for use with Backbone.Paginator	
 	paginator_ui : {
 		// the lowest page index your API allows to be accessed
 		firstPage : 1,
@@ -59,7 +73,7 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
 			$('body').addClass('wait');
-			var qs = snappi.mixins.Href.parseQueryString();
+			var qs = this.parseQueryString();
 			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
 			var request = {
 				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
@@ -108,8 +122,10 @@ collections.GalleryCollection = paginator.requestPager.extend({
 		// custom parameters
 		// 'callback': '?',
 	},
+}
 
-});
+// put it all together at the bottom
+extend(GalleryCollection);
+	
 
-
-})( snappi.collections, snappi.models.Shot, Backbone.Paginator);
+})( snappi.collections, snappi.models.Shot, snappi.mixins, Backbone.Paginator);

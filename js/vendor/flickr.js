@@ -207,7 +207,7 @@ ImageMontage.prototype = {
 		 * @param jquery container wrapper around images
 		 * @param jquery images jquery array of img objects
 		 */		
-		var _layoutThumbs = function(container, layout_images) {
+		var _layoutThumbs = function(container, layout_images, targetHeight) {
     		var 
     			containerWidth = container.outerWidth() - 15,
     			
@@ -474,7 +474,7 @@ ImageMontage.prototype = {
 			            	document.body.style["overflow-y"] = "scroll";
 			            }
 			            
-			            _layoutThumbs(_thumbsContainer, addedThumbs.find('img'));
+			            _layoutThumbs(_thumbsContainer, addedThumbs.find('img'), this.cfg.targetHeight);
 			
 			            if (originalOverflowY != "scroll") {
 			            	document.body.style["overflow-y"] = originalOverflowY;
@@ -515,6 +515,12 @@ ImageMontage.prototype = {
         }
         this.renderAll = _renderAll;	// expose this method so this.show() has access
         
+        this.relayout = function(imgs, targetHeight) {
+        	_layout_y = 0;
+        	this.cfg.targetHeight = targetHeight;
+        	var imgs = imgs || _thumbsContainer.find('img');
+    		_layoutThumbs(_thumbsContainer, imgs, this.cfg.targetHeight);
+        };
         
         /**
          * Returns the container height

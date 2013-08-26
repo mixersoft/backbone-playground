@@ -1,39 +1,87 @@
 // /js/views/gallerydisplayoptions.js
 
+// called by GalleryView
+
 (function ( views, mixins ) {
 
-views.GalleryDisplayOptionsView = Backbone.View.extend(
-	
-_.extend({}, mixins.UiActions, 
-{
+// define Class hierarchy at the top, but use at the bottom
+var extend = function(classDef){
+	views.GalleryDisplayOptionsView = Backbone.View.extend(
+		_.extend({}, mixins.UiActions, classDef)
+	);
+}
+
+// define classDef as Object for IDE introspection
+var GalleryDisplayOptionsView = {
+
 	el: "required",
+	
+	collection: "required",
 	
 	template_source: "#markup #GalleryDisplayOptions.underscore",
 	
-	defaults: {	// default settings
+	ui_defaults: {	// default settings, override in this.collection.gallery_display_options_ui
 		'style': [{label:'Gallery',active:'active'},{label:'Filmstrip'},{label:'Lightbox',disabled:'disabled'}],
-		'size': [{label:'S',active:'active'},{label:'M'},{label:'L'}],
+		'size': [
+			{label:'S', size: 100, },
+			{label:'M', size: 160, active:'active' },
+			{label:'L', size: 240, },
+		],
 	},
 	
 	events: {
-		
+		'click .size.btn-group .btn':'onSetThumbSize',
+		'click .style.btn-group .btn':'onSetLayout',
+		'change .sort':'onFilter',
+		'change .filter':'onSort',
 	},
 	
 	initialize: function(){
-		if(!($.isFunction(this.template))) {
-			var source = $(this.template_source).html();	
-			// compile once, add to Class
-			var settings = { interpolate : /\{\{(.+?)\}\}/g, };
-			views.GalleryDisplayOptionsView.prototype.template = _.template(source, null, settings);
-	    }
+		var source = $(this.template);
+		var settings = { interpolate : /\{\{(.+?)\}\}/g, };
+		this.template = _.template($(this.template_source).html(), null, settings);
+		var setup = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
+		this.collection.gallery_display_options_ui = setup; 
 	    this.render();
-		
+		this.listenTo(this.collection, 'relayout', this.render);
 	},
 	
 	render: function(){
-		this.$el.html( this.template( this.defaults ) );
+		console.log('render display options');
+		// note: the 'model' comes from requestPager.collection.gallery_display_options_ui?
+		this.$el.html( this.template( this.collection.gallery_display_options_ui ) );
 	},
 	
-}));	
+	
+	onSetThumbSize: function(e){
+		e.preventDefault();
+		// update collection.gallery_display_options_ui
+		var label = $(e.target).text()
+		var displayOptions = this.collection.gallery_display_options_ui;
+		_.map(displayOptions.size, function(o){
+			o.active = (o.label == label) ? 'active' : '';
+		});
+		// trigger gallery relayout without deleting ThumbView
+		this.collection.trigger('relayout');
+		// trigger this.render() with by this.listenTo() 
+		this.render();
+	},
+	onSetLayout: function(){
+		// gallery, filmstrip, lightbox
+	},
+	onSetLayoutEngine: function(){
+		// grid, flickr, isotope, or filmstrip layout
+	},
+	onFilter: function(){
+		// also check PagerView.getFilterField/getFilterValue()/filter()
+	},
+	onSort: function(){
+		// also check PagerView.sortByAscending()
+	},
+	
+}
+
+// put it all together at the bottom
+extend(GalleryDisplayOptionsView);	
 
 })( snappi.views, snappi.mixins );

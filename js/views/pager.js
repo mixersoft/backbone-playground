@@ -31,6 +31,7 @@
 		    this.listenTo(collection, 'sync', this.render);
 		},
 		render: function () {
+			// note: the 'model' comes from requestPager.collection.info()
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);

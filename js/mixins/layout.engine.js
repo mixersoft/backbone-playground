@@ -43,7 +43,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 					maxVertScale: 1.4, //What is the largest factor we should scale lines by vertically to fill gaps?
 					classes: {
 						boundingbox: 'flickrd',	// apply class to GalleryView.$el
-						throttle: 'working',
+						throttle: 'throttle-layout',
 					},
 					
 					// browser support
@@ -90,8 +90,16 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
              * this is where the work is done
              */
             options.outerContainer.addClass(options.classes.throttle);
+            
+            // sanity checks
+            if (!items || items.length === 0) items = container.find(options.thumbSelector);
+            if (items.length && !items.eq(0).hasClass('thumb')) {
+            	items = items.find(options.thumbSelector);
+            	if (!items.eq(0).hasClass('thumb'))  throw ('expecting div.thumb');
+            } 
             var lines = engine._linebreak.call(this, container, items, collection, options);
             engine._layout.call(this, lines, options);
+            
             options.outerContainer.removeClass(options.classes.throttle);
             /*
              * done
@@ -117,13 +125,13 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * @param Object options, 'context' for layout 
 		 */		
 		_linebreak: function(container, items, collection, options){
-            
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.imgSelector);
             if (items.length && items.get(0).tagName != 'IMG') {
             	items = items.find(options.imgSelector);
             	if (items.get(0).tagName != 'IMG')  throw ('expecting IMG tags');
-            } else return [];
+            } 
+            if ( !items || !items.length ) return [];
             
 			var nodes = [],
     			breaks = [],
@@ -245,7 +253,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
     				
 					//Do we have to overfill the line vertically in order to fill it horizontally?
 					if (scale > options.maxVertScale) {
-						totalVertCrop = lineHeight * scale - targetHeight * maxVertScale;
+						totalVertCrop = lineHeight * scale - options.targetHeight * options.maxVertScale;
 					}
     				
     				//Now lay out the images

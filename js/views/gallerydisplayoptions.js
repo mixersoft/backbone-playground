@@ -43,7 +43,7 @@ var GalleryDisplayOptionsView = {
 		var setup = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
 		this.collection.gallery_display_options_ui = setup; 
 	    this.render();
-		this.listenTo(this.collection, 'relayout', this.render);
+		this.listenTo(this.collection, 'refreshLayout', this.render);
 	},
 	
 	render: function(){
@@ -61,9 +61,8 @@ var GalleryDisplayOptionsView = {
 		_.map(displayOptions.size, function(o){
 			o.active = (o.label == label) ? 'active' : '';
 		});
-		// trigger gallery relayout without deleting ThumbView
-		this.collection.trigger('relayout');
-		// trigger this.render() with by this.listenTo() 
+		// trigger gallery refreshLayout without deleting ThumbView
+		this.collection.trigger('refreshLayout');
 		this.render();
 	},
 	onSetLayout: function(){

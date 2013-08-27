@@ -64,7 +64,7 @@ var GalleryView = {
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
-		'scroll window': 'onContainerScroll',	// not sure this is valid 
+		'scroll': 'onContainerScroll',	 
 	},
 	
 	initialize: function(attributes, options){
@@ -72,13 +72,15 @@ var GalleryView = {
 		
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
-		this.listenTo(collection, 'relayout', this.relayout);
+		this.listenTo(collection, 'refreshLayout', this.refreshLayout);
 		this.listenTo(collection, 'sync', this.addPage);
 		
-		
 		// calls colletion.sync and makes request from DB
-		collection.pager({ remove: false });
+		this.$el.addClass('debounce');
+		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 		
+		// initial XHR fetch
+		collection.pager({ remove: false });
 	},
 	
 	render: function(){
@@ -95,29 +97,18 @@ var GalleryView = {
 		});
 	},
 	
-	relayout: function(options) {
-		options = options || {};
-		$(window).off('scroll');	// will enable after renderBody?
-		var displayOptions = this.collection.gallery_display_options_ui;
-			var active = _.findWhere(displayOptions.size, {active:'active'});
-		snappi.ImageMontage.instance.relayout(null, active.size);
-		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
-		return;
-		
-		var thumbEls = this.$('.body .thumb');
-		var pages = _.keys(this.collection.rendered);
-		pages.sort();
-		var batch, count, 
-			start = 0;
-		_.each(pages, function(i){
-			count = this.collection.rendered[i];
-			batch = thumbEls.slice(start, count);
-			start = count;
-			// this.bodyRenderers['flickr'].call(this, batch, options);
+	refreshLayout: function(options) {
+		var pages = this.$('.body .page');
+		_.each(pages, function(pageContainer, i){
+			/*
+			 * the actual layout render statement
+			 */
+			var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null);
+			/*
+			 * end
+			 */
 		}, this);
-		
-		// don't do this twice
-		// $(window).on('scroll', $.proxy(this.onContainerScroll, this));
+		this.$el.css('min-height', $(window).outerHeight()-160);
 	},
 	
 	addAll : function(models, options) {
@@ -182,28 +173,26 @@ var GalleryView = {
      */
     onContainerScroll : Cowboy.throttle( 250,function(e) {
     	self = this;
-        var containerHeight = self.$el.outerHeight(), //_outerContainer.outerHeight;
-        	outerContainerHeight =  $(window).outerHeight(),
-       		scrollTop = $(window).scrollTop(),
-       		collection = self.collection;
+    	if (self.$el.hasClass('debounce')) return;
+    	
+    	var target = self.$el,
+    		collection = this.collection,
+        	targetB = target.offset().top+target.height(),
+        	windowB = $(window).scrollTop() + $(window).height();
         // if pageContainer.bottom is in view, then fetch next page
-console.log("windowTop="+scrollTop+", windowH="+outerContainerHeight);        
-        if((containerHeight-scrollTop) <= outerContainerHeight 
-        	&& (collection.currentPage+1) <= collection.totalPages
-        ) {
-        	// $(window).off('scroll',self.onContainerScroll);
-        	$(window).off('scroll');
-        	console.info("fetch next, page="+(collection.currentPage+1));
-            self.collection.nextPage({ merge: true, remove: false });
-        }
-        
-        if((collection.currentPage+1) > collection.totalPages
-        	&& collection.models.length  
-        ) {
-        	// throttle
-			// $(window).off('scroll',self.onContainerScroll);
-			$(window).off('scroll');
+		var bottomPage = self.$('.body .page').last().data('page');       
+		if( bottomPage == collection.totalPages && collection.models.length) 
+		{
+        	// loaded last page
+			$(window).off('scroll',self.onContainerScroll);
 	    }
+
+        if(targetB <= windowB && (bottomPage+1) <= collection.totalPages) 
+        {
+        	self.$el.addClass('debounce');
+console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
+            self.collection.goTo(bottomPage+1,{ merge: true, remove: false });
+        }
     }),
 
 	/**
@@ -219,7 +208,8 @@ console.log("windowTop="+scrollTop+", windowH="+outerContainerHeight);
 		if (pageContainer.length && container.children().length == 0) {
 			// page already rendered, just scroll
 			// refresh Layout?
-			mixins.UiActions.scrollTopIntoView(pageContainer);
+			this.scrollBottomAlmostIntoView(pageContainer);
+			this.$el.removeClass('debounce');
 			return;
 		} else if (pageContainer.length && container.children().length) {
 			// collection.sync() of rendered page
@@ -227,7 +217,8 @@ console.log("windowTop="+scrollTop+", windowH="+outerContainerHeight);
 			// do we need to render updated ThumbViews after sync?
 			// page already rendered, just scroll
 			// refresh Layout?
-			mixins.UiActions.scrollTopIntoView(pageContainer);
+			this.scrollBottomAlmostIntoView(pageContainer);
+			this.$el.removeClass('debounce');
 			return;
 		} else if (pageContainer.length==0) {
 			pageContainer = $(this.templates.pageTemplate(collection))
@@ -256,8 +247,8 @@ console.log("windowTop="+scrollTop+", windowH="+outerContainerHeight);
 		
 		// a new page was added. cleanup GalleryView
 		this.$el.css('min-height', $(window).outerHeight()-160);
-		mixins.UiActions.scrollTopIntoView(pageContainer);
-		// $(window).on('scroll', $.proxy(this.onContainerScroll, this));
+		this.scrollBottomAlmostIntoView(pageContainer);
+		this.$el.removeClass('debounce');
 		// for debugging
 		if (_DEBUG) this.introspect();
 		return;

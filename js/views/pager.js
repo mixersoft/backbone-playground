@@ -74,6 +74,7 @@
 			e.preventDefault();
 			var per = $(e.target).text();
 			this.collection.rendered = {};		// reset
+			this.collection.trigger('repaginate', per);
 			this.collection.howManyPer(per, { merge: true, remove: false });
 		},
 

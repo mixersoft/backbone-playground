@@ -30,6 +30,67 @@ var GalleryCollection =	{
 	
 	model : model,	// snappi.models.Shot	
 	
+	events: {
+		// 'repaginate':'repaginate',		// doesn't work for Collections
+	},
+	
+	initialize: function(){
+		console.info("GalleryCollection initialized");
+		this.listenTo(this, 'repaginate', this.repaginate);
+	},
+	
+	/**
+	 * repaginate models for client side paging
+	 * - adds shot.clientPage
+	 * - call repaginate BEFORE sync()
+	 * 
+	 * when page boundaries change, it's not clear that 
+	 * are inserted into this.models in the correct sort order
+	 *  
+	 */
+	repaginate: function(perpage){
+		perpage = perpage || this.perPage;
+		// reset cached pages index because we don't know which serverPages 
+		// are completely loaded anymore
+		this.fetchedServerPages = {};
+		var activePageCount = {},
+			newPageCounter = {},
+			activePerpage,		// old perpage
+			newPage, index;	
+		
+		// TODO: this.models.sort() must match server sort()
+		
+		var p, activePaging;
+		_.each(this.models, function(model){
+			// estimate clientPage based on serverPage math
+			if (p = model.get('clientPage')) {
+				activePerpage = this.perPage;
+			} else {
+				p = model.get('requestPage');
+				activePerpage = this.paginator_ui.serverPaging.perpage;
+			}
+			if (activePageCount[p]) activePageCount[p]++;
+			else activePageCount[p]=1;	// 1 based
+			
+			index = (p-1)*activePerpage + activePageCount[p]-1;	// 0-based
+			newPage =  Math.floor(index/perpage)+1;	// 0-19 => 1, based on new perpage
+			model.set({
+				clientPage: newPage,
+				requestPage: null,// unknown, will be updated in this.parse()
+			});
+			
+			if (typeof newPageCounter[newPage] != 'undefined') {
+				newPageCounter[newPage]++;
+				if (newPageCounter[newPage] == perpage) {
+					this.fetchedServerPages[newPage] = true;
+				}
+			}
+			else newPageCounter[newPage]=1;	// 1-based
+			
+		}, this);	
+		this.trigger('repaginated', newPageCounter);
+	}
+	
 };
 
 var setup_DisplayOptions = {
@@ -49,7 +110,7 @@ var setup_Paginator = {
 		currentPage : 1,
 
 		// how many items per page should be shown
-		perPage : 20,
+		perPage : 50,
 
 		// a default number of total pages to query in case the API or
 		// service you are using does not support providing the total

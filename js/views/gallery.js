@@ -73,6 +73,7 @@ var GalleryView = {
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
 		this.listenTo(collection, 'refreshLayout', this.refreshLayout);
+		this.listenTo(collection, 'repaginated', this.refreshPages);
 		this.listenTo(collection, 'sync', this.addPage);
 		
 		// calls colletion.sync and makes request from DB
@@ -96,7 +97,6 @@ var GalleryView = {
 			collection : this.collection,
 		});
 	},
-	
 	refreshLayout: function(options) {
 		var pages = this.$('.body .page');
 		_.each(pages, function(pageContainer, i){
@@ -110,6 +110,55 @@ var GalleryView = {
 		}, this);
 		this.$el.css('min-height', $(window).outerHeight()-160);
 	},
+	/**
+	 * put ThumbViews into the correct .body .page after repaginate
+	 * @param Object newPages, {[pageIndex]:[count]} 
+	 */
+	refreshPages: function(newPages) {
+		var collection = this.collection,
+			body = this.$('.body'),
+			pageContainer, 
+			pageContainers=[],
+			$before;
+		
+		var pageNums = _.keys(newPages).sort();
+		// make sure we have the correct pageContainers in .body
+		_.each(pageNums, function(p){
+			pageContainer = body.find('.page[data-page="'+p+'"]');
+			if (pageContainer.length) pageContainers[p] = pageContainer;
+			else {
+				pageContainers[p] = $(this.templates.pageTemplate({currentPage: p}));
+			}
+			if (p==1) body.prepend(pageContainers[p]);
+			else $before.after(pageContainers[p]);
+			$before = pageContainers[p];
+		}, this);
+		
+		// move ThumbView to the correct pageContainer
+		var $thumb, p, clientPageCounter={};
+		_.each(collection.models, function(model, i){
+			$thumb = this.$('#'+model.get('id')+'.thumb');
+			p = model.get('requestPage') || model.get('clientPage') || null;
+			if (pageContainer.data('page') != p) pageContainer = body.find('.page[data-page="'+p+'"]');
+			
+			if (typeof clientPageCounter[p] != 'undefined') clientPageCounter[p]++;
+			else clientPageCounter[p] = 0; 
+			
+			if (clientPageCounter[p]==0) pageContainer.prepend($thumb);
+			else $before.after($thumb);
+			$before = $thumb;
+			
+		}, this);
+		
+		// remove empty pages
+		_.each(body.find('.page'), function(item){
+			if ($(item).find('.thumb').length==0) 
+				$(item).remove();
+		}, this);
+		
+		// refresh layout for each page
+		this.refreshLayout();
+	},
 	
 	addAll : function(models, options) {
 		
@@ -122,16 +171,20 @@ var GalleryView = {
 		});
 		
 		/*
-		 * NOTE: use collection.pager({remove: false}) to append new models 
+		 * NOTE: used collection.pager({remove: false}) to append new models 
 		 */
 		var collection = this.collection,
 			start = (collection.currentPage-1) * collection.perPage,
 			end = Math.min(start + collection.perPage, collection.models.length);
 			
 		// use audition.requestPage to manage paging
-		var pageModels = collection.where({requestPage:collection.currentPage});
-		_.each(pageModels, function(item,k,l){
-			this.addOne(item, options);
+		// TODO: model.get('clientPage') || model.get('requestPage')
+		var p, pageModels = []; 
+		_.each(collection.models, function(model, i){
+			p = model.get('clientPage') || model.get('requestPage') || 9999;
+			if (p == collection.currentPage) {
+				this.addOne(model, options);	
+			}
 		}, this);
 			
 		this.renderBody(options.offscreen);
@@ -153,6 +206,11 @@ var GalleryView = {
 			} else {
 				this.$('.body').append(thumb.render().el);
 			}
+		} else {
+			// TODO: already added, is ThumbView updated automatically?
+			console.log("already added");
+			// move offscreen then move back???
+			// options.offscreen.append($thumb);
 		}
 	},
 	

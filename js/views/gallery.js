@@ -171,7 +171,7 @@ var GalleryView = {
      * When the scroll threshold is reached a new page of thumbs is requested.
      * @param event e - the scroll event object
      */
-    onContainerScroll : Cowboy.throttle( 250,function(e) {
+    onContainerScroll : _.throttle(function(e) {
     	self = this;
     	if (self.$el.hasClass('debounce')) return;
     	
@@ -193,7 +193,7 @@ var GalleryView = {
 console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
             self.collection.goTo(bottomPage+1,{ merge: true, remove: false });
         }
-    }),
+    }, 100, {leading: false}),
 
 	/**
 	 * render gallery body  

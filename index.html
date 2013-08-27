@@ -95,7 +95,7 @@
 			</script>
 			<script id="PagerBootstrap" class='underscore' type="text/html">
 				<div class='pagination pagination-centered pagination-small'>
-					<ul>
+					<ul class='page'>
 						<li><span class='pag-label'>Page</span></li>
 						<% var state = (currentPage == 1) ? 'disabled' : ''; %> 
 						<li class="<%= state %>">
@@ -122,7 +122,7 @@
 						</li>
 					</ul>
 					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-					<ul class='howmany'>
+					<ul class='perpage howmany'>
 						<li><span class='pag-label'>Per Page</span></li>
 						<% _.each ([20,50,100], function (p,i) { %>
 							<% if (perPage == p) { %>
@@ -133,7 +133,7 @@
 						<% }); %>
 					</ul>
 					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-					<ul><li><span class='pag-label'><%= showing %>/<%= totalRecords %> Photos</span></li></ul>
+					<ul class="showing"><li><span class='pag-label'><%= showing %>/<%= totalRecords %> Photos</span></li></ul>
 				</div>
 			</script>
 			<script id="GalleryDisplayOptions" class='underscore' type="text/html">

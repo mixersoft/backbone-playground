@@ -36,6 +36,12 @@
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
+			_.each(this.$('ul.page li > a.page, ul.page li > span'), function(item){
+				var text = $(item).text();
+				if (this.collection.fetchedServerPages[text]) {
+					$(item).css('font-weight','bold');
+				}
+			}, this);
 		},
 
 		gotoFirst: function (e) {

@@ -107,7 +107,10 @@ var setup_Paginator = {
 		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
 		this.paginator_ui.serverPaging = serverPaging;
 		
+		
 		// for requestPaging template
+		if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
+		this.fetchedServerPages[serverPaging.page]=true  
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		

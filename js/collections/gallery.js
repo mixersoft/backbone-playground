@@ -30,11 +30,20 @@ var GalleryCollection =	{
 	
 	model : model,	// snappi.models.Shot	
 	
+	templates: {
+		url_guest: 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
+		url_workorder: 'http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
+	},
+	
 	events: {
 		// 'repaginate':'repaginate',		// doesn't work for Collections
 	},
 	
 	initialize: function(){
+		// compile templates
+		for (var i in this.templates) {
+			if (_.isString(this.templates[i])) this.templates[i] = _.template(this.templates[i]); 
+		}
 		console.info("GalleryCollection initialized");
 		this.listenTo(this, 'repaginate', this.repaginate);
 	},
@@ -128,7 +137,7 @@ var setup_Paginator = {
 		type : 'GET',
 
 		// the type of reply (jsonp by default)
-		dataType : 'json',
+		dataType : 'jsonp',
 
 		// the URL (or base URL) for the service
 		// if you want to have a more dynamic URL, you can make this a function
@@ -138,13 +147,28 @@ var setup_Paginator = {
 			$('body').addClass('wait');
 			var qs = this.parseQueryString();
 			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
-			var request = {
-				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
-				page: this.currentPage,
-				perpage: this.perPage, 
+			var template, type, 
+				request = {
+					sort: qs.sort || 'score',
+					direction: qs.direction || qs.dir || 'desc',
+					ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
+					page: this.currentPage,
+					perpage: this.perPage, 
+				}
+				
+			if (!_.isUndefined(qs.rating)) request.rating = '/rating:'+qs.rating;	
+			// adjust for request by workorder, 
+			// 	ex. ?type=tw&id=22 => /tasks_workorders/photos/22/perpage:162	
+			type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type);	
+			if ( type > -1) { // show workorders
+				request.id = qs.id;
+				request.controller = type>1 ? 'workorders' : 'tasks_workorders';
+				template = 'url_workorder'; 
+			} else {	// normal guest access
+				template = 'url_guest';
+				this.paginator_core.dataType = 'json';
 			}
-			var request_template = 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%>/perpage:<%=perpage%>/page:<%=page%>/sort:score/direction:desc/.json'; 
-			return _.template(request_template, request);
+			return this.templates[template](request);
 		}
 	},
 	

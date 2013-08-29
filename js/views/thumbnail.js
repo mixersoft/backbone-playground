@@ -36,17 +36,20 @@ views.ThumbView = Backbone.View.extend({
 			this.register_handlebar_helpers();
 			views.ThumbView.prototype.template = Handlebars.compile(source);
 	    }
-	    this.listenTo(this, 'click', this.onShowHiddenShot);
 	},
 	
 	render: function(){
 		this.$el.html( this.template( this.model.toJSON() ) );
-		// this.$('.show-hidden-shot')('click',this.onShowHiddenShot);
+		this.$el.attr('id', this.model.get('id')).addClass('thumb');
+		if (this.model.get('orientationLabel')) this.$el.addClass(this.model.get('orientationLabel'));
+		// this.$('.show-hidden-shot').on('click',this.onShowHiddenShot);
+		// this.$el.on('click', this.clicked);
 		return this;
 	},
 	
-	setFocus: function(){
+	setFocus: function(e){
 		e.preventDefault();
+		this.trigger(this.collection,'changeFocus');	// ???: do we know about the parent?
 	},
 	
 	// ???: gallery method

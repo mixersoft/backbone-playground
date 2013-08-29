@@ -171,7 +171,7 @@ var GalleryView = {
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, options) {
 		options = $.extend(options || {}, {
-			offscreen : $('<div></div>'),	// build page in orphaned el
+			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
 		});
 		
 		/*
@@ -191,7 +191,7 @@ var GalleryView = {
 			}
 		}, this);
 			
-		this.renderBody(options.offscreen);
+		this.renderBody(options.offscreen || this.$('.body'));
 	},
 	
 	/**
@@ -258,13 +258,13 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
     }, 100, {leading: false}),
 
 	/**
-	 * render gallery body  
+	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
- 	 * 		if offscreen, don't forget to append to this.$('.body')
+ 	 * 		if offscreen, will also append to this.$('.body')
 	 */
 	renderBody: function(container){
-		console.log('render Gallery Body');
 		var collection = this.collection;
+console.log('render Gallery Body for currentPage='+collection.currentPage);
 		
 		var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
 		if (pageContainer.length && container.children().length == 0) {
@@ -302,7 +302,8 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
 		/*
 		 * the actual layout render statement
 		 */
-		var layoutState = this.layout['Typeset'].call(this, pageContainer, container.children());
+		var thumbs = container.find('> .thumb');
+		var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
 		/*
 		 * end
 		 */

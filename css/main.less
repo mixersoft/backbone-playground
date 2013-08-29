@@ -56,6 +56,7 @@ body.wait {
     float: none;
     position: absolute;
   }
+  
   .crop {
     display:block;
     position:relative;
@@ -66,6 +67,71 @@ body.wait {
       margin: 0 !important;
       /* reset */
       max-width: none;
+    }
+  }
+  
+  .meta {
+    padding: 5px 0 0;
+    position: absolute;
+    background: rgba(0,0,0,0);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    color: #fff;
+    font-size: @fontSizeMini;
+    line-height: 1.3;
+    margin-top: 5px;
+    text-align: left;
+    text-shadow: 1px 1px 0 black;
+    overflow: hidden;
+    transition: all .15s ease-in-out;
+    > * {
+      margin-left: 8px;
+    }
+    .title {
+    }
+    .owner {
+    }
+    .bottom-row {
+      margin: 0 8px;
+      position: relative;
+      bottom: 0;
+      height: 20px;
+    }
+    span.inline-icons {
+      margin-top: 2px;
+      opacity: 0.6;
+      overflow: visible;
+      z-index: 500;
+      > * {
+        margin-left: 1em;
+      }
+      > *:first-child {
+        margin-left: 0;
+      }
+      a {
+        text-decoration: none;
+      }
+      &.left {
+        float: left;
+      }
+      &.right {
+        float: right;
+        text-align: right;
+      }
+    }
+    
+    &:hover {   // .meta:hover
+      background: fade(@black,60%);
+      opacity: 1;
+      transition: all .15s ease-in-out;
+      a:hover {
+        color: #FFF;
+      }
+      .bottom-row {
+      }
+      span.inline-icons {
+      }
     }
   }
 }

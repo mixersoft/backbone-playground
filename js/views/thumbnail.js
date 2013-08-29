@@ -14,6 +14,11 @@ views.ThumbView = Backbone.View.extend({
 	template_source: "#markup #ThumbTemplate.handlebars",
 	
 	events: {
+		'hover .thumb': 'onShowToolbar',
+		'click .rotate': 'onRotate',
+		'click .hidden-shot': 'onShowHiddenShots',
+		'dblclick img': 'onShowPreview',
+		
 		
 	},
 	
@@ -29,6 +34,27 @@ views.ThumbView = Backbone.View.extend({
 		this.$el.html( this.template( this.model.toJSON() ) );
 		return this;
 	},
+	
+	setFocus: function(){
+		
+	},
+	
+	// ???: gallery method
+	onRotate: function(){
+		
+	},
+	
+	onShowToolbar: function(){
+		
+	},
+	
+	onShowPreview: function(){
+		
+	},
+	
+	onShowHiddenShots: function(){
+		
+	}
 });
 
 })( snappi.views );

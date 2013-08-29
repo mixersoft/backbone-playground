@@ -26,6 +26,16 @@
 		});
 		
 		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();
+		
+		var bootstrap = /bootstrap/.test(window.location.search);
+		if (bootstrap){
+			var user = 'venice';
+			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
+			var shots = snappi.collections.paginatedGallery.parse(json);
+			shots = shots.slice(0,20);
+			snappi.collections.paginatedGallery.reset(shots);
+		} 		
+		
 		snappi.views.app = new snappi.views.GalleryView({
 			collection : snappi.collections.paginatedGallery
 		});

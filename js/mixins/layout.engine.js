@@ -36,8 +36,8 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		            targetWidth: 940, // Set large enough to accomodate the odd image that spans the entire screen width
 		            showCaptions: true, // Should we overlay captions on top of images?
 		            space : {
-						width: 15, // What spacing should we try to achieve between images
-						stretch: 35, // How many pixels should the gap between images grow by at most?
+						width: 3, // What spacing should we try to achieve between images
+						stretch: 25, // How many pixels should the gap between images grow by at most?
 						shrink: 50 // How many pixels should we allow that gap to shrink by (it can safely end up negative! images will have edges cropped) 
 					},
 					maxVertScale: 1.4, //What is the largest factor we should scale lines by vertically to fill gaps?

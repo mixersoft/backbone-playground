@@ -104,7 +104,11 @@ var GalleryCollection =	{
 
 var setup_DisplayOptions = {
 	gallery_display_options_ui: {
-		// no overrides
+		'size': [
+			{label:'S', size: 100, },
+			{label:'M', size: 160, active:'active'  },
+			{label:'L', size: 240, },
+		],
 	}
 }
 
@@ -119,7 +123,7 @@ var setup_Paginator = {
 		currentPage : 1,
 
 		// how many items per page should be shown
-		perPage : 50,
+		perPage : 20,
 
 		// a default number of total pages to query in case the API or
 		// service you are using does not support providing the total
@@ -154,9 +158,9 @@ var setup_Paginator = {
 					ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
 					page: this.currentPage,
 					perpage: this.perPage, 
+					rating: _.isString(qs.rating) ? '/rating:'+qs.rating : '',
 				}
 				
-			if (!_.isUndefined(qs.rating)) request.rating = '/rating:'+qs.rating;	
 			// adjust for request by workorder, 
 			// 	ex. ?type=tw&id=22 => /tasks_workorders/photos/22/perpage:162	
 			type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type);	

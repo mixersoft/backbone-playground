@@ -80,8 +80,12 @@ var GalleryView = {
 		this.$el.addClass('debounce');
 		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 		
-		// initial XHR fetch
-		collection.pager({ remove: false });
+		// initial XHR fetch or bootstrap
+		if (collection.models.length) {
+			collection.bootstrap();
+			this.addPage();
+		}
+		else collection.pager({ remove: false });
 	},
 	
 	render: function(){
@@ -161,7 +165,7 @@ var GalleryView = {
 	},
 	
 	addAll : function(models, options) {
-		
+		var bootstrap;
 	},
 	
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'

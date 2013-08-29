@@ -30,6 +30,8 @@
 
 models.Shot = models.Photo.extend({
 	
+	// urlRoot: '???',   // see GalleryCollection.paginator_core.url
+	
 	// backbone methods
 	parse: function( response ){
 		response = models.Photo.prototype.parse.call(this, response);	// manually call for static JSON

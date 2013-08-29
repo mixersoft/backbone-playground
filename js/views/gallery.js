@@ -203,7 +203,7 @@ var GalleryView = {
 	addOne : function( item, options ) {
 		var $thumb = this.$('#'+item.id+'.thumb');
 		if ($thumb.length==0) {
-			thumb = new views.ThumbView({model:item});
+			thumb = new views.ThumbView({model:item, collection: this.collection});
 			if (!!options && options.offscreen ){
 				// from addPage()
 				options.offscreen.append(thumb.render().el);

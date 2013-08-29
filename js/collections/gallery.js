@@ -31,8 +31,9 @@ var GalleryCollection =	{
 	model : model,	// snappi.models.Shot	
 	
 	templates: {
-		url_guest: 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
-		url_workorder: 'http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
+		url_photo_guest: 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
+		url_photo_workorder: 'http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
+		url_shot: 'http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json',
 	},
 	
 	events: {
@@ -46,6 +47,7 @@ var GalleryCollection =	{
 		}
 		console.info("GalleryCollection initialized");
 		this.listenTo(this, 'repaginate', this.repaginate);
+		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 	},
 	
 	/**
@@ -98,8 +100,18 @@ var GalleryCollection =	{
 			
 		}, this);	
 		this.trigger('repaginated', newPageCounter);
+	},
+	/**
+	 * get Hiddenshots and add to Collection
+ 	 * @param {Object} options = {model: [models.Shot]}
+ 	 * 
+ 	 * url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
+	 */
+	fetchHiddenShots: function(options) {
+		var url = this.templates['url_shot']({shotId: options.model.get('shotId')});
+		// ???: should I be using model.urlRoot, etc?
+		var check = options.model.fetch({url:url});		
 	}
-	
 };
 
 var setup_DisplayOptions = {
@@ -151,7 +163,7 @@ var setup_Paginator = {
 			$('body').addClass('wait');
 			var qs = this.parseQueryString();
 			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
-			var template, type, 
+			var templateId, type, 
 				request = {
 					sort: qs.sort || 'score',
 					direction: qs.direction || qs.dir || 'desc',
@@ -167,12 +179,12 @@ var setup_Paginator = {
 			if ( type > -1) { // show workorders
 				request.id = qs.id;
 				request.controller = type>1 ? 'workorders' : 'tasks_workorders';
-				template = 'url_workorder'; 
+				templateId = 'workorder'; 
 			} else {	// normal guest access
-				template = 'url_guest';
+				templateId = 'guest';
 				this.paginator_core.dataType = 'json';
 			}
-			return this.templates[template](request);
+			return this.templates['url_photo_'+templateId](request);
 		}
 	},
 	

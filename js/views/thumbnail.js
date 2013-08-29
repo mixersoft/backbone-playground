@@ -29,21 +29,23 @@ views.ThumbView = Backbone.View.extend({
 		});
 	},
 	
-	initialize: function(){
+	initialize: function(options){
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
 			// compile once, add to Class
 			this.register_handlebar_helpers();
 			views.ThumbView.prototype.template = Handlebars.compile(source);
 	    }
+	    this.collection = options.collection;
 	},
 	
 	render: function(){
-		this.$el.html( this.template( this.model.toJSON() ) );
-		this.$el.attr('id', this.model.get('id')).addClass('thumb');
-		if (this.model.get('orientationLabel')) this.$el.addClass(this.model.get('orientationLabel'));
-		// this.$('.show-hidden-shot').on('click',this.onShowHiddenShot);
-		// this.$el.on('click', this.clicked);
+		var m = this.model.toJSON();
+		this.$el.html( this.template( m ) );
+		this.$el.attr('id', m.id).addClass('thumb');
+		_.defer(function(that, model){
+			if (model.orientationLabel) that.$el.addClass(model.orientationLabel);
+		}, this, m);
 		return this;
 	},
 	
@@ -68,6 +70,9 @@ views.ThumbView = Backbone.View.extend({
 	
 	onShowHiddenShot: function(e){
 		e.preventDefault();
+		this.collection.trigger('fetchHiddenShots', {
+			model: this.model,
+		});
 		console.info("hidden shot clicked for id="+this.model.get('id'));
 	}
 });

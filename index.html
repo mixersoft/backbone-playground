@@ -104,7 +104,7 @@
 						</div>
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
-		    					<a class='show-hidden-shot' href="#" title='click to see {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>
+		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to see {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
 		    					<span title="score: {{score}}">{{score}}<icon class='icon-star'></icon></span>
 		    					<a href="#" class='rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}

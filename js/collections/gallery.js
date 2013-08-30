@@ -1,6 +1,6 @@
 // /js/collections/gallery.js
 
-(function (collections, model, mixins, paginator) {
+(function (collections, models, mixins, paginator) {
 
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
@@ -28,7 +28,7 @@ var extend = function(classDef){
 	
 var GalleryCollection =	{
 	
-	model : model,	// snappi.models.Shot	
+	model : models.Photo,	// snappi.models.Shot	
 	
 	templates: {
 		url_photo_guest: 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
@@ -108,6 +108,8 @@ var GalleryCollection =	{
  	 * url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
 	 */
 	fetchHiddenShots: function(options) {
+		if (!this.model instanceof model.Shot) return;
+		
 		var url = this.templates['url_shot']({shotId: options.model.get('shotId')});
 		// ???: should I be using model.urlRoot, etc?
 		var check = options.model.fetch({url:url});		
@@ -215,13 +217,14 @@ var setup_Paginator = {
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		
-		var parsed = this.parseShot(response.response.castingCall),
-			shots = [];
+		var parsed = this.parseShot(response.response.castingCall), // from mixin
+			photos = [];
 		_.each(parsed, function(v, k, l) {
-			shots.push(new snappi.models.Shot(v));
+			if (v.shotId) photos.push(new models.Shot(v));
+			else photos.push(new models.Photo(v));
 		});
 		$('body').removeClass('wait');
-		return shots;
+		return photos;
 	},
 	
 	server_api: {
@@ -234,4 +237,4 @@ var setup_Paginator = {
 extend(GalleryCollection);
 	
 
-})( snappi.collections, snappi.models.Shot, snappi.mixins, Backbone.Paginator);
+})( snappi.collections, snappi.models, snappi.mixins, Backbone.Paginator);

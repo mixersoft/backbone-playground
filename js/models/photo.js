@@ -50,12 +50,15 @@ models.Photo = Backbone.Model.extend({
 	
 	// backbone methods
 	parse: function( response ){
-		// for testing only, scale IMG to 1/2 of 640px
-		// response.scale = this.templates.rect(this.helper.scaleImg(1, response));
+		response.id = response.photoId;
 		return response
 	},
 	
 	initialize: function(attributes, options){
+		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
+		this.set( {
+			id: attributes.id,
+		});
 	},
 	
 	// public methods

@@ -12,7 +12,10 @@
 /*
  * Model: Shot, a wrapper around bestshot/photo
  * properties
+ *  - bestshotId
  *  - count
+ *  - stale
+ *  Photo attributes (inherited)
  * 	- src
  * 	- dateTaken
  *  - ts	// unixtime
@@ -25,7 +28,9 @@
  * 	- caption
  *  - score
  * methods:
- * 	- rotate()
+ *  - fetchHidden()
+ * 	- Photo.rotate()
+ * 
  */
 
 models.Shot = models.Photo.extend({
@@ -33,6 +38,7 @@ models.Shot = models.Photo.extend({
 	// urlRoot: '???',   // see GalleryCollection.paginator_core.url
 	
 	// backbone methods
+	// stack: Collection.parse > mixin.parseShot > Shot.initialize > Shot.parse
 	parse: function( response ){
 		response = models.Photo.prototype.parse.call(this, response);	// manually call for static JSON
 		// convert models.Photo into snappi.Shot
@@ -59,13 +65,14 @@ models.Shot = models.Photo.extend({
 	},
 	
 	// public methods
-	/**
-	 * 
- 	 * @param String dir, [CW|CCW]
-	 */
-	rotate: function(dir) {
-		
+	
+	fetchHidden: function(){
+		if (this.stale==false || this.count==1) return;
+		var bestshot = new models.Hiddenshot(this.get('id'));
+		var hiddenshots = bestshot.fetch();
+		this.stale = false;
 	}
+	
 	
 })
 

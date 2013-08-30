@@ -27,6 +27,10 @@ views.ThumbView = Backbone.View.extend({
 			}
 		  	return out;
 		});
+		Handlebars.registerHelper('fullText', function(string, options) {
+			if (string.length > options.length)
+			return options.fn();
+		});
 	},
 	
 	initialize: function(options){
@@ -37,6 +41,7 @@ views.ThumbView = Backbone.View.extend({
 			views.ThumbView.prototype.template = Handlebars.compile(source);
 	    }
 	    this.collection = options.collection;
+	    this.listenTo(this.model, 'fetchedHiddenshots', this.onFetchedHiddenshots )
 	},
 	
 	render: function(){
@@ -74,7 +79,11 @@ views.ThumbView = Backbone.View.extend({
 			model: this.model,
 		});
 		console.info("hidden shot clicked for id="+this.model.get('id'));
-	}
+	},
+	
+	onFetchedHiddenshots: function(model, response, options){
+		
+	},
 });
 
 })( snappi.views );

@@ -28,6 +28,7 @@ models.Photo = Backbone.Model.extend({
 	}, 
 	
 	templates: {
+		url_photo: _.template('http://dev.snaphappi.com/photos/home/<%=id%>/.json'),
 		rect: _.template('top:<%=y%>px;left:<%x%>px;width:<%w%>px;height:<%h%>px'),
 	},
 	

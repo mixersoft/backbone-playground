@@ -2,11 +2,16 @@
 (function ( mixins ) {
 	
 	mixins.RestApi = {
+		parseShotExtras : function(json, shot) {
+			var shot = shot || json.response.Shot,
+				shot_extras = json.response.castingCall.shot_extras[shot.id];
+			return shot_extras;
+		},
 		parseShot: function(cc){
 			
 			var i, oSrc, score, id, audition, 
 				parsedAuditions = {},
-				page = cc.CastingCall.Auditions.Page;
+				page = cc.CastingCall.Auditions.Page,
 				auditions = cc.CastingCall.Auditions.Audition;
 				
 			for (i in auditions) {

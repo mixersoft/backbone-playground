@@ -3,11 +3,31 @@
 (function ( models ) {
 	
 
-/*
- * notes from Robert
- * - Shot wrapper around each Photo/bestshot
- * - use something like Shot.photos.fetch() to get hiddenshots
- */ 
+// define Class hierarchy at the top, but use at the bottom
+var extend = function(classDef){
+	var options = _.extend({}, 
+		// add mixins
+		classDef
+	);
+	
+	// merge Shot.properties with parent properties, add to Shot.prototype
+	var prototypeAttrs = ['templates'],
+		forPrototype = {};
+	for (var i in prototypeAttrs) {
+		forPrototype[prototypeAttrs[i]] = classDef[prototypeAttrs[i]];
+		delete classDef[prototypeAttrs[i]];
+	} 
+	
+	models.Shot = models.Photo.extend(
+		options
+	);
+	
+	var parentClass = models.Photo;
+	for (var i in forPrototype) {
+		models.Shot.prototype[i] = _.extend(parentClass.prototype[i] || {}, forPrototype[i]);
+	} 
+}	
+
 
 /*
  * Model: Shot, a wrapper around bestshot/photo
@@ -33,9 +53,16 @@
  * 
  */
 
-models.Shot = models.Photo.extend({
+var Shot = {
 	
-	// urlRoot: '???',   // see GalleryCollection.paginator_core.url
+	url: function(options){
+		options = options || this.toJSON();
+		return this.templates['url_shot'](options);
+	},
+	
+	templates: {
+		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
+	},
 	
 	// backbone methods
 	// stack: Collection.parse > mixin.parseShot > Shot.initialize > Shot.parse
@@ -52,30 +79,52 @@ models.Shot = models.Photo.extend({
 	
 	initialize: function(attributes, options){
 		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
+		// var position = {x:'auto',y:'auto',w:attributes.width, h:attributes.height};
+		// this.set('crop', this.templates.rect(position));
+		models.Photo.prototype.initialize.call(this, attributes, options);
 		this.set( {
-			id: attributes.id,
 			bestshotId: attributes.bestshotId,
 			count: attributes.count,
 			stale: attributes.stale,
 			// scale: attributes.scale,
 		});
-		// var position = {x:'auto',y:'auto',w:attributes.width, h:attributes.height};
-		// this.set('crop', this.templates.rect(position));
-		models.Photo.prototype.initialize.apply(this, arguments);
+	},
+	/**
+	 * 
+ 	 * @param {Object} options.success
+	 */
+	fetchHiddenShots: function(options){
+		if (this.count==1) return;
+		
+		options = options ? _.clone(options) : {};
+		var success = options.success;
+		var model = this;
+		options.success = function(resp) {
+			model.hiddenshots = hiddenshots;
+			if (success) success(model, resp, options);
+			model.stale = false;
+			model.trigger('fetchedHiddenshots', model, resp, options);	// ThumbnailView is listening
+		};
+		wrapError(model, options);
+		return model.fetch(options);
 	},
 	
-	// public methods
-	
-	fetchHidden: function(){
-		if (this.stale==false || this.count==1) return;
-		var bestshot = new models.Hiddenshot(this.get('id'));
-		var hiddenshots = bestshot.fetch();
-		this.stale = false;
-	}
-	
-	
-})
+};
 
 
+/*
+ *  protected methods
+ */
+// Wrap an optional error callback with a fallback error event.
+var wrapError = function (model, options) {
+    var error = options.error;
+    options.error = function(resp) {
+      if (error) error(model, resp, options);
+      model.trigger('error', model, resp, options);
+    };
+};
+
+// put it all together at the bottom
+extend(Shot);
 
 })( snappi.models );

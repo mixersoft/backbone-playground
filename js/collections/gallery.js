@@ -102,17 +102,18 @@ var GalleryCollection =	{
 		this.trigger('repaginated', newPageCounter);
 	},
 	/**
-	 * get Hiddenshots and add to Collection
+	 * get Hiddenshots and add to Collection, fired by ThumbnailView via click event
  	 * @param {Object} options = {model: [models.Shot]}
  	 * 
  	 * url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
 	 */
 	fetchHiddenShots: function(options) {
-		if (!this.model instanceof model.Shot) return;
-		
-		var url = this.templates['url_shot']({shotId: options.model.get('shotId')});
-		// ???: should I be using model.urlRoot, etc?
-		var check = options.model.fetch({url:url});		
+		var model = options.model;
+		if (!(model instanceof models.Shot)) return;
+		var success = function(model, response, options){
+			console.info("GalleryCollection received new Hiddenshots")
+		}
+		model.fetchHiddenShots({success:success});
 	}
 };
 

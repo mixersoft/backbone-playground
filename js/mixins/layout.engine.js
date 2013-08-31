@@ -137,28 +137,16 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
     			breaks = [],
     			lines = [],
     			images = [],
-    			image, model,
+    			image, 
     			i, point, r, lineStart = 0,
     			x;
     			
     		for (i = 0; i < items.length; i++) {
     			var img_tag = items.get(i);
     			
-    			/*
-    			 * get related model
-    			 */
-    			try {
-    				model = collection.findWhere({id:img_tag.parentNode.parentNode.parentNode.id});
-    					thumbAttr = model.toJSON();
-    			} catch (ex) {
-    				console.error('Model not found for img='+img_tag);
-    			}
-    			
-    			    			
     			image = {
-    				width: thumbAttr.origW / thumbAttr.origH * options.targetHeight, 
+    				width: img_tag.getAttribute('data-w0') / img_tag.getAttribute('data-h0') * options.targetHeight, 
     				height: options.targetHeight, 
-    				model: thumbAttr, 
     				tag: img_tag
     			};
     			
@@ -302,7 +290,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 	    					
 	    					// adjust img src prefix to fit actual dim
 							var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
-							image.tag.src = mixins.Href.getImgSrc(image.model, thumbsize_prefix, i);
+							image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
 		
     						border.style.height = Math.round(image.height - totalVertCrop) + "px";
     						border.style.width = Math.round(image.width - imageHorzCrop) + "px";

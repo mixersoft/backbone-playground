@@ -74,7 +74,9 @@ var GalleryView = {
 		this.listenTo(collection, 'reset', this.addAll);
 		this.listenTo(collection, 'refreshLayout', this.refreshLayout);
 		this.listenTo(collection, 'repaginated', this.refreshPages);
+		this.listenTo(collection, 'add', this.add);
 		this.listenTo(collection, 'sync', this.addPage);
+		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
 		
 		// calls colletion.sync and makes request from DB
 		this.$el.addClass('debounce');
@@ -167,7 +169,18 @@ var GalleryView = {
 	addAll : function(models, options) {
 		var bootstrap;
 	},
-	
+	add : function(models, options) {
+		console.log("collection add for models, count="+models.length);
+	},
+	addedHiddenshots : function(models, options) {
+		_.each(models, function(item, i){
+			if (item == options.after) return;
+			this.addOne(item, options);
+		}, this);
+		// get current page
+		var $page = _getPageFromModel(this, options.after);
+		this.renderBody($page, {force: true, scroll: false});
+	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, options) {
 		options = $.extend(options || {}, {
@@ -201,15 +214,21 @@ var GalleryView = {
 	 * }  
 	 */
 	addOne : function( item, options ) {
-		var $thumb = this.$('#'+item.id+'.thumb');
+		options = options || {};
+		var thumb, $thumb = this.$('#'+item.get('id')+'.thumb');
+		// ???: how can you tell if a model already has a rendered View?
+		// add a back reference?
+		var $parent, $before;
 		if ($thumb.length==0) {
 			thumb = new views.ThumbView({model:item, collection: this.collection});
-			if (!!options && options.offscreen ){
-				// from addPage()
-				options.offscreen.append(thumb.render().el);
-			} else {
-				this.$('.body').append(thumb.render().el);
-			}
+			if (options.offscreen ){
+				$parent = options.offscreen; 
+			} else $parent = this.$('.body');
+			
+			$before = !!options.after && this.$('#'+options.after.get('id')+'.thumb');
+			if ($before && $before.length && $.contains($parent.get(0), $before.get(0))) {
+				$before.after(thumb.render().el);
+			} else $parent.append(thumb.render().el);
 		} else {
 			// TODO: already added, is ThumbView updated automatically?
 			console.log("already added");
@@ -261,27 +280,20 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
  	 * 		if offscreen, will also append to this.$('.body')
+ 	 * @param Object options, default={force: false, scroll: true}
 	 */
-	renderBody: function(container){
-		var collection = this.collection;
-console.log('render Gallery Body for currentPage='+collection.currentPage);
+	renderBody: function(container, options){
+		options = options || {};
+		var stale = options.force || false, 
+			collection = this.collection;
 		
 		var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-		if (pageContainer.length && container.children().length == 0) {
-			// page already rendered, just scroll
-			// refresh Layout?
-			this.scrollBottomAlmostIntoView(pageContainer);
-			this.$el.removeClass('debounce');
-			return;
-		} else if (pageContainer.length && container.children().length) {
-			// collection.sync() of rendered page
-			console.info("GalleryCollection.sync(): check if ThumbView model was merged. auto update?");
-			// do we need to render updated ThumbViews after sync?
-			// page already rendered, just scroll
-			// refresh Layout?
-			this.scrollBottomAlmostIntoView(pageContainer);
-			this.$el.removeClass('debounce');
-			return;
+		if (pageContainer.length && (!container || !container.children().length)) {
+			container = pageContainer;
+			// page already rendered, no new elements to render
+		} else if (pageContainer.length && container && container.children().length) {
+			// container could hold offscreen ThumbnailViews
+			// render if stale 
 		} else if (pageContainer.length==0) {
 			pageContainer = $(this.templates.pageTemplate(collection))
 			var p, 
@@ -296,25 +308,31 @@ console.log('render Gallery Body for currentPage='+collection.currentPage);
 				};
 			}	
 			if (currentPage != 'inserted') body.prepend(pageContainer);
+			stale = true;
 			
 		} 
 		
-		/*
-		 * the actual layout render statement
-		 */
-		var thumbs = container.find('> .thumb');
-		var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
-		/*
-		 * end
-		 */
-		
-		// a new page was added. cleanup GalleryView
-		this.$el.css('min-height', $(window).outerHeight()-160);
-		this.scrollBottomAlmostIntoView(pageContainer);
+		if (stale === true){
+			/*
+			 * the actual layout render statement
+			 */
+			var thumbs = container.find('> .thumb');
+			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
+			/*
+			 * end
+			 */
+			
+			// a new page was added. cleanup GalleryView
+			this.$el.css('min-height', $(window).outerHeight()-160);
+		}
+		if (options.scroll !== false) {	// false for hiddenshot
+			_.defer(function(that, pageContainer){
+				that.scrollBottomAlmostIntoView(pageContainer);
+			}, this, pageContainer);
+		}
 		this.$el.removeClass('debounce');
 		// for debugging
 		if (_DEBUG) this.introspect();
-		return;
 	},
 	// debugging
 	introspect: function() {
@@ -331,7 +349,17 @@ console.log('render Gallery Body for currentPage='+collection.currentPage);
 	},
 };
 
-
+/*
+ * protected methods, 
+ * - move to mixin?
+ * 
+ */
+var _getPageFromModel = function(that, m) {
+	// get current page
+	var $thumb = that.$('#'+m.get('id')+'.thumb');
+	var $page = $thumb.closest('.page');
+	return $page; 
+}
 // put it all together at the bottom
 extend(GalleryView);
 

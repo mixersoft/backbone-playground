@@ -5,6 +5,9 @@
 		parseShotExtras : function(json, shot) {
 			var shot = shot || json.response.Shot,
 				shot_extras = json.response.castingCall.shot_extras[shot.id];
+				shot_extras.count = parseInt(shot_extras.count);
+				shot_extras.priority = parseInt(shot_extras.priority);
+				shot_extras.active = !!shot_extras.active;
 			return shot_extras;
 		},
 		parseShot: function(cc){

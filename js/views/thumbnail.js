@@ -9,7 +9,7 @@
  * methods:
  */
 views.ThumbView = Backbone.View.extend({
-	tagname: "div",
+	tagName: "div",
 	
 	template_source: "#markup #ThumbTemplate.handlebars",
 	
@@ -49,6 +49,12 @@ views.ThumbView = Backbone.View.extend({
 		this.$el.html( this.template( m ) );
 		this.$el.attr('id', m.id).addClass('thumb');
 		_.defer(function(that, model){
+			if (model.shotId) {
+				that.$el.addClass('shot-'+_hashShotId(model.shotId));
+				if (model.bestshotId == model.photoId) 
+					that.$el.addClass('bestshot');
+				else that.$el.addClass('hiddenshot');
+			}
 			if (model.orientationLabel) that.$el.addClass(model.orientationLabel);
 		}, this, m);
 		return this;
@@ -75,15 +81,36 @@ views.ThumbView = Backbone.View.extend({
 	
 	onShowHiddenShot: function(e){
 		e.preventDefault();
-		this.collection.trigger('fetchHiddenShots', {
-			model: this.model,
-		});
-		console.info("hidden shot clicked for id="+this.model.get('id'));
+		var action = 'show';
+		if (this.$el.is('.hiddenshot')) {
+			action = 'hide';
+		}
+		switch (action) {
+			case 'show':
+console.info("show hiddenshot for id="+this.model.get('id'));			
+				this.collection.trigger('fetchHiddenShots', {
+					model: this.model,
+				});
+				break;
+			case 'hide':
+console.info("HIDE hiddenshot for id="+this.model.get('shotId'));			
+				break;
+		}
 	},
 	
-	onFetchedHiddenshots: function(model, response, options){
-		
+	onFetchedHiddenshots: function(collection, response, options){
+		console.info("Thumbview: fetchHiddenshots completed");
 	},
 });
+
+/*
+ * Protected attributes
+ */
+var _shotHash = {};
+var _shotCounter = 1;
+var _hashShotId = function(shotId){
+	if (!_shotHash[shotId])	_shotHash[shotId]=_shotCounter++;
+	return _shotHash[shotId];
+}
 
 })( snappi.views );

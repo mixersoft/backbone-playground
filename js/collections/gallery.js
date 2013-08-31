@@ -41,6 +41,7 @@ var GalleryCollection =	{
 	},
 	
 	initialize: function(){
+		// this.set({url: options.value});
 		// compile templates
 		for (var i in this.templates) {
 			if (_.isString(this.templates[i])) this.templates[i] = _.template(this.templates[i]); 
@@ -110,10 +111,24 @@ var GalleryCollection =	{
 	fetchHiddenShots: function(options) {
 		var model = options.model;
 		if (!(model instanceof models.Shot)) return;
-		var success = function(model, response, options){
-			console.info("GalleryCollection received new Hiddenshots")
+		var that = this;
+		var success = function(hiddenshotC, response, options){
+			// NOTE: model.get('hiddenshot') == collection
+			console.info("GalleryCollection received new Hiddenshots");
+			var bestshot = hiddenshotC.shot_core.bestshot;
+			that.add(hiddenshotC.models, {silent:false, merge:true, remove:false} );
+			// TODO: GalleryView is not getting this event
+			that.trigger('addedHiddenshots', hiddenshotC.models, {after:bestshot});
+			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
 		}
-		model.fetchHiddenShots({success:success});
+		var hiddenshotCollection = model.get('hiddenshot');
+		hiddenshotCollection.fetch({
+			success: success,
+			dataType: 'jsonp',
+			callback: '?',
+			merge: true,
+			remove: false,
+		});
 	}
 };
 

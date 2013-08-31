@@ -1,6 +1,6 @@
 // /js/models/shot.js
 
-(function ( models ) {
+(function ( models , HiddenshotCollection) {
 	
 
 // define Class hierarchy at the top, but use at the bottom
@@ -72,7 +72,7 @@ var Shot = {
 		response.id = response.shotId || response.photoId;
 		response.bestshotId = response.photoId;
 		response.count = response.shotId  ? parseInt(response.shotCount) : 1;
-		response.stale = response.count>1; 
+		// response.stale = response.count>1; // moved to this.hiddenshot.shot_core.stale 
 		delete response.shotCount;
 		return response;
 	},
@@ -88,43 +88,21 @@ var Shot = {
 			stale: attributes.stale,
 			// scale: attributes.scale,
 		});
+		// add HiddenshotCollection
+		this.set( {
+			hiddenshot: new HiddenshotCollection([this])
+		})
 	},
-	/**
-	 * 
- 	 * @param {Object} options.success
-	 */
-	fetchHiddenShots: function(options){
-		if (this.count==1) return;
-		
-		options = options ? _.clone(options) : {};
-		var success = options.success;
-		var model = this;
-		options.success = function(resp) {
-			model.hiddenshots = hiddenshots;
-			if (success) success(model, resp, options);
-			model.stale = false;
-			model.trigger('fetchedHiddenshots', model, resp, options);	// ThumbnailView is listening
-		};
-		wrapError(model, options);
-		return model.fetch(options);
-	},
-	
 };
-
 
 /*
  *  protected methods
  */
-// Wrap an optional error callback with a fallback error event.
-var wrapError = function (model, options) {
-    var error = options.error;
-    options.error = function(resp) {
-      if (error) error(model, resp, options);
-      model.trigger('error', model, resp, options);
-    };
-};
+
+
+
 
 // put it all together at the bottom
 extend(Shot);
 
-})( snappi.models );
+})( snappi.models , snappi.collections.HiddenshotCollection);

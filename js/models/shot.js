@@ -10,22 +10,11 @@ var extend = function(classDef){
 		classDef
 	);
 	
-	// merge Shot.properties with parent properties, add to Shot.prototype
-	var prototypeAttrs = ['templates'],
-		forPrototype = {};
-	for (var i in prototypeAttrs) {
-		forPrototype[prototypeAttrs[i]] = classDef[prototypeAttrs[i]];
-		delete classDef[prototypeAttrs[i]];
-	} 
-	
 	models.Shot = models.Photo.extend(
 		options
 	);
 	
-	var parentClass = models.Photo;
-	for (var i in forPrototype) {
-		models.Shot.prototype[i] = _.extend(parentClass.prototype[i] || {}, forPrototype[i]);
-	} 
+	_overloadClassAttrs(models.Shot, models.Photo, ['templates']);
 }	
 
 
@@ -98,7 +87,11 @@ var Shot = {
 /*
  *  protected methods
  */
-
+var _overloadClassAttrs = function(childClass, parentClass, attrs) {
+	for (var i in attrs) {
+		childClass.prototype[attrs[i]] = _.extend(parentClass.prototype[attrs[i]] || {}, childClass.prototype[attrs[i]]);
+	} 
+}
 
 
 

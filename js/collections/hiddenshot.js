@@ -12,10 +12,6 @@ var extend = function(classDef){
 	collections.HiddenshotCollection = Backbone.Collection.extend(
 		options
 	);
-	
-	compileTemplates(collections.HiddenshotCollection, {
-		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=id%>/Usershot/.json'),
-	});
 }
 
 /*
@@ -27,6 +23,10 @@ var extend = function(classDef){
 var HiddenshotCollection = {
 	
 	model: models.Photo,
+	
+	templates: {
+		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=id%>/Usershot/.json'),
+	},
 	
 	url: function(){
 		$('body').addClass('wait');
@@ -78,12 +78,6 @@ var HiddenshotCollection = {
 	
 };
 
-var compileTemplates = function(Class, templates){
-	for (var i in templates) {
-		if (_.isString(templates[i])) templates[i] = _.template(templates[i]);
-	}
-	Class.prototype.templates = _.extend(Class.prototype.templates || {}, templates);
-}
 
 // put it all together at the bottom
 extend(HiddenshotCollection);

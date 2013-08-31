@@ -31,9 +31,9 @@ var GalleryCollection =	{
 	model : models.Photo,	// snappi.models.Shot	
 	
 	templates: {
-		url_photo_guest: 'http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
-		url_photo_workorder: 'http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json',
-		url_shot: 'http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json',
+		url_photo_guest: _.template('http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_photo_workorder: _.template('http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
 	},
 	
 	events: {
@@ -41,12 +41,6 @@ var GalleryCollection =	{
 	},
 	
 	initialize: function(){
-		// this.set({url: options.value});
-		// compile templates
-		for (var i in this.templates) {
-			if (_.isString(this.templates[i])) this.templates[i] = _.template(this.templates[i]); 
-		}
-		console.info("GalleryCollection initialized");
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 	},

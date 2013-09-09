@@ -186,7 +186,33 @@ body.wait {
 }
 
 
+/*
+ * css transitions from isotope
+ */
+@transitionDuration: 0.8s;
+.gallery .body {
+  &, & .thumb {
+    -webkit-transition-duration: @transitionDuration;
+    -moz-transition-duration: @transitionDuration;
+    -ms-transition-duration: @transitionDuration;
+    -o-transition-duration: @transitionDuration;
+    transition-duration: @transitionDuration;
+  }
+  
+  -webkit-transition-property: height, width;
+  -moz-transition-property: height, width;
+  -ms-transition-property: height, width;
+  -o-transition-property: height, width;
+  transition-property: height, width;
 
-
-
-
+  /*
+   * isotope pattern is to use 'transform: translate3d([top]px, [left]px, 0px)'
+   */
+  .thumb{
+    -webkit-transition-property: -webkit-transform, opacity, top, left;
+    -moz-transition-property: -moz-transform, opacity, top, left;
+    -ms-transition-property: -ms-transform, opacity, top, left;
+    -o-transition-property: -o-transform, opacity, top, left;
+    transition-property: transform, opacity, top, left;
+  }
+}

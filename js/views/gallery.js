@@ -172,9 +172,12 @@ var GalleryView = {
 	add : function(models, options) {
 		console.log("collection add for models, count="+models.length);
 	},
+	/**
+	 * @param Object options, options.after models.Shot of bestshot 
+	 */
 	addedHiddenshots : function(models, options) {
 		_.each(models, function(item, i){
-			if (item == options.after) return;
+			if (item == options.after) return;	// skip bestshot
 			this.addOne(item, options);
 		}, this);
 		// get current page
@@ -211,7 +214,9 @@ var GalleryView = {
 	 * @param models.Shot item
 	 * @param options { 
 	 * 		offscreen: jquery container to append rendered view 
+	 * 		after: models.Shot, add .item after options.after.get('id')
 	 * }  
+	 * @return HTMLElement
 	 */
 	addOne : function( item, options ) {
 		options = options || {};
@@ -220,15 +225,33 @@ var GalleryView = {
 		// add a back reference?
 		var $parent, $before;
 		if ($thumb.length==0) {
-			thumb = new views.ThumbView({model:item, collection: this.collection});
+			thumb = new views.PhotoView({model:item, collection: this.collection});
 			if (options.offscreen ){
 				$parent = options.offscreen; 
 			} else $parent = this.$('.body');
 			
-			$before = !!options.after && this.$('#'+options.after.get('id')+'.thumb');
-			if ($before && $before.length && $.contains($parent.get(0), $before.get(0))) {
-				$before.after(thumb.render().el);
-			} else $parent.append(thumb.render().el);
+			$thumb = thumb.render().$el;
+			
+			if (item instanceof snappi.models.Shot) {
+				// as determined by GalleryCollection.parse()
+				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
+				var $wrap = $('<div></div>').addClass('shot-wrap');
+				$wrap.append($thumb);
+				$parent.append($wrap);
+			} else if (!!options.after) {
+				// only models.Photo for .hiddenshots
+				$before = this.$('#'+options.after.get('id')+'.thumb');
+				if ($before.length && $.contains($parent.get(0), $before.get(0))) {
+					$before.after($thumb);
+				} else {
+					throw "Trying to insert after missing item, id="+options.after.get('id');
+				}
+			} else {
+				// only models.Photo
+				$parent.append($thumb);
+			}
+			
+			return thumb.el;
 		} else {
 			// TODO: already added, is ThumbView updated automatically?
 			console.log("already added");
@@ -316,7 +339,7 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
 			/*
 			 * the actual layout render statement
 			 */
-			var thumbs = container.find('> .thumb');
+			var thumbs = container.find('.thumb');
 			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
 			/*
 			 * end

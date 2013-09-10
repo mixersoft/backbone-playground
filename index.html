@@ -81,15 +81,10 @@
 		</div> <!-- /container -->
         
         <div id="markup" class="hide">
-        	<script id="ThumbTemplate" class='handlebars' type="text/x-handlebars-template">
+        	<script id="PhotoTemplate" class='handlebars' type="text/x-handlebars-template">
 	        	<!-- <div id="{{id}}" class="thumb {{orientationLabel}}" style="{{position}}"> -->
 	        		<div class="crop-wrap">
-	        			<div class="crop">	        				<img class="" src="{{src}}" 
-	        					data-datetaken="{{dateTaken}}" 
-	        					data-batchid="" 
-	        					data-rating="{{rating}}" 
-	        					data-score="{{score}}" 
-	        					data-caption="{{caption}}" 
+	        			<div class="crop">	        				<img class="" src="" 
 	        					data-w0="{{origW}}"
 	        					data-h0="{{origH}}"
 	        					data-root-src="{{rootSrc}}"
@@ -216,7 +211,7 @@
         <script src="js/collections/gallery.js"></script>
 
 		<!--Views-->
-        <script src="js/views/thumbnail.js"></script>
+        <script src="js/views/photo.js"></script>
         <script src="js/views/pager.js"></script>
         <script src="js/views/gallerydisplayoptions.js"></script>
         <script src="js/views/gallery.js"></script>

@@ -283,22 +283,50 @@ var GalleryView = {
     	
     	var target = self.$el,
     		collection = this.collection,
-        	targetB = target.offset().top+target.height(),
-        	windowB = $(window).scrollTop() + $(window).height();
-        // if pageContainer.bottom is in view, then fetch next page
-		var bottomPage = self.$('.body .page').last().data('page');       
-		if( bottomPage == collection.totalPages && collection.models.length) 
+        	selfB = target.offset().top+target.height(),
+        	windowT = $(window).scrollTop(),
+        	windowB = windowT + $(window).height();
+        	
+        // find current visible page
+        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
+        self.$('.body .page').each(function(i,item){
+        	if (scrollDir=='down') {
+	        	if (visiblePg 
+	        		&& item.offsetTop > windowB)
+	        	{
+	        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
+	        		return false;
+	        	} 
+        	} else { // page up
+	        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
+	        		if (item.offsetTop < windowT) visiblePg = item;
+	        		return false;
+	        	} 
+        	}
+        	visiblePg = item;
+        });
+        
+        // scrollspy. ???: listen from PagerView
+        var scrollPage = $(visiblePg).data('page');
+        
+        var nextPage = scrollDir=='down' ? this.collection.currentPage+1 : this.collection.currentPage-1;
+			
+		if (nextPage !== scrollPage && 0 < nextPage && nextPage < this.collection.totalPages) 
 		{
-        	// loaded last page
-			$(window).off('scroll',self.onContainerScroll);
-	    }
-
-        if(targetB <= windowB && (bottomPage+1) <= collection.totalPages) 
-        {
-        	self.$el.addClass('debounce');
-console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
-            self.collection.goTo(bottomPage+1,{ merge: true, remove: false });
-        }
+			
+			if (!this.collection.fetchedServerPages[nextPage]) {
+				// check for fetch
+				if (nextPage > scrollPage && selfB > windowB) {
+					// skip bottomPage fetch until see bottom, selfB < windowB
+				} else {	
+					self.$el.addClass('debounce');
+					this.collection.goTo(nextPage,{ merge: true, remove: false });
+					return;
+				}
+			}
+		}
+	    this.collection.trigger('scrollPage', scrollPage, scrollDir);
+        
     }, 100, {leading: false}),
 
 	/**

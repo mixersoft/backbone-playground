@@ -1,6 +1,11 @@
 // /js/mixins/snappi.js
 (function ( mixins ) {
 	
+	/*
+	 * private vars
+	 */
+	var _lastScrollTop = 0;
+        
 mixins.UiActions = {
 
 	toggle: function() { /* ... */ },
@@ -8,6 +13,16 @@ mixins.UiActions = {
 	open: function() { /*... */ },
 
 	close: function() { /* ... */ },
+	
+    detectScrollDirection : function () {
+        if (window.pageYOffset > _lastScrollTop) {
+        	_lastScrollTop = window.pageYOffset;
+            return "down";
+        } else {
+        	_lastScrollTop = window.pageYOffset;
+            return "up";
+        }
+    },
 	
 	scrollIntoView: function(target) {
 		var top, next, target, NAVBAR_OFFSET_H = 40;

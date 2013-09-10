@@ -29,16 +29,17 @@
 		    var collection = this.collection;
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
+		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
 		},
-		render: function () {
+		render: function (collection, resp, options) {
 			// note: the 'model' comes from requestPager.collection.info()
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
 			_.each(this.$('ul.page li > a.page, ul.page li > span'), function(item){
-				var text = $(item).text();
-				if (this.collection.fetchedServerPages[text]) {
+				var page = $(item).text();
+				if (this.collection.fetchedServerPages[page]) {
 					$(item).css('font-weight','bold');
 				}
 			}, this);
@@ -143,6 +144,11 @@
 
 			this.preserveFilterField(fields);
 			this.preserveFilterValue(filter);
+		},
+		
+		renderCurrentPage: function(visiblePage, dir){ 
+			this.collection.currentPage = visiblePage;
+			this.render();
 		}
 	});
 })( snappi.views );

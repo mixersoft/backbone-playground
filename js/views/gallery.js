@@ -277,7 +277,11 @@ var GalleryView = {
      * When the scroll threshold is reached a new page of thumbs is requested.
      * @param event e - the scroll event object
      */
-    onContainerScroll : _.throttle(function(e) {
+    onContainerScroll : _.throttle(function(){
+    	this._scrollSpy();
+    }, 200, {leading: false}),
+    
+    _scrollSpy : function(e) {
     	self = this;
     	if (self.$el.hasClass('debounce')) return;
     	
@@ -291,8 +295,7 @@ var GalleryView = {
         var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
         self.$('.body .page').each(function(i,item){
         	if (scrollDir=='down') {
-	        	if (visiblePg 
-	        		&& item.offsetTop > windowB)
+	        	if (visiblePg && item.offsetTop > windowB)
 	        	{
 	        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
 	        		return false;
@@ -306,14 +309,14 @@ var GalleryView = {
         	visiblePg = item;
         });
         
-        // scrollspy. ???: listen from PagerView
         var scrollPage = $(visiblePg).data('page');
+// console.log('scroll to page='+scrollPage);        
         
         var nextPage = scrollDir=='down' ? this.collection.currentPage+1 : this.collection.currentPage-1;
 			
 		if (nextPage !== scrollPage && 0 < nextPage && nextPage < this.collection.totalPages) 
 		{
-			
+			// ???: should this section be debounce, not throttle
 			if (!this.collection.fetchedServerPages[nextPage]) {
 				// check for fetch
 				if (nextPage > scrollPage && selfB > windowB) {
@@ -327,7 +330,7 @@ var GalleryView = {
 		}
 	    this.collection.trigger('scrollPage', scrollPage, scrollDir);
         
-    }, 100, {leading: false}),
+    },
 
 	/**
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb

@@ -112,7 +112,12 @@ var GalleryCollection =	{
 			var bestshot = hiddenshotC.shot_core.bestshot;
 			that.add(hiddenshotC.models, {silent:false, merge:true, remove:false} );
 			// TODO: GalleryView is not getting this event
-			that.trigger('addedHiddenshots', hiddenshotC.models, {after:bestshot});
+			that.trigger('addedHiddenshots', hiddenshotC.models, {
+				// after : bestshot,
+				shotId : hiddenshotC.shot_core.id,
+				viewClass : 'PhotoView',
+				wrap: false, 
+			});
 			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
 		}
 		var hiddenshotCollection = model.get('hiddenshot');
@@ -129,8 +134,8 @@ var GalleryCollection =	{
 var setup_DisplayOptions = {
 	gallery_display_options_ui: {
 		'size': [
-			{label:'S', size: 100, },
-			{label:'M', size: 160, active:'active'  },
+			{label:'S', size: 100, active:'active' },
+			{label:'M', size: 160,  },
 			{label:'L', size: 240, },
 		],
 	}

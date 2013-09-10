@@ -52,6 +52,19 @@ body.wait {
  * .photo_container_th = .crop-wrap
  * .photoLink = .crop
  */
+.thumb-meta-hover {
+  background: fade(@black,60%);
+    opacity: 1;
+    transition: all .15s ease-in-out;
+    a:hover {
+      color: #FFF;
+    }
+    .bottom-row {
+    }
+    span.inline-icons {
+    }
+}
+
 .thumb {
   &, &.crop-wrap {
     width:auto;
@@ -156,7 +169,9 @@ body.wait {
   }
 }
 
-
+.shot-wrap:hover .thumb .meta {
+  .thumb-meta-hover;
+}
 
 
 .gallery .header {

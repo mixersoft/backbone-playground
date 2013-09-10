@@ -15,7 +15,7 @@ views.PhotoView = Backbone.View.extend({
 	
 	events: {
 		'click .rotate': 'onRotate',
-		'click .show-hidden-shot': 'onShowHiddenShot',
+		'click .show-hidden-shot': 'onHideHiddenshot',
 		'dblclick img': 'onShowPreview',
 	},
 	
@@ -40,23 +40,29 @@ views.PhotoView = Backbone.View.extend({
 			this.register_handlebar_helpers();
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
-	    this.collection = options.collection;
-	    this.listenTo(this.model, 'fetchedHiddenshots', this.onFetchedHiddenshots )
 	},
 	
-	render: function(){
-		var shot_index, m = this.model.toJSON();
-		this.$el.html( this.template( m ) );
-		this.$el.attr('id', m.id).addClass('thumb');
+	render: function(options){
+		var m = this.model.toJSON();
+		if (options.wrap === false) {
+			var $wrap = $(this.template( m ));
+			this.$el.html( $wrap.children() );
+			this.$el.attr('id', m.photoId).addClass('thumb');
+		} else 
+			this.$el.html( this.template( m ) );
 		_.defer(function(that, model){
-			if (model.shotId) {
-				shot_index = _hashShotId(model.shotId);
-				that.$el.addClass('shot-'+ shot_index);
+			if (model instanceof snappi.models.Shot) {
+				// shot_index = views.ShotView.prototype.hashShotId(model.shotId);
+				// that.$el.addClass('shot-'+ shot_index);
 				if (model.bestshotId == model.photoId) { 
-					that.$el.addClass('bestshot');
-				} else that.$el.addClass('hiddenshot');
+					// that.$('.thumb').addClass('bestshot');
+					throw "Error: got models.Shot when expecting models.Photo";
+				} else if (that.$el.is('.thumb')) {
+					that.$el.addClass('hiddenshot');
+				} else {
+					that.$('.thumb').addClass('hiddenshot');
+				}
 			}
-			if (model.orientationLabel) that.$el.addClass(model.orientationLabel);
 		}, this, m);
 		return this;
 	},
@@ -80,18 +86,16 @@ views.PhotoView = Backbone.View.extend({
 		e.preventDefault();
 	},
 	
-	onShowHiddenShot: function(e){
+	onHideHiddenshot: function(e){
+console.log('PhotoView.onHideHiddenshot()')	;	
 		e.preventDefault();
-		var action = 'show';
+		var action = 'hide';
 		if (this.$el.is('.hiddenshot')) {
 			action = 'hide';
 		}
 		switch (action) {
 			case 'show':
 console.info("show hiddenshot for id="+this.model.get('id'));			
-				this.collection.trigger('fetchHiddenShots', {
-					model: this.model,
-				});
 				break;
 			case 'hide':
 console.info("HIDE hiddenshot for id="+this.model.get('shotId'));			
@@ -99,19 +103,10 @@ console.info("HIDE hiddenshot for id="+this.model.get('shotId'));
 		}
 	},
 	
-	onFetchedHiddenshots: function(collection, response, options){
-		console.info("Thumbview: fetchHiddenshots completed");
+	onHideHiddenshotComplete: function(collection, response, options){
+		console.info("Photoview: onHideHiddenshotComplete completed");
 	},
 });
 
-/*
- * Protected attributes
- */
-var _shotHash = {};
-var _shotCounter = 1;
-var _hashShotId = function(shotId){
-	if (!_shotHash[shotId])	_shotHash[shotId]=_shotCounter++;
-	return _shotHash[shotId];
-}
 
 })( snappi.views );

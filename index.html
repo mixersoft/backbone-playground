@@ -82,7 +82,7 @@
         
         <div id="markup" class="hide">
         	<script id="PhotoTemplate" class='handlebars' type="text/x-handlebars-template">
-	        	<!-- <div id="{{id}}" class="thumb {{orientationLabel}}" style="{{position}}"> -->
+	        	<div id="{{photoId}}" class="thumb {{orientationLabel}}" style="{{position}}">
 	        		<div class="crop-wrap">
 	        			<div class="crop">	        				<img class="" src="" 
 	        					data-w0="{{origW}}"
@@ -115,7 +115,44 @@
 							</span>
 						</div>
 					</div>
-				<!-- </div> -->
+				</div>
+			</script>
+			<script id="ShotTemplate" class='handlebars' type="text/x-handlebars-template">
+	        	<div id="{{photoId}}" class="thumb {{orientationLabel}}" style="{{position}}">
+	        		<div class="crop-wrap">
+	        			<div class="crop">
+	        				<img class="" src="" 
+	        					data-w0="{{origW}}"
+	        					data-h0="{{origH}}"
+	        					data-root-src="{{rootSrc}}"
+	        				>
+	    				</div>
+	    			</div>
+	    			<div class="meta">
+	    				<div class="title truncate">
+	    					{{caption}}
+	    				</div>
+    					<div class="attribution-block hide">
+    						<span class="attribution">
+    							<span>by </span><a class="owner">Owner</a>
+							</span>
+						</div>
+						<div class='bottom-row'> 
+							<span class="inline-icons left">
+		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to see {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
+		    					<span title="score: {{score}}">{{score}}<icon class='icon-star'></icon></span>
+		    					<a href="#" class='rating' title='rating: {{rating}}'>
+		    						{{#ratingStars rating}}{{/ratingStars}}
+		    					</a>
+	    					</span>
+							<span class="inline-icons right">
+								<a href="#" title='favorite (planned)'><icon class='icon-heart active'></icon></a>
+								<a href="#" title='taken: {{dateTaken}}'><icon class='icon-info-sign'></icon></a>	
+								<a href="#" title='show full screen (planned)'><icon class='icon-resize-full'></icon></a>
+							</span>
+						</div>
+					</div>
+				</div>
 			</script>
 			<script id="PagerBootstrap" class='underscore' type="text/html">
 				<div class='pagination pagination-centered pagination-small'>
@@ -212,6 +249,7 @@
 
 		<!--Views-->
         <script src="js/views/photo.js"></script>
+        <script src="js/views/shot.js"></script>
         <script src="js/views/pager.js"></script>
         <script src="js/views/gallerydisplayoptions.js"></script>
         <script src="js/views/gallery.js"></script>

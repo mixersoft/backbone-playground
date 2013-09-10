@@ -223,31 +223,30 @@ var GalleryView = {
 		var thumb, $thumb = this.$('#'+item.get('id')+'.thumb');
 		// ???: how can you tell if a model already has a rendered View?
 		// add a back reference?
-		var $parent, $before;
+		var $parent, $shotEl;
 		if ($thumb.length==0) {
-			thumb = new views.PhotoView({model:item, collection: this.collection});
+			var viewClass = (item instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
+			thumb = new viewClass({model:item, collection: this.collection});
 			if (options.offscreen ){
 				$parent = options.offscreen; 
 			} else $parent = this.$('.body');
 			
-			$thumb = thumb.render().$el;
+			$thumb = thumb.render(options).$el;
 			
 			if (item instanceof snappi.models.Shot) {
 				// as determined by GalleryCollection.parse()
 				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
-				var $wrap = $('<div></div>').addClass('shot-wrap');
-				$wrap.append($thumb);
-				$parent.append($wrap);
-			} else if (!!options.after) {
-				// only models.Photo for .hiddenshots
-				$before = this.$('#'+options.after.get('id')+'.thumb');
-				if ($before.length && $.contains($parent.get(0), $before.get(0))) {
-					$before.after($thumb);
+				$parent.append($thumb.addClass('shot-wrap'));
+			} else if (!!options.shotId) {
+				// options.shotId set in this.addedHiddenshots()
+				$shotEl = this.$('#'+options.shotId);
+				if ($shotEl.length) {
+					$shotEl.append($thumb); // add $thumb.$('.thumb')???
 				} else {
-					throw "Trying to insert after missing item, id="+options.after.get('id');
+					throw "Trying to insert into missing shot, shotId="+options.shotId;
 				}
 			} else {
-				// only models.Photo
+				// item instanceof models.Photo
 				$parent.append($thumb);
 			}
 			
@@ -310,11 +309,17 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
 		var stale = options.force || false, 
 			collection = this.collection;
 		
-		var pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-		if (pageContainer.length && (!container || !container.children().length)) {
-			container = pageContainer;
-			// page already rendered, no new elements to render
-		} else if (pageContainer.length && container && container.children().length) {
+		var pageContainer;
+		if (container && container.hasClass('page')) {
+			pageContainer = container;
+		} else {
+			pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
+			if (pageContainer.length && (!container || !container.children().length)) {
+				container = pageContainer;
+				// page already rendered, no new elements to render
+			} 
+		}
+		if (pageContainer.length && container && container.children().length) {
 			// container could hold offscreen ThumbnailViews
 			// render if stale 
 		} else if (pageContainer.length==0) {
@@ -339,12 +344,12 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
 			/*
 			 * the actual layout render statement
 			 */
-			var thumbs = container.find('.thumb');
+			var thumbs = container.find('> div');  // container.find('.thumb');
+			pageContainer.append(thumbs);
 			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
 			/*
 			 * end
 			 */
-			
 			// a new page was added. cleanup GalleryView
 			this.$el.css('min-height', $(window).outerHeight()-160);
 		}
@@ -379,7 +384,7 @@ console.info("onContainerScroll: goTo(), bottomPage+1="+(bottomPage+1));
  */
 var _getPageFromModel = function(that, m) {
 	// get current page
-	var $thumb = that.$('#'+m.get('id')+'.thumb');
+	var $thumb = that.$('#'+m.get('photoId')+'.thumb');
 	var $page = $thumb.closest('.page');
 	return $page; 
 }

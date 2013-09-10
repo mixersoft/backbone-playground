@@ -113,8 +113,8 @@ var GalleryCollection =	{
 			that.add(hiddenshotC.models, {silent:false, merge:true, remove:false} );
 			// TODO: GalleryView is not getting this event
 			that.trigger('addedHiddenshots', hiddenshotC.models, {
-				// after : bestshot,
 				shotId : hiddenshotC.shot_core.id,
+				bestshot : hiddenshotC.shot_core.bestshot,
 				viewClass : 'PhotoView',
 				wrap: false, 
 			});

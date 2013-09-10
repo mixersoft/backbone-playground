@@ -177,11 +177,11 @@ var GalleryView = {
 	 */
 	addedHiddenshots : function(models, options) {
 		_.each(models, function(item, i){
-			if (item == options.after) return;	// skip bestshot
+			if (item == options.bestshot) return;	// skip bestshot
 			this.addOne(item, options);
 		}, this);
 		// get current page
-		var $page = _getPageFromModel(this, options.after);
+		var $page = _getPageFromModel(this, options.bestshot);
 		this.renderBody($page, {force: true, scroll: false});
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
@@ -214,7 +214,8 @@ var GalleryView = {
 	 * @param models.Shot item
 	 * @param options { 
 	 * 		offscreen: jquery container to append rendered view 
-	 * 		after: models.Shot, add .item after options.after.get('id')
+	 * 		shotId: append item to #[shotId].shot-wrap
+	 * 		bestshot: models.Shot, 
 	 * }  
 	 * @return HTMLElement
 	 */

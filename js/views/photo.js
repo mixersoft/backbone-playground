@@ -15,7 +15,6 @@ views.PhotoView = Backbone.View.extend({
 	
 	events: {
 		'click .rotate': 'onRotate',
-		'click .show-hidden-shot': 'onHideHiddenshot',
 		'dblclick img': 'onShowPreview',
 	},
 	
@@ -40,6 +39,7 @@ views.PhotoView = Backbone.View.extend({
 			this.register_handlebar_helpers();
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
+	    this.listenTo(this.model, 'hide', this.onHide);
 	},
 	
 	render: function(options){
@@ -51,10 +51,10 @@ views.PhotoView = Backbone.View.extend({
 		} else 
 			this.$el.html( this.template( m ) );
 		_.defer(function(that, model){
-			if (model instanceof snappi.models.Shot) {
+			if (m.shotId && m.shotCount) {
 				// shot_index = views.ShotView.prototype.hashShotId(model.shotId);
 				// that.$el.addClass('shot-'+ shot_index);
-				if (model.bestshotId == model.photoId) { 
+				if (m.bestshotId == m.photoId) { 
 					// that.$('.thumb').addClass('bestshot');
 					throw "Error: got models.Shot when expecting models.Photo";
 				} else if (that.$el.is('.thumb')) {
@@ -63,7 +63,7 @@ views.PhotoView = Backbone.View.extend({
 					that.$('.thumb').addClass('hiddenshot');
 				}
 			}
-		}, this, m);
+		}, this, this.model);
 		return this;
 	},
 	
@@ -86,26 +86,13 @@ views.PhotoView = Backbone.View.extend({
 		e.preventDefault();
 	},
 	
-	onHideHiddenshot: function(e){
-console.log('PhotoView.onHideHiddenshot()')	;	
-		e.preventDefault();
-		var action = 'hide';
-		if (this.$el.is('.hiddenshot')) {
-			action = 'hide';
-		}
-		switch (action) {
-			case 'show':
-console.info("show hiddenshot for id="+this.model.get('id'));			
-				break;
-			case 'hide':
-console.info("HIDE hiddenshot for id="+this.model.get('shotId'));			
-				break;
-		}
-	},
-	
 	onHideHiddenshotComplete: function(collection, response, options){
 		console.info("Photoview: onHideHiddenshotComplete completed");
 	},
+	
+	onHide : function(){
+		this.remove();
+	}
 });
 
 

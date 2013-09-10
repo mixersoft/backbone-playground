@@ -54,25 +54,31 @@ views.ShotView = views.PhotoView.extend({
 	
 	onShowHiddenShot: function(e){
 		e.preventDefault();
-		var action = 'show';
-		if (this.$('.thumb').is('.hiddenshot')) {
-			action = 'hide';
-		}
+		var action = this.$el.hasClass('showing') ? 'hide' : 'show';
 		switch (action) {
 			case 'show':
-console.info("show hiddenshot for id="+this.model.get('id'));			
+				if (this.$el.hasClass('showing')) return;
+console.info("show hiddenshot for id="+this.model.get('id'));
 				this.collection.trigger('fetchHiddenShots', {
 					model: this.model,
 				});
 				break;
 			case 'hide':
-console.info("HIDE hiddenshot for id="+this.model.get('shotId'));			
+				_.each(this.model.get('hiddenshot').models, function(model,k,l){
+					if (!(model instanceof snappi.models.Shot)) {
+						// get view from model Id
+						model.trigger('hide');	// view.remove()
+					}
+				}, this);
+				if (this.$el.removeClass('showing'));
+				this.collection.trigger('pageLayoutChanged', null, this.$el);
 				break;
 		}
 	},
 	
 	onFetchedHiddenshots: function(collection, response, options){
 		console.info("Thumbview: fetchHiddenshots completed");
+		this.$el.addClass('showing')
 	},
 	
 });

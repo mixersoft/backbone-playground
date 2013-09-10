@@ -77,6 +77,7 @@ var GalleryView = {
 		this.listenTo(collection, 'add', this.add);
 		this.listenTo(collection, 'sync', this.addPage);
 		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
+		this.listenTo(collection, 'pageLayoutChanged', this.layoutPage);
 		
 		// calls colletion.sync and makes request from DB
 		this.$el.addClass('debounce');
@@ -106,15 +107,16 @@ var GalleryView = {
 	refreshLayout: function(options) {
 		var pages = this.$('.body .page');
 		_.each(pages, function(pageContainer, i){
-			/*
-			 * the actual layout render statement
-			 */
-			var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null);
-			/*
-			 * end
-			 */
+			this.layoutPage(pageContainer);
 		}, this);
 		this.$el.css('min-height', $(window).outerHeight()-160);
+	},
+	/**
+	 * layout a single page, this.$('.body .page') 
+	 */
+	layoutPage: function(pageContainer, $child){
+		if (!pageContainer) pageContainer = $child.closest('.page');
+		var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null);
 	},
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
@@ -170,7 +172,7 @@ var GalleryView = {
 		var bootstrap;
 	},
 	add : function(models, options) {
-		console.log("collection add for models, count="+models.length);
+		console.log("collection add for models, count="+this.collection.models.length);
 	},
 	/**
 	 * @param Object options, 

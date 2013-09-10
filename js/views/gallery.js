@@ -173,7 +173,9 @@ var GalleryView = {
 		console.log("collection add for models, count="+models.length);
 	},
 	/**
-	 * @param Object options, options.after models.Shot of bestshot 
+	 * @param Object options, 
+	 * 	options.shotId #[shotId].shot-wrap
+	 *  options.bestshot instanceof models.Shot 
 	 */
 	addedHiddenshots : function(models, options) {
 		_.each(models, function(item, i){

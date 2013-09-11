@@ -31,10 +31,10 @@ var GalleryCollection =	{
 	model : models.Photo,	// snappi.models.Shot	
 	
 	templates: {
-		url_photo_guest: _.template('http://dev.snaphappi.com/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_photo_owner: _.template('http://dev.snaphappi.com/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_photo_workorder: _.template('http://dev.snaphappi.com/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
+		url_photo_guest: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
 	},
 	
 	events: {
@@ -182,6 +182,7 @@ var setup_Paginator = {
 			var qs = this.parseQueryString();		
 			var templateId, type, 
 				request = {
+					hostname: qs.host || 'dev.snaphappi.com',
 					sort: qs.sort || 'score',
 					direction: qs.direction || qs.dir || 'desc',
 					ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",

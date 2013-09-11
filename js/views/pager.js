@@ -27,6 +27,9 @@
 				views.PagerView.prototype.template = _.template(source);
 		    }
 		    var collection = this.collection;
+			var qs = snappi.mixins.Href.parseQueryString();
+			if (qs.perpage) collection.perPage = collection.paginator_ui.perPage = parseInt(qs.perpage);
+
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
 		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);

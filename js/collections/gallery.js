@@ -178,8 +178,7 @@ var setup_Paginator = {
 		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
 			$('body').addClass('wait');
-			var qs = this.parseQueryString();
-			if (qs.perpage) this.perPage = this.paginator_ui.perPage = parseInt(qs.perpage);
+			var qs = this.parseQueryString();		
 			var templateId, type, 
 				request = {
 					sort: qs.sort || 'score',

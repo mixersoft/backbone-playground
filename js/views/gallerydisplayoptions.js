@@ -40,14 +40,22 @@ var GalleryDisplayOptionsView = {
 		var source = $(this.template);
 		var settings = { interpolate : /\{\{(.+?)\}\}/g, };
 		this.template = _.template($(this.template_source).html(), null, settings);
+		
+		// initialize with querystring override
 		var setup = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
+		var qs = mixins.Href.parseQueryString();
+		if (qs.size) {	// override display-option size from url
+			_.map(setup.size, function(o){
+				o.active = (o.label == qs.size.toUpperCase()) ? 'active' : '';
+			});
+		}
 		this.collection.gallery_display_options_ui = setup; 
+		
 	    this.render();
 		this.listenTo(this.collection, 'refreshLayout', this.render);
 	},
 	
 	render: function(){
-		console.log('render display options');
 		// note: the 'model' comes from requestPager.collection.gallery_display_options_ui?
 		this.$el.html( this.template( this.collection.gallery_display_options_ui ) );
 	},

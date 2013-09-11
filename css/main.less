@@ -11,6 +11,7 @@ body.wait {
   cursor: wait !important;
 }
 
+
 @galleryH : 720px;
 .gallery {
   background-color: @grayLighter;
@@ -91,6 +92,7 @@ body.wait {
   }
   
   .meta {
+    @yellow: yellow;
     padding: 5px 0 0;
     position: absolute;
     background: rgba(0,0,0,0);
@@ -144,6 +146,9 @@ body.wait {
         .bestshot& {
           color: @yellow;
         }
+      }
+      .score {
+        color: @yellow;
       }
       a.rating {
         white-space: nowrap;

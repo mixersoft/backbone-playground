@@ -20,7 +20,9 @@ views.ShotView = views.PhotoView.extend({
 	},
 	
 	initialize: function(options){
-		if(!($.isFunction(this.template))) {
+		if( !views.ShotView.prototype.hasOwnProperty('template') ||
+			!($.isFunction(this.template))
+		) {
 			var source = $(this.template_source).html();	
 			// compile once, add to Class
 			this.register_handlebar_helpers();

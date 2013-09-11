@@ -175,8 +175,7 @@ body.wait {
 
 
 .gallery .header {
-  margin-top: -38px;
-  position: fixed;
+  margin-top: 10px;
   z-index: 100;
   width: 100%;
   .pager {
@@ -200,6 +199,24 @@ body.wait {
   }
 }
 
+.pager.vertical-right {
+  position: fixed;
+  right: 0;
+  width: 40px;
+  background: fade(@black,20%);
+  border-radius: 20px 0 0 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 20px 0 20px 20px;
+  top: 85px;
+  .pagination {
+    ul, ul > li {
+      display: block;
+    }
+    ul > li {
+      float: right;
+    }
+  }
+}
 
 /*
  * css transitions from isotope

@@ -162,7 +162,7 @@ var setup_Paginator = {
 
 		// The total number of page numbers to be shown in pagination UI
 		// list is calculated by (pagesInRange * 2) + 1.
-		pagesInRange : 3
+		pagesInRange : 7
 	},
 
 	paginator_core : {

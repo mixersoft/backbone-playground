@@ -204,6 +204,19 @@ body.wait {
   }
 }
 
+.pager {
+  .pagination ul {
+    li.loaded a, li.loaded span {
+      font-weight: bold;
+      color: @blueDark;
+    }
+    li.active a, li.active span {
+       background-color: lighten(@blueDark, 50%);
+       color: @blueDark;
+    }
+  }
+}
+
 .pager.vertical-right {
   position: fixed;
   right: 0;

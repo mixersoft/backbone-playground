@@ -205,6 +205,7 @@ var setup_Paginator = {
 				templateId = 'guest';
 				this.paginator_core.dataType = 'json';
 			}
+			this.trigger('xhr-fetch-page', this.currentPage);
 			return this.templates['url_photo_'+templateId](request);
 		}
 	},

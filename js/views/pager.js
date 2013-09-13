@@ -33,6 +33,7 @@
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
 		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
+		    this.listenTo(collection, 'xhr-fetch-page', this.renderLoading);
 		},
 		render: function (collection, resp, options) {
 			// note: the 'model' comes from requestPager.collection.info()
@@ -43,10 +44,11 @@
 			_.each(this.$('ul.page li > a.page, ul.page li > span'), function(item){
 				var page = $(item).text();
 				if (this.collection.fetchedServerPages[page]) {
-					$(item).css('font-weight','bold');
+					$(item).parent().addClass('loaded');
 				}
 			}, this);
 		},
+		
 
 		gotoFirst: function (e) {
 			e.preventDefault();
@@ -152,6 +154,17 @@
 		renderCurrentPage: function(visiblePage, dir){ 
 			this.collection.currentPage = visiblePage;
 			this.render();
-		}
+		},
+		
+		renderLoading: function (page) {
+			_.each(this.$('ul.page > li a'), function(v){
+				if (v.text==page) {
+					$(v).css({padding: '2px 8px'})
+						.html('<i class="icon-spinner icon-spin icon-small" data-page="'+page+'"><i>');
+					return false;
+				}
+			}, this);
+		},
+
 	});
 })( snappi.views );

@@ -31,7 +31,8 @@ var GalleryCollection =	{
 	model : models.Photo,	// snappi.models.Shot	
 	
 	templates: {
-		url_photo_guest: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
+		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
 		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
 		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
 		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
@@ -193,13 +194,15 @@ var setup_Paginator = {
 				
 			// adjust for request by workorder, 
 			// 	ex. ?type=tw&id=22 => /tasks_workorders/photos/22/perpage:162	
-			type = ['owner','tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type);	
+			type = ['owner','odesk','tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type);	
 			if (type===0) { // owner access, logged in user
 				templateId = 'owner'; 
 				delete request.ownerid;
-			} else if ( type > 0) { // show workorders
+			} else if (type===1) {
+				templateId = 'odesk'; 
+			} else if ( type > 1) { // show workorders
 				request.id = qs.id;
-				request.controller = type>1 ? 'workorders' : 'tasks_workorders';
+				request.controller = type>3 ? 'workorders' : 'tasks_workorders';
 				templateId = 'workorder'; 
 			} else {	// guest access
 				templateId = 'guest';

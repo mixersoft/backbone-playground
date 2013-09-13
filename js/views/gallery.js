@@ -285,7 +285,9 @@ var GalleryView = {
     
     _scrollSpy : function(e) {
     	self = this;
-    	if (self.$el.hasClass('debounce')) return;
+    	if (self.$el.hasClass('debounce')) {
+    		return;
+    	}
     	
     	var target = self.$el,
     		collection = this.collection,
@@ -318,7 +320,8 @@ var GalleryView = {
 			
 		if (nextPage !== scrollPage && 0 < nextPage && nextPage < this.collection.totalPages) 
 		{
-			// ???: should this section be debounce, not throttle
+			// TODO: how can we debounce this if the page load times
+			//	are indeterminant? want to debounce AFTER load complete?
 			if (!this.collection.fetchedServerPages[nextPage]) {
 				// check for fetch
 				if (nextPage > scrollPage && selfB > windowB) {
@@ -333,6 +336,7 @@ var GalleryView = {
 	    this.collection.trigger('scrollPage', scrollPage, scrollDir);
         
     },
+    
 
 	/**
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
@@ -390,11 +394,16 @@ var GalleryView = {
 			this.$el.css('min-height', $(window).outerHeight()-160);
 		}
 		if (options.scroll !== false) {	// false for hiddenshot
+			// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
+			// what is the best way? Stop the listener?
 			_.defer(function(that, pageContainer){
+				that.$el.addClass('debounce');
 				that.scrollBottomAlmostIntoView(pageContainer);
 			}, this, pageContainer);
 		}
-		this.$el.removeClass('debounce');
+		_.delay(function(that){
+			that.$el.removeClass('debounce');
+		}, 1000, this);
 		// for debugging
 		if (_DEBUG) this.introspect();
 	},

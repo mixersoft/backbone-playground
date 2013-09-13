@@ -177,7 +177,7 @@ var setup_Paginator = {
 		// the URL (or base URL) for the service
 		// if you want to have a more dynamic URL, you can make this a function
 		// that returns a string
-		// template:  http://snappi-dev/person/odesk_photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
+		// template:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
 			$('body').addClass('wait');
 			var qs = this.parseQueryString();		
@@ -206,7 +206,7 @@ var setup_Paginator = {
 				templateId = 'workorder'; 
 			} else {	// guest access
 				templateId = 'guest';
-				this.paginator_core.dataType = 'json';
+				// this.paginator_core.dataType = 'json';
 			}
 			this.trigger('xhr-fetch-page', this.currentPage);
 			return this.templates['url_photo_'+templateId](request);

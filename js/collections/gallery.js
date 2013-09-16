@@ -193,15 +193,16 @@ var setup_Paginator = {
 				}
 				
 			// adjust for request by workorder, 
-			// 	ex. ?type=tw&id=22 => /tasks_workorders/photos/22/perpage:162	
-			type = ['owner','odesk','tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type);	
+			// 	ex. ?type=tw:22 => /tasks_workorders/photos/22/perpage:162	
+			type = ['owner','odesk','tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]);	
 			if (type===0) { // owner access, logged in user
 				templateId = 'owner'; 
 				delete request.ownerid;
 			} else if (type===1) {
 				templateId = 'odesk'; 
 			} else if ( type > 1) { // show workorders
-				request.id = qs.id;
+				// use format ?type=wo:17
+				request.id = qs.type.split(':')[1];
 				request.controller = type>3 ? 'workorders' : 'tasks_workorders';
 				templateId = 'workorder'; 
 			} else {	// guest access

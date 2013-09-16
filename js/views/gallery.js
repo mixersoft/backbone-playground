@@ -39,7 +39,7 @@ var LayoutEngines = {
 			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
 			 */
 			qs = this.parseQueryString();
-			if (qs.hasOwnProperty('no-image')) layoutOptions.noImageSrc = true; 	 
+			if (qs['no-image']) layoutOptions.noImageSrc = qs['no-image']==true; 	 
 			
 			var layout = mixins.LayoutEngine.Typeset.run.call(this, 
 				container, 

@@ -52,14 +52,14 @@ models.Photo = Backbone.Model.extend({
 	// backbone methods
 	parse: function( response ){
 		response.id = response.photoId;
-		return response
+		if (!response.origW) response.origW = response.W;
+		if (!response.origH) response.origH = response.H;
+		return response;
 	},
 	
 	initialize: function(attributes, options){
 		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
-		this.set( {
-			id: attributes.id,
-		});
+		this.set( attributes );
 	},
 	
 	// public methods

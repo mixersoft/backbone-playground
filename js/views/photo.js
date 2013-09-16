@@ -44,7 +44,7 @@ views.PhotoView = Backbone.View.extend({
 	
 	render: function(options){
 		var m = this.model.toJSON();
-		if (options.wrap === false) {
+		if (options.wrap === false) {		// do NOT wrap hiddenshots
 			var $wrap = $(this.template( m ));
 			this.$el.html( $wrap.children() );
 			this.$el.attr('id', m.photoId).addClass('thumb');

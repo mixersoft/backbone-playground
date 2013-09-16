@@ -31,11 +31,11 @@ var GalleryCollection =	{
 	model : models.Photo,	// snappi.models.Shot	
 	
 	templates: {
-		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/.json'),
-		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
+		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot//min:typeset/.json'),
 	},
 	
 	events: {

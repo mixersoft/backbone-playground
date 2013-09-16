@@ -26,19 +26,21 @@
 					photoId: id,
 					score: auditions[i].Photo.Fix.Score ? parseInt(auditions[i].Photo.Fix.Score) : null,
 					rating: auditions[i].Photo.Fix.Rating ? parseInt(auditions[i].Photo.Fix.Rating) : null,
+					rotate: auditions[i].Photo.Fix.Rotate ? parseInt(auditions[i].Photo.Fix.Rotate) : 1,
 					caption: auditions[i].Photo.Caption,
 					batchId: parseInt(auditions[i].Photo.BatchId),
 					dateTaken: new Date(auditions[i].Photo.DateTaken.replace(' ', 'T')), 
 					ts: auditions[i].Photo.TS,
 					H: auditions[i].Photo.Img.Src.H,
 					W: auditions[i].Photo.Img.Src.W,
-					exifOrientation:  auditions[i].Photo.Img.Src.Orientation,	// ExifOrientation tag, [1,3,6,8]
+					exifOrientation:  auditions[i].Photo.Img.Src.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
 					rootSrc: auditions[i].Photo.Img.Src.rootSrc,
 					// for collections page management
 					requestPage: page,
 				};
 				
 				// adjust for ExifOrientation
+				// TODO: add math to include audition.rotate
 				if (audition.exifOrientation < 4) {
 					audition.origW = auditions[i].Photo.W;
 					audition.origH = auditions[i].Photo.H;

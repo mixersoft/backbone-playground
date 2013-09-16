@@ -25,12 +25,15 @@ var HiddenshotCollection = {
 	model: models.Photo,
 	
 	templates: {
-		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=id%>/Usershot/.json'),
+		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=id%>/Usershot/min:typeset/.json'),
 	},
 	
 	url: function(){
 		$('body').addClass('wait');
-		return this.templates['url_shot'](this.shot_core);
+		var qs = this.parseQueryString(),	
+			hostname = qs.host || 'dev.snaphappi.com';
+		var data = _.extend({hostname: hostname}, this.shot_core);
+		return this.templates['url_shot'](data);
 	},
 	
 	initialize: function(models, options){

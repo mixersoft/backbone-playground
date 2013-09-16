@@ -289,8 +289,11 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 	    					image.tag.style.height = Math.round(image.height) + 'px';
 	    					
 	    					// adjust img src prefix to fit actual dim
-							var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
-							image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+	    					if (!options.noImageSrc) {  // noImageSrc used to test 10K repsonse without JPGs
+								var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
+								if (image.tag.src.indexOf(thumbsize_prefix+'~')<0)
+									image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+							}
 		
     						border.style.height = Math.round(image.height - totalVertCrop) + "px";
     						border.style.width = Math.round(image.width - imageHorzCrop) + "px";

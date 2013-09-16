@@ -6,6 +6,7 @@
 var extend = function(classDef){
 	var options = _.extend({}, 
 		mixins.UiActions,
+		mixins.Href,
 		LayoutEngines, 
 		classDef
 	);
@@ -32,8 +33,15 @@ var LayoutEngines = {
 				thumbsContainer: container || this.$('.body'),		// or .body .page[data-page=N]
 				targetHeight: displayOptionSize.size,
 				_layout_y: 0,			// start at top
-			}	 
-			var layout = snappi.mixins.LayoutEngine.Typeset.run.call(this, 
+			}	
+			
+			/*
+			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
+			 */
+			qs = this.parseQueryString();
+			if (qs.hasOwnProperty('no-image')) layoutOptions.noImageSrc = true; 	 
+			
+			var layout = mixins.LayoutEngine.Typeset.run.call(this, 
 				container, 
 				items,				// if null, will layout all .thumbs IMG in container
 				this.collection,
@@ -172,7 +180,7 @@ var GalleryView = {
 		var bootstrap;
 	},
 	add : function(models, options) {
-		console.log("collection add for models, count="+this.collection.models.length);
+		// console.log("collection add for models, count="+this.collection.models.length);
 	},
 	/**
 	 * @param Object options, 

@@ -193,21 +193,26 @@ var setup_Paginator = {
 				}
 				
 			// adjust for request by workorder, 
-			// 	ex. ?type=tw:22 => /tasks_workorders/photos/22/perpage:162	
-			type = ['owner','odesk','tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]);	
-			if (type===0) { // owner access, logged in user
-				templateId = 'owner'; 
-				delete request.ownerid;
-			} else if (type===1) {
-				templateId = 'odesk'; 
-			} else if ( type > 1) { // show workorders
-				// use format ?type=wo:17
-				request.id = qs.type.split(':')[1];
-				request.controller = type>3 ? 'workorders' : 'tasks_workorders';
-				templateId = 'workorder'; 
-			} else {	// guest access
-				templateId = 'guest';
-				// this.paginator_core.dataType = 'json';
+			type = !!qs.type && ['owner', 'odesk', 'tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]) || -1;	
+			switch (type){
+				case -1: // guest access, default, show public photos for userid
+					templateId = 'guest';		// ?owner=[uuid] || "51cad9fb-d130-4150-b859-1bd00afc6d44"
+					if (/^[a-z]+$/i.test(qs.owner)) {
+						templateId = 'odesk';   // same as ?type=odesk&owner=paris
+					}
+					break;
+				case 0: // guest access, show public photos for userid
+					templateId = 'owner'; 
+					delete request.ownerid;		// ?type=owner, fetch /my/photos, ignore &owner=[] param
+					break;
+				case 1:
+					templateId = 'odesk';		// ?type=odesk&owner=paris or ?type=demo&owner=paris  
+					break; 
+				default: // workorder access, 
+					request.id = qs.type.split(':')[1];
+					request.controller = type>3 ? 'workorders' : 'tasks_workorders';
+					templateId = 'workorder'; 	// ?type=wo:17 or ?type=workorder:17
+					break;
 			}
 			this.trigger('xhr-fetch-page', this.currentPage);
 			return this.templates['url_photo_'+templateId](request);

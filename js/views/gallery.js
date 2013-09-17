@@ -108,7 +108,7 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 		else collection.pager({ remove: false });
 		/*
 		 * NOTE: get containerWidth BEFORE rendering Views, 
-		 * 	otherwise it will take longer, force a DOM render
+		 * 	otherwise it will take longer, forces a DOM render
 		 */
 		// TODO: update on window.resize
 		this.$el.data('outerW', this.$('.body').outerWidth());

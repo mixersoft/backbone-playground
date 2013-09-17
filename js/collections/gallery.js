@@ -198,7 +198,7 @@ if (_DEBUG) console.time("GalleryView.fetch()");
 			switch (type){
 				case -1: // guest access, default, show public photos for userid
 					templateId = 'guest';		// ?owner=[uuid] || "51cad9fb-d130-4150-b859-1bd00afc6d44"
-					if (/^[a-z]+$/i.test(qs.owner)) {
+					if (qs.owner && /^[a-z]+$/i.test(qs.owner)) {
 						templateId = 'odesk';   // same as ?type=odesk&owner=paris
 					}
 					break;

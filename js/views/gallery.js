@@ -107,12 +107,11 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 		}
 		else collection.pager({ remove: false });
 		/*
-		 * get containerWidth BEFORE rendering Views
+		 * NOTE: get containerWidth BEFORE rendering Views, 
+		 * 	otherwise it will take longer, force a DOM render
 		 */
-		if (_DEBUG) console.time("Typeset.run DOM render0");
 		// TODO: update on window.resize
 		this.$el.data('outerW', this.$('.body').outerWidth());
-		if (_DEBUG) console.timeEnd("Typeset.run DOM render0");
 	},
 	
 	render: function(){

@@ -180,6 +180,7 @@ var setup_Paginator = {
 		// template:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
 			$('body').addClass('wait');
+if (_DEBUG) console.time("GalleryView.fetch()");				
 			var qs = this.parseQueryString();		
 			var templateId, type, 
 				request = {
@@ -220,6 +221,8 @@ var setup_Paginator = {
 	},
 	
 	parse : function(response) {
+if (_DEBUG) console.timeEnd("GalleryView.fetch()");		
+
 		var paging = response.response.castingCall.CastingCall.Auditions,
 			serverPaging = {
 				page: paging.Page,
@@ -245,13 +248,14 @@ var setup_Paginator = {
 		this.fetchedServerPages[serverPaging.page]=true  
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
-		
 		var parsed = this.parseShot(response.response.castingCall), // from mixin
 			photos = [];
+if (_DEBUG) console.time("GalleryView: create models");			
 		_.each(parsed, function(v, k, l) {
 			if (v.shotId) photos.push(new models.Shot(v));
 			else photos.push(new models.Photo(v));
 		});
+if (_DEBUG) console.timeEnd("GalleryView: create models");		
 		$('body').removeClass('wait');
 		return photos;
 	},

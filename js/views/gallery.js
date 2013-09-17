@@ -24,23 +24,25 @@ var extend = function(classDef){
 var LayoutEngines = {
 	layout: {
 		Typeset: function(container, items){
-			var layoutState,
-				displayOptions = this.collection.gallery_display_options_ui,
+			var that = this,
+				layoutState,
+				displayOptions = that.collection.gallery_display_options_ui,
 				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
 				
 			var layoutOptions = {
-				outerContainer: this.$el,
-				thumbsContainer: container || this.$('.body'),		// or .body .page[data-page=N]
+				outerContainer: that.$el,
+				thumbsContainer: container || that.$('.body'),		// or .body .page[data-page=N]
 				targetHeight: displayOptionSize.size,
-				_layout_y: 0,			// start at top
+				_layout_y: 0,					// start at page top
+				// success: function(){},		// pipeline success
 			}	
 			
 			/*
 			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
 			 */
-			qs = this.parseQueryString();
+			qs = that.parseQueryString();
 			if (qs['no-image']) layoutOptions.noImageSrc = qs['no-image']==true; 	 
-			_.defer(function(that){
+			// _.defer(function(that){
 if (_DEBUG) console.time("Typeset.run");
 				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
 					container, 
@@ -55,7 +57,7 @@ if (_DEBUG) console.timeEnd("Typeset.run");
 			        	container.append(layout.items);
 			        }
 				} ;
-			},this);
+			// },that);
 			return;
 		},  // end layout.Typeset
 	},
@@ -199,6 +201,7 @@ var GalleryView = {
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, options) {
+if (_DEBUG) console.time("Backbone.addPage View render");			
 		options = $.extend(options || {}, {
 			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
 			offscreenTop : _.template(
@@ -225,6 +228,7 @@ var GalleryView = {
 				this.addOne(model, options);	
 			}
 		}, this);
+if (_DEBUG) console.timeEnd("Backbone.addPage View render");
 			
 		this.renderBody(options.offscreen || this.$('.body'));
 	},

@@ -183,7 +183,7 @@ var setup_Paginator = {
 			var qs = this.parseQueryString();		
 			var templateId, type, 
 				request = {
-					hostname: qs.host || 'dev.snaphappi.com',
+					hostname: this.hostname(),
 					sort: qs.sort || 'score',
 					direction: qs.direction || qs.dir || 'desc',
 					ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",

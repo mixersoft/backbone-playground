@@ -31,7 +31,7 @@ var HiddenshotCollection = {
 	url: function(){
 		$('body').addClass('wait');
 		var qs = this.parseQueryString(),	
-			hostname = qs.host || 'dev.snaphappi.com';
+			hostname = this.hostname();
 		var data = _.extend({hostname: hostname}, this.shot_core);
 		return this.templates['url_shot'](data);
 	},

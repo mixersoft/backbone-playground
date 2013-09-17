@@ -50,7 +50,7 @@ var Shot = {
 	},
 	
 	templates: {
-		url_shot: _.template('http://dev.snaphappi.com/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
+		url_shot: _.template('http://'+snappi.mixins.Href.hostname()+'/photos/hiddenShots/<%=shotId%>/Usershot/.json'),
 	},
 	
 	// backbone methods

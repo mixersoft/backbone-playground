@@ -69,7 +69,16 @@
 	/*
 	 * helper functions for manipulating window.location.href
 	 */
+	var _hostname;
 	mixins.Href = {
+		hostname: function(host){
+			if (!!host) _hostname = host;
+			if (!_hostname) {
+				var qs = this.parseQueryString();
+				_hostname = qs.host || 'dev.snaphappi.com';
+			}
+			return _hostname;
+		},
 		parseQueryString : function(a) {
 			a = a || (window.location.search.substr(1).split('&'));
 		    if (a == "") return {};

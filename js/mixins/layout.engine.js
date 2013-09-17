@@ -110,6 +110,9 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             var lines;
             var _layoutComplete = function(){
             	options.outerContainer.removeClass(options.classes.throttle);
+				if (originalOverflowY != "scroll") {
+	            	document.body.style["overflow-y"] = originalOverflowY;
+	            }
 	            var result = {
 	            	state : options, // return options/state for multi-page layouts using same settings
 	            	items: items

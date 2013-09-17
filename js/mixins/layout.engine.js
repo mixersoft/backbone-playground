@@ -69,6 +69,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * @param Object options, defaults for layout engine, including 'context' for multi-page layouts
 		 */	
 		run: function(container, items, collection, options){
+if (_DEBUG) console.time("Typeset.run prepare");			
 			var engine = mixins.LayoutEngine.Typeset;
 			// TODO: need to keep a static options avail for relayout
 			if (!options.complete) options = engine.initialize(options);
@@ -90,7 +91,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
              * this is where the work is done
              */
             options.outerContainer.addClass(options.classes.throttle);
-            
+if (_DEBUG) console.timeEnd("Typeset.run prepare");            
             // sanity checks
 if (_DEBUG) console.time("Typeset.run sanity");
             if (!items || items.length === 0) items = container.find(options.thumbSelector);
@@ -113,6 +114,7 @@ if (_DEBUG) console.time("Typeset.run chunking");
 if (_DEBUG) console.timeEnd("Typeset.run chunking");            
             var lines;
             var _layoutComplete = function(){
+if (_DEBUG) console.time("Typeset.run _layoutComplete");            
             	options.outerContainer.removeClass(options.classes.throttle);
 				if (originalOverflowY != "scroll") {
 	            	document.body.style["overflow-y"] = originalOverflowY;
@@ -122,8 +124,8 @@ if (_DEBUG) console.timeEnd("Typeset.run chunking");
 	            	items: items
 	            };
 	            return result;
+if (_DEBUG) console.timeEnd("Typeset.run _layoutComplete");            
             }
-if (_DEBUG) console.time("Typeset.run each");            
             _.each(chunks, function(chunk, i){
             	_.defer(function(that){
 		            lines = engine._linebreak.call(this, container, chunk, collection, options);
@@ -142,7 +144,6 @@ if (_DEBUG) console.time("Typeset.run each");
 		            }
             	}, this);
             }, this);
-if (_DEBUG) console.timeEnd("Typeset.run each");              
 		},
 		/**
 		 * @param jquery container, .gallery .body, GalleryView.$(.body .page)

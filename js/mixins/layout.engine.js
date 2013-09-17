@@ -69,7 +69,6 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * @param Object options, defaults for layout engine, including 'context' for multi-page layouts
 		 */	
 		run: function(container, items, collection, options){
-if (_DEBUG) console.time("Typeset.run prepare");			
 			var engine = mixins.LayoutEngine.Typeset;
 			// TODO: need to keep a static options avail for relayout
 			if (!options.complete) options = engine.initialize(options);
@@ -85,21 +84,22 @@ if (_DEBUG) console.time("Typeset.run prepare");
             if (originalOverflowY != "scroll") {
             	document.body.style["overflow-y"] = "scroll";
             }
-            options.containerWidth = options.thumbsContainer.outerWidth() - 15;
-            
+if (_DEBUG) console.time("Typeset.run DOM render");
+			// TODO: this is slow, forces a DOM render operation 
+			var w = options.thumbsContainer.get(0).offsetWidth;  // options.thumbsContainer.outerWidth();
+			options.containerWidth = w - 15;
+if (_DEBUG) console.timeEnd("Typeset.run DOM render"); 
+           
             /*
              * this is where the work is done
              */
             options.outerContainer.addClass(options.classes.throttle);
-if (_DEBUG) console.timeEnd("Typeset.run prepare");            
             // sanity checks
-if (_DEBUG) console.time("Typeset.run sanity");
             if (!items || items.length === 0) items = container.find(options.thumbSelector);
             if (items.length && !items.eq(0).hasClass('thumb')) {
             	items = items.find(options.thumbSelector);
             	if (!items.eq(0).hasClass('thumb'))  throw ('expecting div.thumb');
             } 
-if (_DEBUG) console.timeEnd("Typeset.run sanity");  
 if (_DEBUG) console.time("Typeset.run chunking");          
             var chunks=[], end, stop = items.length;
             var CHUNK_SIZE = Math.ceil($(window).height() * $(window).width() / (options.targetHeight*options.targetHeight*1.3)); 

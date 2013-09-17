@@ -349,7 +349,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
         
         var nextPage = scrollDir=='down' ? this.collection.currentPage+1 : this.collection.currentPage-1;
 			
-		if (nextPage !== scrollPage && 0 < nextPage && nextPage < this.collection.totalPages) 
+		if (nextPage !== scrollPage && 0 < nextPage && nextPage <= this.collection.totalPages) 
 		{
 			// TODO: how can we debounce this if the page load times
 			//	are indeterminant? want to debounce AFTER load complete?

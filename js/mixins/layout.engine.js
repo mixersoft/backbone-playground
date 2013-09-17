@@ -106,27 +106,39 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	} else chunks.push(items.slice(c*CHUNKSIZE, Math.min(end, stop)));
             }
             var lines;
-            _.each(chunks, function(chunk){
-	            lines = engine._linebreak.call(this, container, chunk, collection, options);
-	            engine._layout.call(this, lines, options);
-	            // add class to indicate layout engine after 1st chunk rendered
-	            options.outerContainer.addClass(options.classes.boundingbox);
-	            container.css('height', options._layout_y + "px");
-            }, this);
-            
-            options.outerContainer.removeClass(options.classes.throttle);
-            /*
-             * done
-             */
-			// // cleanup
-			// container.css('height', options._layout_y + "px");
-			if (originalOverflowY != "scroll") {
-            	document.body.style["overflow-y"] = originalOverflowY;
+            var complete = function(){
+            	options.outerContainer.removeClass(options.classes.throttle);
+	            /*
+	             * done
+	             */
+				// // cleanup
+				if (originalOverflowY != "scroll") {
+	            	document.body.style["overflow-y"] = originalOverflowY;
+	            }
+	            var result = {
+	            	state : options, // return options/state for multi-page layouts using same settings
+	            	items: items
+	            };
+	            if (_.isFunction(options.success)) options.success(result);
+	            else return result;
             }
-            return {
-            	state : options, // return options/state for multi-page layouts using same settings
-            	items: items
-            };		
+            _.each(chunks, function(chunk, i){
+            	_.defer(function(that){
+		            lines = engine._linebreak.call(this, container, chunk, collection, options);
+		            engine._layout.call(this, lines, options);
+		            if (i==0){
+			            // add class to indicate layout engine after 1st chunk rendered
+			            options.outerContainer.addClass(options.classes.boundingbox);
+		            }
+		            if (i < chunks.length) {
+		            	container.css('height', options._layout_y + "px");
+		            }
+console.warn("layout chunk complete, chunk="+i);		            
+		            if (i==chunks.length-1) {
+		            	complete();
+		            }
+            	}, this);
+            }, this);
 		},
 		/**
 		 * @param jquery container, .gallery .body, GalleryView.$(.body .page)

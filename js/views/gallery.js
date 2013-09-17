@@ -201,7 +201,6 @@ var GalleryView = {
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, options) {
-if (_DEBUG) console.time("Backbone.addPage View render");			
 		options = $.extend(options || {}, {
 			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
 			offscreenTop : _.template(
@@ -221,6 +220,7 @@ if (_DEBUG) console.time("Backbone.addPage View render");
 			
 		// use audition.requestPage to manage paging
 		// TODO: model.get('clientPage') || model.get('requestPage')
+if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
 		var p, pageModels = []; 
 		_.each(collection.models, function(model, i){
 			p = model.get('clientPage') || model.get('requestPage') || 9999;
@@ -228,7 +228,7 @@ if (_DEBUG) console.time("Backbone.addPage View render");
 				this.addOne(model, options);	
 			}
 		}, this);
-if (_DEBUG) console.timeEnd("Backbone.addPage View render");
+if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			
 		this.renderBody(options.offscreen || this.$('.body'));
 	},
@@ -428,6 +428,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage View render");
 	},
 	// debugging
 	introspect: function() {
+		return;
 		var auditions = SNAPPI.Auditions;
 		_.each(this.$('div.thumb'), function(el,k,l) {
 			var id = $(el).attr('id'),

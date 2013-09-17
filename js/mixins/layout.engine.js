@@ -84,11 +84,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             if (originalOverflowY != "scroll") {
             	document.body.style["overflow-y"] = "scroll";
             }
-if (_DEBUG) console.time("Typeset.run DOM render");
-			// TODO: this is slow, forces a DOM render operation 
-			var w = options.thumbsContainer.get(0).offsetWidth;  // options.thumbsContainer.outerWidth();
-			options.containerWidth = w - 15;
-if (_DEBUG) console.timeEnd("Typeset.run DOM render"); 
+			options.containerWidth = options.outerContainer.data('outerW') - 15;
            
             /*
              * this is where the work is done

@@ -23,7 +23,7 @@ var extend = function(classDef){
 
 var LayoutEngines = {
 	layout: {
-		Typeset: function(container, items){
+		Typeset: function(container, items, options){
 			var that = this,
 				layoutState,
 				displayOptions = that.collection.gallery_display_options_ui,
@@ -106,6 +106,13 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 			this.addPage();
 		}
 		else collection.pager({ remove: false });
+		/*
+		 * get containerWidth BEFORE rendering Views
+		 */
+		if (_DEBUG) console.time("Typeset.run DOM render0");
+		// TODO: update on window.resize
+		this.$el.data('outerW', this.$('.body').outerWidth());
+		if (_DEBUG) console.timeEnd("Typeset.run DOM render0");
 	},
 	
 	render: function(){

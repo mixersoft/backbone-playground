@@ -89,6 +89,12 @@ var GalleryView = {
 		this.listenTo(collection, 'sync', this.addPage);
 		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
 		this.listenTo(collection, 'pageLayoutChanged', this.layoutPage);
+		this.listenTo(collection, 'layout-chunk', function(i, container, height){
+			container.css('height', height + "px");
+if (_DEBUG) console.info("layout chunk complete, chunk="+i);			
+		});
+		this.listenTo(collection, 'layout-complete', function(){
+		});
 		
 		// calls colletion.sync and makes request from DB
 		this.$el.addClass('debounce');
@@ -365,7 +371,8 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 	 */
 	renderBody: function(container, options){
 		options = options || {};
-		var stale = options.force || false, 
+		var that = this,
+			stale = options.force || false, 
 			collection = this.collection;
 		
 		var pageContainer;
@@ -412,13 +419,14 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			// a new page was added. cleanup GalleryView
 			this.$el.css('min-height', $(window).outerHeight()-160);
 		}
-		if (options.scroll !== false) {	// false for hiddenshot
-			// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
-			// what is the best way? Stop the listener?
-			_.defer(function(that, pageContainer){
+		if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+			that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
+				// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
+				// what is the best way? Stop the listener?
 				that.$el.addClass('debounce');
 				that.scrollBottomAlmostIntoView(pageContainer);
-			}, this, pageContainer);
+console.log('GalleryView.renderBody() first chunk ready to view');				
+			});
 		}
 		_.delay(function(that){
 			that.$el.removeClass('debounce');

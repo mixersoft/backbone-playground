@@ -105,6 +105,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             		chunks.push(items.slice(c*CHUNK_SIZE, stop));
             		break;
             	} else chunks.push(items.slice(c*CHUNK_SIZE, Math.min(end, stop)));
+            	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             }
             var lines;
             var complete = function(){
@@ -127,17 +128,15 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	_.defer(function(that){
 		            lines = engine._linebreak.call(this, container, chunk, collection, options);
 		            engine._layout.call(this, lines, options);
-		            if (i==0){
+					if (i==0){
 			            // add class to indicate layout engine after 1st chunk rendered
-			            options.outerContainer.addClass(options.classes.boundingbox);
-		            }
+		            	options.outerContainer.addClass(options.classes.boundingbox);
+		            }		            
 		            if (i < chunks.length) {
-		            	container.css('height', options._layout_y + "px");
+		            	collection.trigger('layout-chunk', i, container, options._layout_y );
+		            	// container.css('height', options._layout_y + "px");
 		            }
-if (_DEBUG) console.info("layout chunk complete, chunk="+i);		            
-		            if (i==chunks.length-1) {
-		            	complete();
-		            }
+		            if (i==chunks.length-1) collection.trigger('layout-complete');
             	}, this);
             }, this);
 		},

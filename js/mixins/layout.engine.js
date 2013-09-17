@@ -97,22 +97,32 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	items = items.find(options.thumbSelector);
             	if (!items.eq(0).hasClass('thumb'))  throw ('expecting div.thumb');
             } 
-            var lines = engine._linebreak.call(this, container, items, collection, options);
-            engine._layout.call(this, lines, options);
+            var CHUNKSIZE = 100, chunks=[], end, stop = items.length;
+            for (var c=0; (c*CHUNKSIZE)<stop; c++){
+            	end = (c+1)*CHUNKSIZE;
+            	if ((stop-end) < CHUNKSIZE/2) {
+            		chunks.push(items.slice(c*CHUNKSIZE, stop));
+            		break;
+            	} else chunks.push(items.slice(c*CHUNKSIZE, Math.min(end, stop)));
+            }
+            var lines;
+            _.each(chunks, function(chunk){
+	            lines = engine._linebreak.call(this, container, chunk, collection, options);
+	            engine._layout.call(this, lines, options);
+	            // add class to indicate layout engine after 1st chunk rendered
+	            options.outerContainer.addClass(options.classes.boundingbox);
+	            container.css('height', options._layout_y + "px");
+            }, this);
             
             options.outerContainer.removeClass(options.classes.throttle);
             /*
              * done
              */
-
-			// cleanup
-			container.css('height', options._layout_y + "px");
+			// // cleanup
+			// container.css('height', options._layout_y + "px");
 			if (originalOverflowY != "scroll") {
             	document.body.style["overflow-y"] = originalOverflowY;
             }
-            // add class to indicate layout engine  
-            options.outerContainer.addClass(options.classes.boundingbox);
-            
             return {
             	state : options, // return options/state for multi-page layouts using same settings
             	items: items
@@ -141,7 +151,7 @@ if (_DEBUG) console.time("Typeset._linebreak");
     			image, 
     			i, point, r, lineStart = 0,
     			x;
-    			
+    		//TODO: add chunksize	
     		for (i = 0; i < items.length; i++) {
     			var img_tag = items.get(i);
     			

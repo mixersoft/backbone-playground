@@ -92,11 +92,14 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             options.outerContainer.addClass(options.classes.throttle);
             
             // sanity checks
+if (_DEBUG) console.time("Typeset.run sanity");
             if (!items || items.length === 0) items = container.find(options.thumbSelector);
             if (items.length && !items.eq(0).hasClass('thumb')) {
             	items = items.find(options.thumbSelector);
             	if (!items.eq(0).hasClass('thumb'))  throw ('expecting div.thumb');
             } 
+if (_DEBUG) console.timeEnd("Typeset.run sanity");  
+if (_DEBUG) console.time("Typeset.run chunking");          
             var chunks=[], end, stop = items.length;
             var CHUNK_SIZE = Math.ceil($(window).height() * $(window).width() / (options.targetHeight*options.targetHeight*1.3)); 
             for (var c=0; (c*CHUNK_SIZE)<stop; c++){
@@ -107,6 +110,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	} else chunks.push(items.slice(c*CHUNK_SIZE, Math.min(end, stop)));
             	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             }
+if (_DEBUG) console.timeEnd("Typeset.run chunking");            
             var lines;
             var _layoutComplete = function(){
             	options.outerContainer.removeClass(options.classes.throttle);
@@ -119,6 +123,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 	            };
 	            return result;
             }
+if (_DEBUG) console.time("Typeset.run each");            
             _.each(chunks, function(chunk, i){
             	_.defer(function(that){
 		            lines = engine._linebreak.call(this, container, chunk, collection, options);
@@ -137,6 +142,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		            }
             	}, this);
             }, this);
+if (_DEBUG) console.timeEnd("Typeset.run each");              
 		},
 		/**
 		 * @param jquery container, .gallery .body, GalleryView.$(.body .page)

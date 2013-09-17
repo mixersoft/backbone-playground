@@ -426,7 +426,7 @@ var GalleryView = {
 				? this.collection.origModels
 				: this.collection.models;
 			$(el).find('img').get(0).raw = auditions[id];
-			$(el).find('img').get(0).parsed = _.findWhere(models, {id: id}).toJSON();
+			// $(el).find('img').get(0).parsed = _.findWhere(models, {id: id}).toJSON();
 		}, this);
 	},
 };

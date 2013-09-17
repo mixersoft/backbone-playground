@@ -125,6 +125,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * @param Object options, 'context' for layout 
 		 */		
 		_linebreak: function(container, items, collection, options){
+if (_DEBUG) console.time("Typeset._linebreak");			
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.imgSelector);
             if (items.length && items.get(0).tagName != 'IMG') {
@@ -188,11 +189,12 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
     			lines.push({ratio: r, nodes: nodes.slice(lineStart, point + 1), position: point});
     			lineStart = point;
     		}
-    		
+if (_DEBUG) console.timeEnd("Typeset._linebreak");    		
     		return lines;	
     		
 		},
 		_layout:function(lines, options){
+if (_DEBUG) console.time("Typeset._layout");			
 			lines.forEach(function (line) {
     			var	
     				lineImages = [],
@@ -308,6 +310,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
     				options._layout_y += lineHeight * scale - totalVertCrop + options.space.width;
     			}
     		});	
+if (_DEBUG) console.timeEnd("Typeset._layout");    		
 		},
 	}
 	

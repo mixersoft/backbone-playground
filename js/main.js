@@ -2,7 +2,7 @@
 
 (function() {
 
-	_DEBUG = 0;
+	_DEBUG = window.location.search.indexOf('debug') > -1;
 	window.SNAPPI = window.SNAPPI || {};
 	
 	/*

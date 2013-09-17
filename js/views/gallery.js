@@ -40,22 +40,23 @@ var LayoutEngines = {
 			 */
 			qs = this.parseQueryString();
 			if (qs['no-image']) layoutOptions.noImageSrc = qs['no-image']==true; 	 
-			
-			var layout = mixins.LayoutEngine.Typeset.run.call(this, 
-				container, 
-				items,				// if null, will layout all .thumbs IMG in container
-				this.collection,
-				layoutOptions
-			);
-			
-			if (layout) {
-				// append, if necessary
-		        if (!$.contains(container.get(0), layout.items.get(0))) {
-		        	container.append(layout.items);
-		        }
-		        
-		        return layout.state;
-			} else return false;
+			_.defer(function(that){
+if (_DEBUG) console.time("Typeset.run");
+				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
+					container, 
+					items,				// if null, will layout all .thumbs IMG in container
+					that.collection,
+					layoutOptions
+				);
+if (_DEBUG) console.timeEnd("Typeset.run");
+				if (layout) {
+					// append, if necessary
+			        if (!$.contains(container.get(0), layout.items.get(0))) {
+			        	container.append(layout.items);
+			        }
+				} ;
+			},this);
+			return;
 		},  // end layout.Typeset
 	},
 }

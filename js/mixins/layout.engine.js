@@ -108,21 +108,13 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             }
             var lines;
-            var complete = function(){
+            var _layoutComplete = function(){
             	options.outerContainer.removeClass(options.classes.throttle);
-	            /*
-	             * done
-	             */
-				// // cleanup
-				if (originalOverflowY != "scroll") {
-	            	document.body.style["overflow-y"] = originalOverflowY;
-	            }
 	            var result = {
 	            	state : options, // return options/state for multi-page layouts using same settings
 	            	items: items
 	            };
-	            if (_.isFunction(options.success)) options.success(result);
-	            else return result;
+	            return result;
             }
             _.each(chunks, function(chunk, i){
             	_.defer(function(that){
@@ -136,7 +128,10 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		            	collection.trigger('layout-chunk', i, container, options._layout_y );
 		            	// container.css('height', options._layout_y + "px");
 		            }
-		            if (i==chunks.length-1) collection.trigger('layout-complete');
+		            if (i==chunks.length-1) {
+		            	_layoutComplete();
+		            	collection.trigger('layout-complete');
+		            }
             	}, this);
             }, this);
 		},

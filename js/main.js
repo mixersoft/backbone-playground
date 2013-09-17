@@ -16,14 +16,16 @@
 	
 	// Defer initialization until doc ready.
 	$(function() {
-		
+		var mixins = snappi.mixins;
 		// config image server
-		snappi.mixins.Href.imgServer({
-			hostname: 'snaphappi.com',
-			subdomains: ['snappi','snappi1','snappi2'],
-			baseurl: '/svc/STAGING/',
-			template: 'http://{{subdomain}}.{{hostname}}{{baseurl}}{{stage}}/.thumbs/{{size}}~{{filename}}',
-		});
+		if (0 && /snaphappi.com$/.test(mixins.Href.hostname())==false){
+			// use localhost config for img hosting
+			var localhost = {
+				hostname: mixins.Href.hostname(),
+				subdomains : [''],
+			};
+		}
+		mixins.Href.imgServer(localhost || {});
 		
 		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();
 		

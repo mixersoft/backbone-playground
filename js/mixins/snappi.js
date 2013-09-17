@@ -108,9 +108,9 @@
 				// init static
 				var defaults = {
 					hostname: 'snaphappi.com',
-					subdomains: ['snappi','snappi1','snappi2'],
+					subdomains: ['snappi.','snappi1.','snappi2.'],
 					baseurl: '/svc/STAGING/',
-					template: 'http://{{subdomain}}.{{hostname}}{{baseurl}}{{stage}}/.thumbs/{{size}}~{{filename}}',
+					template: 'http://{{subdomain}}{{hostname}}{{baseurl}}{{stage}}/.thumbs/{{size}}~{{filename}}',
 				};
 				mixins.Href._imgServer = defaults;
 			}

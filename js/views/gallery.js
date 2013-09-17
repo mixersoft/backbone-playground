@@ -201,6 +201,12 @@ var GalleryView = {
 	addPage : function(models, options) {
 		options = $.extend(options || {}, {
 			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
+			offscreenTop : _.template(
+				'top:<%=top%>px;',
+				{ 	// set CSS transition start point offscreen
+					top: Math.max(this.$el.height(),$(window).height()) 
+				}
+			),
 		});
 		
 		/*

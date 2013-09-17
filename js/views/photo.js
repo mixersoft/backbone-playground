@@ -48,8 +48,12 @@ views.PhotoView = Backbone.View.extend({
 			var $wrap = $(this.template( m ));
 			this.$el.html( $wrap.children() );
 			this.$el.attr('id', m.photoId).addClass('thumb');
-		} else 
+		} else {
+			if (options.offscreen) {
+				m.top = options.offscreenTop;
+			}
 			this.$el.html( this.template( m ) );
+		}
 		_.defer(function(that, model){
 			if (m.shotId && m.shotCount) {
 				// shot_index = views.ShotView.prototype.hashShotId(model.shotId);

@@ -157,6 +157,7 @@
 		},
 		
 		renderLoading: function (page) {
+			$('body').addClass('wait');
 			_.each(this.$('ul.page > li a'), function(v){
 				if (v.text==page) {
 					$(v).css({padding: '2px 8px'})

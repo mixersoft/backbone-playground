@@ -24,7 +24,7 @@
 					shotCount: auditions[i].Shot.count ? parseInt(auditions[i].Shot.count) : null,
 					
 					photoId: id,
-					score: auditions[i].Photo.Fix.Score ? parseInt(auditions[i].Photo.Fix.Score) : null,
+					score: auditions[i].Photo.Fix.Score ? Math.round(parseFloat(auditions[i].Photo.Fix.Score)*10)/10 : null,
 					rating: auditions[i].Photo.Fix.Rating ? parseInt(auditions[i].Photo.Fix.Rating) : null,
 					rotate: auditions[i].Photo.Fix.Rotate ? parseInt(auditions[i].Photo.Fix.Rotate) : 1,
 					caption: auditions[i].Photo.Caption,

@@ -25,6 +25,7 @@
 				subdomains : [''],
 			};
 		}
+		snappi.qs = mixins.Href.parseQueryString();
 		mixins.Href.imgServer(localhost || {});
 		
 		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();

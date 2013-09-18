@@ -45,6 +45,7 @@ var GalleryCollection =	{
 	initialize: function(){
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
+		this.listenTo(this, 'request', this.request);
 	},
 	
 	/**
@@ -179,9 +180,8 @@ var setup_Paginator = {
 		// that returns a string
 		// template:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
 		url : function(){
-			$('body').addClass('wait');
-if (_DEBUG) console.time("GalleryView.fetch()");				
-			var qs = this.parseQueryString();		
+			var that = this, 
+				qs = this.parseQueryString();		
 			var templateId, type, 
 				request = {
 					hostname: this.hostname(),
@@ -216,7 +216,18 @@ if (_DEBUG) console.time("GalleryView.fetch()");
 					break;
 			}
 			this.trigger('xhr-fetch-page', this.currentPage);
-			return this.templates['url_photo_'+templateId](request);
+			return function(){ // return as function so this instanceOf queryOptions 
+				var url;
+				switch (this.type){
+					case 'GET':
+						url = that.templates['url_photo_'+templateId](request);
+						break;
+					case 'PUT':	
+						// use model.save() instead
+					default:
+				}
+				return url;
+			};
 		}
 	},
 	
@@ -260,9 +271,13 @@ if (_DEBUG) console.timeEnd("GalleryView: create models");
 		return photos;
 	},
 	
-	server_api: {
-		// custom parameters
-		// 'callback': '?',
+	server_api: {	
+		// custom parameters appended to querystring via queryAttributes
+	},
+	request: function(collection, xhr, queryOptions){
+		var check; // GalleryCollection
+		this.trigger('xhr-fetch-page', this.currentPage);
+		if (_DEBUG) console.time("GalleryView.fetch()");
 	},
 }
 

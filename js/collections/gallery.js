@@ -194,8 +194,9 @@ var setup_Paginator = {
 				}
 				
 			// adjust for request by workorder, 
-			type = !!qs.type && ['owner', 'odesk', 'tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]);	
+			type = !!qs.type && ['owner', 'odesk', 'tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]) ;	
 			switch (type){
+				case false:
 				case -1: // guest access, default, show public photos for userid
 					templateId = 'guest';		// ?owner=[uuid] || "51cad9fb-d130-4150-b859-1bd00afc6d44"
 					if (qs.owner && /^[a-z]+$/i.test(qs.owner)) {

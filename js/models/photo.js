@@ -27,8 +27,11 @@ models.Photo = Backbone.Model.extend({
 		
 	}, 
 	
+	url: 'http://'+snappi.mixins.Href.hostname()+'/assets/restapi/.json',	
+	
 	templates: {
 		url_photo: _.template('http://'+snappi.mixins.Href.hostname()+'/photos/home/<%=id%>/.json'),
+		url_rest: _.template('http://'+snappi.mixins.Href.hostname()+'/assets/rest:1'),
 		rect: _.template('top:<%=y%>px;left:<%x%>px;width:<%w%>px;height:<%h%>px'),
 	},
 	
@@ -60,6 +63,8 @@ models.Photo = Backbone.Model.extend({
 	initialize: function(attributes, options){
 		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
 		this.set( attributes );
+		this.listenTo(this, 'request', this.request);
+		this.listenTo(this, 'change', this.change);
 	},
 	
 	// public methods
@@ -69,7 +74,13 @@ models.Photo = Backbone.Model.extend({
 	 */
 	rotate: function(dir) {
 		
-	}
+	},
+	change: function(model, xhr){
+		var check; // Photo.change;
+	},
+	request: function(model, xhr, attrs){
+		var check; // Photo.request
+	},
 	
 })
 

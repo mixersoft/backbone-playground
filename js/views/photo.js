@@ -15,6 +15,7 @@ views.PhotoView = Backbone.View.extend({
 	
 	events: {
 		'click .rotate': 'onRotate',
+		'click .rating': 'onRatingClick',
 		'dblclick img': 'onShowPreview',
 	},
 	
@@ -40,9 +41,11 @@ views.PhotoView = Backbone.View.extend({
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
 	    this.listenTo(this.model, 'hide', this.onHide);
+	    this.listenTo(this.model, 'change:rating', this.onRatingChanged);
 	},
 	
 	render: function(options){
+		options = options || {};
 		var m = this.model.toJSON();
 		if (options.wrap === false) {		// do NOT wrap hiddenshots
 			var $wrap = $(this.template( m ));
@@ -80,7 +83,59 @@ views.PhotoView = Backbone.View.extend({
 	onRotate: function(e){
 		e.preventDefault();
 	},
+	onRatingClick: function(e){
+		e.preventDefault();
+		var target = e.target,
+			value = $(target.parentNode).children().index(target)+1;
+		// this.model.set({rating: value});	// does not trigger sync()
+		var attrs = {
+			id: this.model.get('id'), 
+			rating: value,
+		}
+		// add workorder params from qs
+		if (snappi.qs.type) {
+			type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(snappi.qs.type.split(':')[0]);	
+			switch (type){
+				case 0: 
+				case 1:
+					 attrs.Workorder = {
+					 	type: 'TasksWorkorder',
+					 	id: snappi.qs.type.split(':')[1],	
+					 }
+					break;
+				case 2: 
+				case 3:
+					 attrs.Workorder = {
+					 	type: 'Workorder',
+					 	id: snappi.qs.type.split(':')[1],	
+					 }
+					break;
+			}
+		}
+		this.model.save(attrs, 	// trigger sync()
+			{
+				patch: true, 
+				emulateHTTP: true,
+				emulateJSON: true,
+				crossDomain: true,
+				beforeSend: function(xhr, options){
+					// xhr.setRequestHeader('contentType', options.contentType);
+				},
+				success: function(){
+					console.info('restapi success');
+				},
+				error: function(){
+					console.warn('restapi error');
+				},
+				
+			});
+	},
 	
+	onRatingChanged: function(model){
+    	var markup = Handlebars.compile('{{#ratingStars rating}}{{/ratingStars}}')(model.changed);
+    	this.$('a.rating').attr('title', 'rating: '+ model.changed.rating).html(markup);
+	},
+   
 	onShowToolbar: function(e){
 		e.preventDefault();
 		console.info("showToolbar");

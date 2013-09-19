@@ -216,7 +216,6 @@ var setup_Paginator = {
 					templateId = 'workorder'; 	// ?type=wo:17 or ?type=workorder:17
 					break;
 			}
-			this.trigger('xhr-fetch-page', this.currentPage);
 			return function(){ // return as function so this instanceOf queryOptions 
 				var url;
 				switch (this.type){

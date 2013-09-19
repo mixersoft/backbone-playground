@@ -27,7 +27,10 @@ models.Photo = Backbone.Model.extend({
 		
 	}, 
 	
-	url: 'http://'+snappi.mixins.Href.hostname()+'/assets/restapi/.json',	
+	urlRoot: function() {
+		return '/assets/restapi';
+		return 'http://'+snappi.mixins.Href.hostname()+'/assets/restapi';	
+	},	
 	
 	templates: {
 		url_photo: _.template('http://'+snappi.mixins.Href.hostname()+'/photos/home/<%=id%>/.json'),
@@ -66,8 +69,84 @@ models.Photo = Backbone.Model.extend({
 		this.listenTo(this, 'request', this.request);
 		this.listenTo(this, 'change', this.change);
 	},
-	
+	sync: function(method, model, options) {
+		options = _.extend(options,
+			{emulateHTTP: true,
+			 emulateJSON: true,
+			 crossDomain: true,
+			 });
+		var useRestApi,
+			cakeAttrs = {
+			Asset:{id: model.get('id')}
+		} 
+		switch (method) {
+			case 'patch': case 'put': // append Wo attrs if necessary
+				cakeAttrs['Asset'] = _.extend(cakeAttrs['Asset'], options.attrs)
+				cakeAttrs = this._getAsWorkorder(cakeAttrs);
+			break;
+		}
+		if (useRestApi=true) options.attrs = cakeAttrs;  			// REST PUT
+		else options.data = this._formatForCakePhp(cakeAttrs);	// Cake POST
+		var beforeSend = options.beforeSend;
+		options.beforeSend = function(xhr, options){
+			if (!useRestApi) options.url += '/.json';	// for CakePhp form
+			if (beforeSend) return beforeSend.apply(this, arguments);
+		}
+	    Backbone.sync(method, model, options);
+	},
+	_formatForCakePhp : function(attrs) {
+		var key, formatted = {};
+		for (var m in attrs) {
+			for (var p in attrs[m]) {
+				key = _.template('data[<%=model%>][<%=prop%>]', {model:m, prop:p});
+				formatted[key] = attrs[m][p]; 
+			}
+		}
+		return formatted;
+	},
+	_getAsWorkorder : function(attrs){
+		try {
+			var woAttrs = {},
+				type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(snappi.qs.type.split(':')[0]);	
+			switch (type){
+				case 0: 
+				case 1:
+					 attrs.Workorder = {
+					 	type: 'TasksWorkorder',
+					 	id: snappi.qs.type.split(':')[1],	
+					 }
+					break;
+				case 2: 
+				case 3:
+					 attrs.Workorder = {
+					 	type: 'Workorder',
+					 	id: snappi.qs.type.split(':')[1],	
+					 }
+					break;
+			}
+		} catch (ex) {
+			// not a workorder
+		}
+		return attrs;
+	},
 	// public methods
+	rating: function(value){
+		// this.model.set({rating: value});	// does not trigger sync()
+		var attrs = {
+			rating: value,
+		}
+		this.save(attrs, 	// trigger sync()
+			{
+				patch: true, 
+				success: function(){
+					console.info('restapi success');
+				},
+				error: function(){
+					console.warn('restapi error');
+				},
+				
+			});
+	},
 	/**
 	 * 
  	 * @param String dir, [CW|CCW]

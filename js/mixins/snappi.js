@@ -10,7 +10,7 @@
 				shot_extras.active = !!shot_extras.active;
 			return shot_extras;
 		},
-		parseShot: function(cc){
+		parseShot_CC: function(cc){
 			
 			var i, oSrc, score, id, audition, 
 				parsedAuditions = {},
@@ -64,6 +64,62 @@
 			// for debugging/introspection
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedAuditions); 
 			return parsedAuditions;	
+		},
+		// flat response, Assets model attrs only. from nodejs
+		parseShot_Assets: function(response){
+			
+			var i, row, photo, exif, src,
+				parsedPhotos = {};
+				
+			for (i=0;i<response.assets.length;i++) {
+				row = response.assets[i];
+				exif = JSON.parse(row.json_exif);
+				src = JSON.parse(row.json_src);
+				photo = {
+					id: row.id,
+					shotId: row.shot_id,
+					shotCount: row.shot_count ? parseInt(row.shot_count) : null,
+					photoId: row.id,
+					score: row.score ? Math.round(parseFloat(row.score)*10)/10 : null,
+					rating: row.rating ? parseInt(row.rating) : null,
+					rotate: row.rotate ? parseInt(row.rotate) : 1,
+					caption: row.caption,
+					batchId: parseInt(row.batchId),
+					dateTaken: new Date(row.dateTaken.replace(' ', 'T')), 
+					// ts: row.Photo.TS,
+					H: exif.root.imageHeight,
+					W: exif.root.imageWidth,
+					exifOrientation:  exif.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
+					rootSrc: src.root,
+					// for collections page management
+					requestPage: response.request.page,
+				};
+				
+				// adjust for ExifOrientation
+				// TODO: add math to include photo.rotate
+				if (photo.exifOrientation < 4) {
+					photo.origW = exif.ExifImageWidth;
+					photo.origH = exif.ExifImageLength;
+					// fix bad origW/H data
+					if (photo.H > photo.W && photo.origH < photo.origW)
+					{
+						photo.origW = exif.ExifImageLength; 
+						photo.origH = exif.ExifImageWidth;
+						console.warn("origW/H flipped for id="+id);
+					}
+				} else { // ExifOrientation = 6|8 means the bp~ image is rotated
+					photo.origH = exif.ExifImageWidth;
+					photo.origW = exif.ExifImageLength;
+					photo.H = exif.root.imageWidth;
+					photo.W = exif.root.imageHeight;
+				}
+				
+				photo.orientationLabel =  (photo.H > photo.W) ? 'portrait' : '';
+				parsedPhotos[photo.id] = photo;
+			}
+			// for debugging/introspection
+			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedPhotos); 
+			return parsedPhotos;	
 		},
 	}
 	/*

@@ -28,7 +28,7 @@ models.Photo = Backbone.Model.extend({
 	}, 
 	
 	urlRoot: function() {
-		return '/assets/restapi';
+		// return '/assets/restapi';
 		return 'http://'+snappi.mixins.Href.hostname()+'/assets/restapi';	
 	},	
 	

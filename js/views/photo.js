@@ -15,6 +15,7 @@ views.PhotoView = Backbone.View.extend({
 	
 	events: {
 		'click .rotate': 'onRotate',
+		'click .rating': 'onRatingClick',
 		'dblclick img': 'onShowPreview',
 	},
 	
@@ -40,9 +41,11 @@ views.PhotoView = Backbone.View.extend({
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
 	    this.listenTo(this.model, 'hide', this.onHide);
+	    this.listenTo(this.model, 'change:rating', this.onRatingChanged);
 	},
 	
 	render: function(options){
+		options = options || {};
 		var m = this.model.toJSON();
 		if (options.wrap === false) {		// do NOT wrap hiddenshots
 			var $wrap = $(this.template( m ));
@@ -80,7 +83,18 @@ views.PhotoView = Backbone.View.extend({
 	onRotate: function(e){
 		e.preventDefault();
 	},
+	onRatingClick: function(e){
+		e.preventDefault();
+		var target = e.target,
+			value = $(target.parentNode).children().index(target)+1;
+		this.model.rating(value);
+	},
 	
+	onRatingChanged: function(model){
+    	var markup = Handlebars.compile('{{#ratingStars rating}}{{/ratingStars}}')(model.changed);
+    	this.$('a.rating').attr('title', 'rating: '+ model.changed.rating).html(markup);
+	},
+   
 	onShowToolbar: function(e){
 		e.preventDefault();
 		console.info("showToolbar");

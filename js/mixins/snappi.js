@@ -2,7 +2,7 @@
 (function ( mixins ) {
 	
 	mixins.RestApi = {
-		parseShotExtras : function(json, shot) {
+		parseShotExtras_CC : function(json, shot) {
 			var shot = shot || json.response.Shot,
 				shot_extras = json.response.castingCall.shot_extras[shot.id];
 				shot_extras.count = parseInt(shot_extras.count);
@@ -10,8 +10,7 @@
 				shot_extras.active = !!shot_extras.active;
 			return shot_extras;
 		},
-		parseShot: function(cc){
-			
+		parseShot_CC: function(cc){
 			var i, oSrc, score, id, audition, 
 				parsedAuditions = {},
 				page = cc.CastingCall.Auditions.Page,
@@ -64,6 +63,75 @@
 			// for debugging/introspection
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedAuditions); 
 			return parsedAuditions;	
+		},
+		// flat response, Assets model attrs only. from nodejs
+		parseShotExtras_Assets : function(assets, bestshotId) {
+			var bestshot = _.findWhere(assets, {id: bestshotId}),
+				shot_extras = {
+					id : bestshot.shot_id,
+					owner_id : bestshot.shot_owner_id,
+					priority : bestshot.shot_priority,	
+					active : bestshot.shot_active,
+					count : bestshot.shot_count,
+				};
+			return shot_extras;
+		},
+		parseShot_Assets: function(response){
+			
+			var i, row, photo, exif, src,
+				parsedPhotos = {},
+				assets = response.assets;
+				
+			for (i=0;i<assets.length;i++) {
+				row = assets[i];
+				exif = JSON.parse(row.json_exif);
+				src = JSON.parse(row.json_src);
+				photo = {
+					id: row.id,
+					shotId: row.shot_id,
+					shotCount: row.shot_count ? parseInt(row.shot_count) : null,
+					photoId: row.id,
+					score: row.score ? Math.round(parseFloat(row.score)*10)/10 : null,
+					rating: row.rating ? parseInt(row.rating) : null,
+					rotate: row.rotate ? parseInt(row.rotate) : 1,
+					caption: row.caption,
+					batchId: parseInt(row.batchId),
+					dateTaken: new Date(row.dateTaken.replace(' ', 'T')), 
+					// ts: row.Photo.TS,
+					H: exif.root.imageHeight,
+					W: exif.root.imageWidth,
+					exifOrientation:  exif.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
+					rootSrc: src.root,
+				};
+				// extras
+				// for collections page management
+				if (response.request && response.request.page) photo.requestPage = response.request.page; 
+				
+				// adjust for ExifOrientation
+				// TODO: add math to include photo.rotate
+				if (photo.exifOrientation < 4) {
+					photo.origW = exif.ExifImageWidth;
+					photo.origH = exif.ExifImageLength;
+					// fix bad origW/H data
+					if (photo.H > photo.W && photo.origH < photo.origW)
+					{
+						photo.origW = exif.ExifImageLength; 
+						photo.origH = exif.ExifImageWidth;
+						console.warn("origW/H flipped for id="+id);
+					}
+				} else { // ExifOrientation = 6|8 means the bp~ image is rotated
+					photo.origH = exif.ExifImageWidth;
+					photo.origW = exif.ExifImageLength;
+					photo.H = exif.root.imageWidth;
+					photo.W = exif.root.imageHeight;
+				}
+				
+				photo.orientationLabel =  (photo.H > photo.W) ? 'portrait' : '';
+				parsedPhotos[photo.id] = photo;
+			}
+			// for debugging/introspection
+			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedPhotos); 
+			return parsedPhotos;	
 		},
 	}
 	/*

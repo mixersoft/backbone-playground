@@ -15,6 +15,7 @@ views.ShotView = views.PhotoView.extend({
 	
 	events: {
 		'click .rotate': 'onRotate',
+		'click .rating': 'onRatingClick',
 		'click .show-hidden-shot': 'onShowHiddenShot',
 		'dblclick img': 'onShowPreview',
 	},

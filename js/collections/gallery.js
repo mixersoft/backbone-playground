@@ -21,7 +21,7 @@ var _useNodeBackend = {
 	dataType: 'json',
 	url: function(){
 		var collection = this, 
-			qs = collection.parseQueryString(),
+			qs = snappi.qs,	
 			defaults = {
 				sort: 'score',
 				direction : 'desc',
@@ -34,12 +34,6 @@ var _useNodeBackend = {
 			request.perpage = collection.perPage; 
 		var url = '/asset.json?'+$.param(request);
 		return url;
-		// alternate form for modifying dataType
-		return function(){ // return as function to modify queryOptions using this  
-			var queryOptions = this;
-			queryOptions.dataType = 'json';	// reset not working
-			return url;
-		}
 	},
 	parse: function(response){
 if (_DEBUG) console.timeEnd("GalleryView.fetch()");		
@@ -293,13 +287,14 @@ var GalleryCollection =	{
 			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
 		}
 		var hiddenshotCollection = model.get('hiddenshot');
-		hiddenshotCollection.fetch({
+		var hiddenshot_options = {
 			success: success,
-			dataType: 'jsonp',
-			callback: '?',
+			dataType: hiddenshotCollection.backend.dataType,
+			// callback: '?',
 			merge: true,
 			remove: false,
-		});
+		};
+		hiddenshotCollection.fetch(hiddenshot_options);
 	}
 };
 

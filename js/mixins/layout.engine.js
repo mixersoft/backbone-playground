@@ -71,6 +71,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		run: function(container, items, collection, options){
 			var engine = mixins.LayoutEngine.Typeset;
 			// TODO: need to keep a static options avail for relayout
+			// ??? clone and render offscreen to limit to 1 browser layout/paint operation? 
 			if (!options.complete) options = engine.initialize(options);
 			if (options.outerContainer.hasClass(options.classes.throttle)){
 				console.warn('throttle LayoutEngine.Typeset.run()  ');
@@ -114,6 +115,7 @@ if (_DEBUG) console.time("Typeset.run _layoutComplete");
             	options.outerContainer.removeClass(options.classes.throttle);
 				if (originalOverflowY != "scroll") {
 	            	document.body.style["overflow-y"] = originalOverflowY;
+	            	console.warn("WARNING: body.style.overflow=scroll should be set");
 	            }
 	            var result = {
 	            	state : options, // return options/state for multi-page layouts using same settings
@@ -279,7 +281,8 @@ if (_DEBUG) console.time("Typeset._layout");
     						image = lineImages[i],
 	    					border = image.tag.parentNode,  // A or DIV
 	    					thumbViewEl = image.tag.parentNode.parentNode.parentNode, // ThumbnailView.el
-	    					imageHorzCrop = 0; 
+	    					imageHorzCrop = 0,
+	    					cssText=[]; 
     					
     					if (totalHorzCrop > 0) {
     						imageHorzCrop = (image.width / imagesTotalWidth) * totalHorzCrop;
@@ -288,15 +291,19 @@ if (_DEBUG) console.time("Typeset._layout");
     						image.height *= scale;
     					}
 
-    					image.tag.style.top = '0px';
-    					thumbViewEl.style.top = options._layout_y + "px";
+    					image.tag.style.top = '0px'; // move to later?
+    					// thumbViewEl.style.top = options._layout_y + "px";
 
 						if (i == lineImages.length - 1) {
 	    					//The rightmost image should be flush with the right margin:
     						x = options.containerWidth - (image.width - imageHorzCrop);
     					}
 							    					
-    					thumbViewEl.style.left = x + "px";
+    					// thumbViewEl.style.left = x + "px";
+    					cssText = ''; // batch changes
+    					cssText += '; left:'+ x + "px";
+						cssText += '; top:'+ options._layout_y + "px";
+						thumbViewEl.style.cssText = cssText;
 
 						if (!options.supportsBackgroundStretch && image.tag.src.indexOf('/img/spacer.gif') > -1) {
 							// On IE < 9 we will have to weaken the right click protection slightly by moving the image from the background to the src attribute
@@ -305,27 +312,46 @@ if (_DEBUG) console.time("Typeset._layout");
 						}
 
     					if (image.tag.src.indexOf('/img/spacer.gif') > -1) {
-	    					image.tag.style.backgroundSize = Math.round(image.width) + 'px ' + Math.round(image.height) + 'px';
-	    					image.tag.style.backgroundPosition = -Math.floor(imageHorzCrop / 2) + "px " + -Math.floor(totalVertCrop / 2) + "px";
+    						
+	    					// image.tag.style.backgroundSize = Math.round(image.width) + 'px ' + Math.round(image.height) + 'px';
+	    					// image.tag.style.backgroundPosition = -Math.floor(imageHorzCrop / 2) + "px " + -Math.floor(totalVertCrop / 2) + "px";
 	    						
-	    					image.tag.style.height = Math.round(image.height - totalVertCrop) + "px";
-	    					image.tag.style.width = Math.round(image.width - imageHorzCrop) + "px";	    						
-    					} else {
-	    					image.tag.style.width = Math.round(image.width) + 'px';
-	    					image.tag.style.height = Math.round(image.height) + 'px';
+	    					// image.tag.style.height = Math.round(image.height - totalVertCrop) + "px";
+	    					// image.tag.style.width = Math.round(image.width - imageHorzCrop) + "px";	    						
 	    					
-	    					// adjust img src prefix to fit actual dim
+	    					cssText = ''; // batch changes
+	    					cssText += '; background-size:'+ Math.round(image.width) + 'px ' + Math.round(image.height) + 'px;';
+    						cssText += '; background-position:'+ -Math.floor(imageHorzCrop / 2) + "px " + -Math.floor(totalVertCrop / 2) + "px";
+    						cssText += '; height:'+Math.round(image.height - totalVertCrop) + "px";
+    						cssText += '; width:'+Math.round(image.width - imageHorzCrop) + "px";
+    						image.tag.cssText  = cssText;
+	    					
+    					} else {
+    						// border.style.height = Math.round(image.height - totalVertCrop) + "px";
+    						// border.style.width = Math.round(image.width - imageHorzCrop) + "px";
+    						cssText = ''; // batch changes
+    						cssText += '; height:'+ Math.round(image.height - totalVertCrop) + "px";
+    						cssText += '; width:'+ Math.round(image.width - imageHorzCrop) + "px";
+    						border.style.cssText = cssText;
+    						
+	    					// image.tag.style.width = Math.round(image.width) + 'px';
+	    					// image.tag.style.height = Math.round(image.height) + 'px';
+	    					// image.tag.style.left = -Math.floor(imageHorzCrop / 2) + "px";
+    						// image.tag.style.top = -Math.floor(totalVertCrop / 2) + "px";
+    						
+    						cssText = ''; // batch changes
+	    					cssText += '; left:'+ -Math.floor(imageHorzCrop / 2) + "px";
+    						cssText += '; top:'+ -Math.floor(totalVertCrop / 2) + "px";
+    						cssText += '; height:'+ Math.round(image.height) + 'px';
+    						cssText += '; width:'+ Math.round(image.width) + 'px';
+    						image.tag.cssText  = cssText;
+    						
+    						// adjust img src prefix to fit actual dim
 	    					if (!options.noImageSrc) {  // noImageSrc used to test 10K repsonse without JPGs
 								var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
 								if (image.tag.src.indexOf(thumbsize_prefix+'~')<0)
 									image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
 							}
-		
-    						border.style.height = Math.round(image.height - totalVertCrop) + "px";
-    						border.style.width = Math.round(image.width - imageHorzCrop) + "px";
-    						
-    						image.tag.style.left = -Math.floor(imageHorzCrop / 2) + "px";
-    						image.tag.style.top = -Math.floor(totalVertCrop / 2) + "px";
     					}
     					
     					x += image.width - imageHorzCrop + spacing;

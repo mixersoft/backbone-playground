@@ -62,7 +62,7 @@ var _useCakephpBackend = {
 		return url;
 	},
 	parse: function(response){
-		var parsed = this.parseShot(response.response.castingCall), // from mixin
+		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
 			photos = []
 			bestshotId = this.shot_core.bestshot.get('photoId');
 		_.each(parsed, function(v, k, l) {

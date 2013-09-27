@@ -97,9 +97,10 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	items = items.find(options.thumbSelector);
             	if (!items.eq(0).hasClass('thumb'))  throw ('expecting div.thumb');
             } 
-if (_DEBUG) console.time("Typeset.run chunking");          
+            
+            // chunk layout based on window size
             var chunks=[], end, stop = items.length;
-            var CHUNK_SIZE = Math.ceil($(window).height() * $(window).width() / (options.targetHeight*options.targetHeight*1.3)); 
+            var CHUNK_SIZE = Math.ceil($('body').data('winH')*$('body').data('winW') / (options.targetHeight*options.targetHeight*1.3)); 
             for (var c=0; (c*CHUNK_SIZE)<stop; c++){
             	end = (c+1)*CHUNK_SIZE;
             	if ((stop-end) < CHUNK_SIZE/2) {
@@ -108,7 +109,7 @@ if (_DEBUG) console.time("Typeset.run chunking");
             	} else chunks.push(items.slice(c*CHUNK_SIZE, Math.min(end, stop)));
             	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             }
-if (_DEBUG) console.timeEnd("Typeset.run chunking");            
+           
             var lines;
             var _layoutComplete = function(){
 if (_DEBUG) console.time("Typeset.run _layoutComplete");            

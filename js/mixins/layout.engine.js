@@ -81,11 +81,11 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 			 * Ensure there is a vertical scrollbar on the body, so that laying out images doesn't cause the image 
              * container to shrink horizontally, which would invalidate the layout immediately.
              */
-            var originalOverflowY = document.body.style["overflow-y"];
-            if (originalOverflowY != "scroll") {
-            	document.body.style["overflow-y"] = "scroll";
-            }
-			options.containerWidth = options.outerContainer.data('outerW') - 15;
+            // var originalOverflowY = document.body.style["overflowY"];
+            // if (originalOverflowY != "scroll") {
+            	// document.body.style["overflow-y"] = "scroll";
+            // }
+			options.containerWidth = options.outerContainer.data('outerW');
            
             /*
              * this is where the work is done
@@ -113,10 +113,10 @@ if (_DEBUG) console.timeEnd("Typeset.run chunking");
             var _layoutComplete = function(){
 if (_DEBUG) console.time("Typeset.run _layoutComplete");            
             	options.outerContainer.removeClass(options.classes.throttle);
-				if (originalOverflowY != "scroll") {
-	            	document.body.style["overflow-y"] = originalOverflowY;
-	            	console.warn("WARNING: body.style.overflow=scroll should be set");
-	            }
+				// if (originalOverflowY != "scroll") {
+	            	// document.body.style["overflow-y"] = originalOverflowY;
+	            	// console.warn("WARNING: body.style.overflow=scroll should be set");
+	            // }
 	            var result = {
 	            	state : options, // return options/state for multi-page layouts using same settings
 	            	items: items

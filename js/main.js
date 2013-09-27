@@ -17,16 +17,17 @@
 	// Defer initialization until doc ready.
 	$(function() {
 		var mixins = snappi.mixins;
-		// config image server
-		if (0 && /snaphappi.com$/.test(mixins.Href.hostname())==false){
-			// use localhost config for img hosting
-			var localhost = {
-				hostname: mixins.Href.hostname(),
+		snappi.qs = mixins.Href.parseQueryString();		// global parsed qs
+		
+		// config image server, to set explicitly, use &host=[hostname]
+		var imgHost = {};		// default is snappi[N].snaphappi.com
+		if (/snaphappi.com$/.test(mixins.Href.hostname())==false){
+			imgHost = {		// use localhost config for img hosting
+				hostname: mixins.Href.hostname('snappi-dev'),
 				subdomains : [''],
 			};
 		}
-		snappi.qs = mixins.Href.parseQueryString();
-		mixins.Href.imgServer(localhost || {});
+		mixins.Href.imgServer(imgHost);
 		
 		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();
 		

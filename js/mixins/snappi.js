@@ -78,13 +78,14 @@
 		},
 		parseShot_Assets: function(response){
 			
-			var i, row, photo, exif, src,
+			var i, row, photo, exif, preview, src,
 				parsedPhotos = {},
 				assets = response.assets;
 				
 			for (i=0;i<assets.length;i++) {
 				row = assets[i];
 				exif = JSON.parse(row.json_exif);
+				preview = exif.root || exif.preview; // exif.preview is legacy
 				src = JSON.parse(row.json_src);
 				photo = {
 					id: row.id,
@@ -98,8 +99,8 @@
 					batchId: parseInt(row.batchId),
 					dateTaken: new Date(row.dateTaken.replace(' ', 'T')), 
 					// ts: row.Photo.TS,
-					H: exif.root.imageHeight,
-					W: exif.root.imageWidth,
+					H: preview.imageHeight,
+					W: preview.imageWidth,
 					exifOrientation:  exif.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
 					rootSrc: src.root,
 				};
@@ -117,7 +118,7 @@
 					{
 						photo.origW = exif.ExifImageLength; 
 						photo.origH = exif.ExifImageWidth;
-						console.warn("origW/H flipped for id="+id);
+						console.warn("origW/H flipped for id="+photo.id);
 					}
 				} else { // ExifOrientation = 6|8 means the bp~ image is rotated
 					photo.origH = exif.ExifImageWidth;
@@ -142,7 +143,7 @@
 		hostname: function(host){
 			if (!!host) _hostname = host;
 			if (!_hostname) {
-				var qs = this.parseQueryString();
+				var qs = snappi.qs || this.parseQueryString();
 				_hostname = qs.host || 'dev.snaphappi.com';
 			}
 			return _hostname;

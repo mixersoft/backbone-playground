@@ -71,7 +71,7 @@ if (_DEBUG) console.time("GalleryView: create models");
 			else photos.push(new models.Photo(v));
 		});
 if (_DEBUG) console.timeEnd("GalleryView: create models");		
-		$('body').removeClass('wait');
+		// $('body').removeClass('wait');
 		return photos;
 	},
 }
@@ -168,7 +168,7 @@ if (_DEBUG) console.time("GalleryView: create models");
 			else photos.push(new models.Photo(v));
 		});
 if (_DEBUG) console.timeEnd("GalleryView: create models");		
-		$('body').removeClass('wait');
+		// $('body').removeClass('wait');
 		return photos;
 	},
 };
@@ -204,6 +204,8 @@ var GalleryCollection =	{
 		// HACK: support for either node or cakephp backend
 		this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
 		this.paginator_core.dataType = this.backend.dataType;
+		if (snappi.qs.page) this.paginator_ui.currentPage = snappi.qs.page;
+		if (snappi.qs.perpage) this.paginator_ui.perPage = snappi.qs.perpage;
 		// end
 		
 		this.listenTo(this, 'repaginate', this.repaginate);

@@ -24,11 +24,7 @@
 body {
     overflow-y: scroll;
 }
-body.wait {
-    cursor: wait !important;
-}
 .gallery {
-    background-color: #EEEEEE;
     border-radius: 20px 20px 20px 20px;
     margin: 20px;
     padding: 0 20px;
@@ -37,27 +33,9 @@ body.wait {
     margin: 20px auto;
     min-height: 680px;
 }
-.gallery, .gallery .body {
+.page {
     overflow: hidden;
     position: relative;
-}
-.gallery .body .page {
-    overflow: hidden;
-    position: relative;
-}
-.truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
-}
-.thumb-meta-hover {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
-    opacity: 1;
-    transition: all 0.15s ease-in-out 0s;
-}
-.thumb-meta-hover a:hover {
-    color: #FFFFFF;
 }
 .thumb {
     float: left;
@@ -83,9 +61,7 @@ body.wait {
     position: relative;
 }
 .thumb .meta {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
     bottom: 0;
-    color: #FFFFFF;
     font-size: 10.5px;
     left: 0;
     line-height: 1.3;
@@ -95,7 +71,6 @@ body.wait {
     position: absolute;
     right: 0;
     text-align: left;
-    text-shadow: 1px 1px 0 #000000;
     transition: all 0.15s ease-in-out 0s;
 }
 .thumb .meta > * {
@@ -107,56 +82,33 @@ body.wait {
     margin: 0 8px;
     position: relative;
 }
-.thumb .meta span.inline-icons {
+.thumb .meta .inline-icons {
+    display: inline;
     margin-top: 2px;
-    opacity: 0.6;
     overflow: visible;
-    z-index: 500;
+    z-index: 50;
 }
-.thumb .meta span.inline-icons > * {
+.thumb .meta .inline-icons > * {
     cursor: pointer;
     margin-left: 1em;
 }
-.thumb .meta span.inline-icons > *:first-child {
+.thumb .meta .inline-icons > *:first-child {
     margin-left: 0;
 }
-.thumb .meta span.inline-icons a {
-    text-decoration: none;
-}
-.thumb .meta span.inline-icons.left {
+.thumb .meta .inline-icons.left {
     float: left;
 }
-.thumb .meta span.inline-icons.right {
+.thumb .meta .inline-icons.right {
     float: right;
     text-align: right;
 }
-.bestshot.thumb .meta span.inline-icons a.show-hidden-shot {
-    color: #FFFF00;
-}
-.thumb .meta span.inline-icons .score {
-    color: #FFFF00;
-}
-.thumb .meta span.inline-icons a.rating {
+.thumb .meta .inline-icons a.rating {
     white-space: nowrap;
 }
-.thumb .meta span.inline-icons a.rating .icon-star {
-    color: #FFFF00;
+.thumb .meta .inline-icons a.rating .icon-star {
 }
 .thumb .meta:hover {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
-    opacity: 1;
     transition: all 0.15s ease-in-out 0s;
-}
-.thumb .meta:hover a:hover {
-    color: #FFFFFF;
-}
-.shot-wrap:hover .thumb .meta {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
-    opacity: 1;
-    transition: all 0.15s ease-in-out 0s;
-}
-.shot-wrap:hover .thumb .meta a:hover {
-    color: #FFFFFF;
 }
 .gallery .header {
     margin-top: 10px;
@@ -170,28 +122,7 @@ body.wait {
 .gallery .header .pager .pagination {
     margin: 0;
 }
-.gallery .header .pager .pagination li.disabled span {
-    background-color: #F5F5F5;
-}
-.gallery .header .pager .pagination span.pag-label {
-    background-color: #EEEEEE;
-    color: #0088CC;
-}
-.gallery .header .pager .pagination li > a, .gallery .header .pager .pagination li > span {
-    border-radius: 0 0 0 0;
-}
-.pager .pagination ul li.loaded a, .pager .pagination ul li.loaded span {
-    color: #0064CD;
-    font-weight: bold;
-}
-.pager .pagination ul li.active a, .pager .pagination ul li.active span {
-    background-color: #CDE5FF;
-    color: #0064CD;
-}
 .pager.vertical-right {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.2);
-    border-radius: 20px 0 0 20px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     padding: 20px 0 20px 20px;
     position: fixed;
     right: 0;
@@ -203,6 +134,80 @@ body.wait {
 }
 .pager.vertical-right .pagination ul > li {
     float: right;
+}
+body.wait {
+    cursor: wait !important;
+}
+.gallery {
+    background-color: #EEEEEE;
+}
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+.thumb-meta-hover {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+    transition: all 0.15s ease-in-out 0s;
+}
+.thumb-meta-hover a:hover {
+    color: #FFFFFF;
+}
+.thumb .meta {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    color: #FFFFFF;
+    text-shadow: 1px 1px 0 #000000;
+}
+.thumb .meta .inline-icons {
+    opacity: 0.6;
+}
+.thumb .meta .inline-icons a {
+    text-decoration: none;
+}
+.thumb .meta .inline-icons .show-hidden-shot.best {
+    color: #FFFF00;
+}
+.thumb .meta .inline-icons .score, .thumb .meta .inline-icons .icon-star {
+    color: #FFFF00;
+}
+.thumb .meta:hover {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+}
+.thumb .meta:hover a:hover {
+    color: #FFFFFF;
+}
+.shot-wrap:hover .thumb .meta {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+    transition: all 0.15s ease-in-out 0s;
+}
+.shot-wrap:hover .thumb .meta a:hover {
+    color: #FFFFFF;
+}
+.pager .pagination {
+    color: #0088CC;
+}
+.pager .pagination a, .pager .pagination span {
+    border-radius: 0 0 0 0;
+    color: inherit;
+}
+.pager .pagination .disabled a, .pager .pagination .disabled span {
+    background-color: #F5F5F5;
+}
+.pager .pagination .loaded a, .pager .pagination .loaded span {
+    color: #0064CD;
+    font-weight: bold;
+}
+.pager .pagination .pag-label {
+    background-color: #EEEEEE;
+}
+.pager.vertical-right {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.2);
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 .gallery .body {
     transition-property: height, width;

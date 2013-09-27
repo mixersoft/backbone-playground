@@ -1,0 +1,216 @@
+
+.clearfix {
+}
+.clearfix:before, .clearfix:after {
+    content: "";
+    display: table;
+    line-height: 0;
+}
+.clearfix:after {
+    clear: both;
+}
+.hide-text {
+    background-color: rgba(0, 0, 0, 0);
+    border: 0 none;
+    color: rgba(0, 0, 0, 0);
+    text-shadow: none;
+}
+.input-block-level {
+    -moz-box-sizing: border-box;
+    display: block;
+    min-height: 30px;
+    width: 100%;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+body.wait {
+    cursor: wait !important;
+}
+.gallery {
+    background-color: #EEEEEE;
+    border-radius: 20px 20px 20px 20px;
+    margin: 20px;
+    padding: 0 20px;
+}
+.gallery .body {
+    margin: 20px auto;
+    min-height: 680px;
+}
+.gallery, .gallery .body {
+    overflow: hidden;
+    position: relative;
+}
+.gallery .body .page {
+    overflow: hidden;
+    position: relative;
+}
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+.thumb-meta-hover {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+    transition: all 0.15s ease-in-out 0s;
+}
+.thumb-meta-hover a:hover {
+    color: #FFFFFF;
+}
+.thumb {
+    float: left;
+    margin: 0;
+}
+.thumb, .thumb.crop-wrap {
+    height: auto;
+    width: auto;
+}
+.flickrd .thumb {
+    float: none;
+    position: absolute;
+}
+.thumb .crop {
+    display: block;
+    overflow: hidden;
+    position: relative;
+}
+.thumb .crop img {
+    display: block;
+    margin: 0 !important;
+    max-width: none;
+    position: relative;
+}
+.thumb .meta {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    bottom: 0;
+    color: #FFFFFF;
+    font-size: 10.5px;
+    left: 0;
+    line-height: 1.3;
+    margin-top: 5px;
+    overflow: hidden;
+    padding: 5px 0 0;
+    position: absolute;
+    right: 0;
+    text-align: left;
+    text-shadow: 1px 1px 0 #000000;
+    transition: all 0.15s ease-in-out 0s;
+}
+.thumb .meta > * {
+    margin-left: 8px;
+}
+.thumb .meta .bottom-row {
+    bottom: 0;
+    height: 20px;
+    margin: 0 8px;
+    position: relative;
+}
+.thumb .meta span.inline-icons {
+    margin-top: 2px;
+    opacity: 0.6;
+    overflow: visible;
+    z-index: 500;
+}
+.thumb .meta span.inline-icons > * {
+    cursor: pointer;
+    margin-left: 1em;
+}
+.thumb .meta span.inline-icons > *:first-child {
+    margin-left: 0;
+}
+.thumb .meta span.inline-icons a {
+    text-decoration: none;
+}
+.thumb .meta span.inline-icons.left {
+    float: left;
+}
+.thumb .meta span.inline-icons.right {
+    float: right;
+    text-align: right;
+}
+.bestshot.thumb .meta span.inline-icons a.show-hidden-shot {
+    color: #FFFF00;
+}
+.thumb .meta span.inline-icons .score {
+    color: #FFFF00;
+}
+.thumb .meta span.inline-icons a.rating {
+    white-space: nowrap;
+}
+.thumb .meta span.inline-icons a.rating .icon-star {
+    color: #FFFF00;
+}
+.thumb .meta:hover {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+    transition: all 0.15s ease-in-out 0s;
+}
+.thumb .meta:hover a:hover {
+    color: #FFFFFF;
+}
+.shot-wrap:hover .thumb .meta {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
+    opacity: 1;
+    transition: all 0.15s ease-in-out 0s;
+}
+.shot-wrap:hover .thumb .meta a:hover {
+    color: #FFFFFF;
+}
+.gallery .header {
+    margin-top: 10px;
+    width: 100%;
+    z-index: 100;
+}
+.gallery .header .pager {
+    margin: 5px 0;
+}
+.gallery .header .pager .pagination {
+    margin: 0;
+}
+.gallery .header .pager .pagination li.disabled span {
+    background-color: #F5F5F5;
+}
+.gallery .header .pager .pagination span.pag-label {
+    background-color: #EEEEEE;
+    color: #0088CC;
+}
+.gallery .header .pager .pagination li > a, .gallery .header .pager .pagination li > span {
+    border-radius: 0 0 0 0;
+}
+.pager .pagination ul li.loaded a, .pager .pagination ul li.loaded span {
+    color: #0064CD;
+    font-weight: bold;
+}
+.pager .pagination ul li.active a, .pager .pagination ul li.active span {
+    background-color: #CDE5FF;
+    color: #0064CD;
+}
+.pager.vertical-right {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.2);
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: 20px 0 20px 20px;
+    position: fixed;
+    right: 0;
+    top: 85px;
+    width: 40px;
+}
+.pager.vertical-right .pagination ul, .pager.vertical-right .pagination ul > li {
+    display: block;
+}
+.pager.vertical-right .pagination ul > li {
+    float: right;
+}
+.gallery .body {
+    transition-property: height, width;
+}
+.gallery .body, .gallery .body .thumb {
+    transition-duration: 0.8s;
+}
+.gallery .body .thumb {
+    transition-property: transform, opacity, top, left;
+}

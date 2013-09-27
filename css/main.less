@@ -7,14 +7,16 @@
 @import "vendor/variables.less"; // Modify this for custom colors, font-sizes, etc
 @import "vendor/mixins.less"; 
 
-body.wait {
-  cursor: wait !important;
-}
 
+/*****************************************************************************
+ * structure: contains positioning, margin, padding, flow
+ *****************************************************************************/
+body {
+  overflow-y: scroll;
+}
 
 @galleryH : 720px;
 .gallery {
-  background-color: @grayLighter;
   margin: 20px;     /* undo body {padding-left/right} */
   padding: 0 20px;
   .border-radius(20px);
@@ -24,46 +26,9 @@ body.wait {
   }
 }
 
-
-
-
-// for flickr-style layout
-.gallery {
-  &, & .body {
-    position: relative; /* for position:absolute within */
-    overflow: hidden; /* Stretch to fit floated content */
-  }
-  & .body .page {
-    position: relative; /* for position:absolute within */
-    overflow: hidden; /* Stretch to fit floated content */
-   }
-}
-
-.truncate {
-    white-space: nowrap;
-    width: 100%;                   /* IE6 needs any width */
-    overflow: hidden;              /* "overflow" value must be different from  visible"*/ 
-    -o-text-overflow: ellipsis;    /* Opera < 11*/
-    text-overflow:    ellipsis;    /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
-}
-
-/*
- * view=Thumbnail
- * .thumb = .photo
- * .photo_container_th = .crop-wrap
- * .photoLink = .crop
- */
-.thumb-meta-hover {
-  background: fade(@black,60%);
-    opacity: 1;
-    transition: all .15s ease-in-out;
-    a:hover {
-      color: #FFF;
-    }
-    .bottom-row {
-    }
-    span.inline-icons {
-    }
+.page { /* for position:absolute within */
+    position: relative; 
+    overflow: hidden; 
 }
 
 .thumb {
@@ -92,19 +57,15 @@ body.wait {
   }
   
   .meta {
-    @yellow: yellow;
     padding: 5px 0 0;
     position: absolute;
-    background: rgba(0,0,0,0);
     bottom: 0;
     left: 0;
     right: 0;
-    color: #fff;
     font-size: @fontSizeMini;
     line-height: 1.3;
     margin-top: 5px;
     text-align: left;
-    text-shadow: 1px 1px 0 black;
     overflow: hidden;
     transition: all .15s ease-in-out;
     > * {
@@ -120,20 +81,17 @@ body.wait {
       bottom: 0;
       height: 20px;
     }
-    span.inline-icons {
+    .inline-icons {
+      display: inline;
       margin-top: 2px;
-      opacity: 0.6;
       overflow: visible;
-      z-index: 500;
+      z-index: 50;
       > * {
         margin-left: 1em;
         cursor: pointer;
       }
       > *:first-child {
         margin-left: 0;
-      }
-      a {
-        text-decoration: none;
       }
       &.left {
         float: left;
@@ -142,29 +100,17 @@ body.wait {
         float: right;
         text-align: right;
       }
-      a.show-hidden-shot {
-        .bestshot& {
-          color: @yellow;
-        }
-      }
-      .score {
-        color: @yellow;
-      }
       a.rating {
         white-space: nowrap;
         .icon-star {
-          color: @yellow;
           whitespace: nowrap;
         }
       }
     }
     
     &:hover {   // .meta:hover
-      background: fade(@black,60%);
-      opacity: 1;
       transition: all .15s ease-in-out;
       a:hover {
-        color: #FFF;
       }
       .bottom-row {
       }
@@ -173,11 +119,6 @@ body.wait {
     }
   }
 }
-
-.shot-wrap:hover .thumb .meta {
-  .thumb-meta-hover;
-}
-
 
 .gallery .header {
   margin-top: 10px;
@@ -188,43 +129,16 @@ body.wait {
     z-index: 100;
     .pagination {
       margin: 0;
-      li.disabled span {
-        background-color: #F5F5F5;
-      }
-      span.pag-label {
-        background-color: @grayLighter;
-        color: #0088CC;
-      }
-      li > a, li > span {
-        .border-radius(0);      // reset twbootstrap value
-      }
     }
   }
-  .display-options {
-    
-  }
-}
-
-.pager {
-  .pagination ul {
-    li.loaded a, li.loaded span {
-      font-weight: bold;
-      color: @blueDark;
-    }
-    li.active a, li.active span {
-       background-color: lighten(@blueDark, 50%);
-       color: @blueDark;
-    }
-  }
+  // .display-options {
+  // }
 }
 
 .pager.vertical-right {
   position: fixed;
   right: 0;
   width: 40px;
-  background: fade(@black,20%);
-  border-radius: 20px 0 0 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   padding: 20px 0 20px 20px;
   top: 85px;
   .pagination {
@@ -235,6 +149,113 @@ body.wait {
       float: right;
     }
   }
+}
+
+
+
+
+
+/***************************************************************
+ * skin: visible attributes
+ ***************************************************************/
+
+body.wait {
+  cursor: wait !important;
+}
+
+
+.gallery {
+  background-color: @grayLighter;
+}
+
+.truncate {
+    white-space: nowrap;
+    width: 100%;                   /* IE6 needs any width */
+    overflow: hidden;              /* "overflow" value must be different from  visible"*/ 
+    -o-text-overflow: ellipsis;    /* Opera < 11*/
+    text-overflow:    ellipsis;    /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
+}
+
+/*
+ * view=Thumbnail
+ * .thumb = .photo
+ * .photo_container_th = .crop-wrap
+ * .photoLink = .crop
+ */
+.thumb-meta-hover {
+  background: fade(@black,60%);
+    opacity: 1;
+    transition: all .15s ease-in-out;
+    a:hover {
+      color: #FFF;
+    }
+    // .bottom-row {
+    // }
+    // span.inline-icons {
+    // }
+}
+
+.thumb {
+  .meta {
+    @yellow: yellow;
+    background: rgba(0,0,0,0);
+    color: #fff;
+    text-shadow: 1px 1px 0 black;
+    .inline-icons {
+      opacity: 0.6;
+      a {
+        text-decoration: none;
+      }
+      .show-hidden-shot.best {
+        color: @yellow;
+      }
+      .score, .icon-star {
+        color: @yellow;
+      }
+    }
+    
+    &:hover {   // .meta:hover
+      background: fade(@black,60%);
+      opacity: 1;
+      a:hover {
+        color: #FFF;
+      }
+    }
+  }
+}
+
+.shot-wrap:hover .thumb .meta {
+  .thumb-meta-hover;
+}
+
+
+.pager {
+  .pagination {
+    color: #0088CC;
+    a, span {
+      .border-radius(0);      // reset twbootstrap value
+      color: inherit;
+    }
+    .disabled a, .disabled span {
+      background-color: #F5F5F5;
+    }
+    .loaded a, .loaded span  {
+      font-weight: bold;
+      color: @blueDark;
+    }
+    .pag-label {
+      background-color: @grayLighter;
+    }
+  }
+}
+
+// .display-options {
+// }
+
+.pager.vertical-right {
+  background: fade(@black,20%);
+  border-radius: 20px 0 0 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /*

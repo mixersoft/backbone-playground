@@ -17,9 +17,9 @@
             }
         </style>
         <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
-        <link rel="stylesheet" href="css/main.css">
-        <!-- <link rel="stylesheet" href="css/main.less"  type="text/less"> -->
-		<!-- <script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script> -->
+        <link rel="stylesheet" href="css/main.less"  type="text/less">
+		<script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script>
+		<!-- <link rel="stylesheet" href="css/main.css"> -->
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
     </head>
     <body>
@@ -140,7 +140,7 @@
 						</div>
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
-		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to show {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
+		    					{{#if shotCount}}<a class='show-hidden-shot best' href="#" title='click to show {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
 		    					<span class="score" title="score: {{score}}">{{score}}<icon class='icon-star'></icon></span>
 		    					<a href="#" class='rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
@@ -225,7 +225,7 @@
         <script src="js/vendor/backbone.js"></script>
         
         <!-- demo bootstrap data -->
-        <script src="js/snappi.js"></script>
+        <script src="js/snappi-bootstrap.js"></script>
         
         <!-- main app -->
 		<script src="js/main.js"></script>
@@ -234,7 +234,6 @@
 		<script src="js/mixins/snappi.js"></script>
 		<script src="js/mixins/uiactions.js"></script>
 		<script src="js/mixins/layout.engine.js"></script>
-		<!-- <script src="js/vendor/flickr.js"></script> -->
 
 		<!--Backbone.Paginator-->
 		<script src="js/vendor/backbone.paginator-0.9.0-dev.js"></script>

@@ -99,19 +99,24 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 		// calls colletion.sync and makes request from DB
 		this.$el.addClass('debounce');
 		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+		/*
+		 * NOTE: get/save containerWidth BEFORE rendering Views 
+		 * to avoid layout/repaint later
+		 */
+		// TODO: update on window.resize
+		this.$el.data('outerW', this.$('.body').outerWidth());
 		
 		// initial XHR fetch or bootstrap
-		if (collection.models.length) {
+		if (snappi.qs.bootstrap) {
+			var user = snappi.qs.bootstrap || 'venice';
+			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
+			var shots = collection.parse(json);
+			if (snappi.qs.perpage) shots = shots.slice(0,parseInt(snappi.qs.perpage));
+			collection.reset(shots);
 			collection.bootstrap();
 			this.addPage();
 		}
 		else collection.pager({ remove: false });
-		/*
-		 * NOTE: get containerWidth BEFORE rendering Views, 
-		 * 	otherwise it will take longer, forces a DOM render
-		 */
-		// TODO: update on window.resize
-		this.$el.data('outerW', this.$('.body').outerWidth());
 	},
 	
 	render: function(){

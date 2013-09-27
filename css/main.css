@@ -21,11 +21,9 @@
     min-height: 30px;
     width: 100%;
 }
-
 body {
-  overflow-y: scroll;
+    overflow-y: scroll;
 }
-
 body.wait {
     cursor: wait !important;
 }
@@ -167,6 +165,7 @@ body.wait {
 }
 .gallery .header .pager {
     margin: 5px 0;
+    z-index: 100;
 }
 .gallery .header .pager .pagination {
     margin: 0;

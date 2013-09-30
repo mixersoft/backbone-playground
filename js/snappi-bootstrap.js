@@ -1,10 +1,12 @@
+/*
+ * DEV file for loading JSON from a static file 
+ * 	- eliminates backend Authentication and DB query 
+ */
 (function() {
 	SNAPPI = (typeof SNAPPI == 'undefined')? {} : SNAPPI; 
 	
 	// CFG constants
 	SNAPPI.CFG = {
-		IMG_SERVER: ['http://snappi.snaphappi.com','http://snappi1.snaphappi.com','http://snappi2.snaphappi.com'],	
-		TARGET_THUMB_SIZE: 120,		// target max dim for IMG.src, i.e. 120px
 		JSON: {
 			mb:{
 				url: 'http://dev.snaphappi.com/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/perpage:500/page:1/sort:score/direction:desc/.json',

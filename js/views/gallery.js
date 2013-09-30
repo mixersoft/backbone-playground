@@ -107,14 +107,11 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 		this.$el.data('outerW', this.$('.body').outerWidth());
 		
 		// initial XHR fetch or bootstrap
-		if (snappi.qs.bootstrap) {
-			var user = snappi.qs.bootstrap || 'venice';
+		if (snappi.qs.backend && snappi.qs.backend=='file') {
+			var user = snappi.qs.owner || 'venice';	// valid = [venice|mb|2011]
 			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
 			var shots = collection.parse(json);
-			if (snappi.qs.perpage) shots = shots.slice(0,parseInt(snappi.qs.perpage));
-			collection.reset(shots);
-			collection.bootstrap();
-			this.addPage();
+			collection.pager({ remove: false });
 		}
 		else collection.pager({ remove: false });
 	},

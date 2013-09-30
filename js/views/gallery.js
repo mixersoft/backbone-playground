@@ -43,14 +43,12 @@ var LayoutEngines = {
 			qs = that.parseQueryString();
 			if (qs['no-image']) layoutOptions.noImageSrc = qs['no-image']==true; 	 
 			// _.defer(function(that){
-if (_DEBUG) console.time("Typeset.run");
 				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
 					container, 
 					items,				// if null, will layout all .thumbs IMG in container
 					that.collection,
 					layoutOptions
 				);
-if (_DEBUG) console.timeEnd("Typeset.run");
 				if (layout) {
 					// append, if necessary
 			        if (!$.contains(container.get(0), layout.items.get(0))) {
@@ -80,6 +78,13 @@ var GalleryView = {
 	
 	initialize: function(attributes, options){
 		this.render();
+		/*
+		 * NOTE: get containerWidth BEFORE rendering Views, to avoid an unnecssary layout/paint
+		 */
+		// TODO: update on window.resize
+		this.$el.data('outerW', this.$('.body').outerWidth());
+		$('body').data('winH', $(window).height());
+		$('body').data('winW', $(window).width());
 		
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
@@ -91,7 +96,6 @@ var GalleryView = {
 		this.listenTo(collection, 'pageLayoutChanged', this.layoutPage);
 		this.listenTo(collection, 'layout-chunk', function(i, container, height){
 			container.css('height', height + "px");
-if (_DEBUG) console.info("layout chunk complete, chunk="+i);			
 		});
 		this.listenTo(collection, 'layout-complete', function(){
 		});
@@ -106,12 +110,6 @@ if (_DEBUG) console.info("layout chunk complete, chunk="+i);
 			this.addPage();
 		}
 		else collection.pager({ remove: false });
-		/*
-		 * NOTE: get containerWidth BEFORE rendering Views, 
-		 * 	otherwise it will take longer, forces a DOM render
-		 */
-		// TODO: update on window.resize
-		this.$el.data('outerW', this.$('.body').outerWidth());
 	},
 	
 	render: function(){

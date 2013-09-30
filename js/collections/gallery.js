@@ -65,12 +65,12 @@ if (_DEBUG) console.timeEnd("GalleryView.fetch()");
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_Assets(response), // from mixin
 			photos = [];
-if (_DEBUG) console.time("GalleryView: create models");			
+if (_DEBUG) console.time("GalleryCollection: create models");			
 		_.each(parsed, function(v, k, l) {
 			if (v.shotId) photos.push(new models.Shot(v));
 			else photos.push(new models.Photo(v));
 		});
-if (_DEBUG) console.timeEnd("GalleryView: create models");		
+if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		// $('body').removeClass('wait');
 		return photos;
 	},
@@ -162,12 +162,12 @@ if (_DEBUG) console.timeEnd("GalleryView.fetch()");
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
 			photos = [];
-if (_DEBUG) console.time("GalleryView: create models");			
+if (_DEBUG) console.time("GalleryCollection: create models");			
 		_.each(parsed, function(v, k, l) {
 			if (v.shotId) photos.push(new models.Shot(v));
 			else photos.push(new models.Photo(v));
 		});
-if (_DEBUG) console.timeEnd("GalleryView: create models");		
+if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		// $('body').removeClass('wait');
 		return photos;
 	},

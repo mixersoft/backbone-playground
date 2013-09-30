@@ -105,9 +105,11 @@ var GalleryView = {
 		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 		
 		// initial XHR fetch or bootstrap
-		if (collection.models.length) {
-			collection.bootstrap();
-			this.addPage();
+		if (snappi.qs.backend && snappi.qs.backend=='file') {
+			var user = snappi.qs.owner || 'venice';	// valid = [venice|mb|2011]
+			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
+			var shots = collection.parse(json);
+			collection.pager({ remove: false });
 		}
 		else collection.pager({ remove: false });
 	},

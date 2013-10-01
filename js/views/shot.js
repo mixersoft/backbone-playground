@@ -25,8 +25,6 @@ views.ShotView = views.PhotoView.extend({
 			!($.isFunction(this.template))
 		) {
 			var source = $(this.template_source).html();	
-			// compile once, add to Class
-			this.register_handlebar_helpers();
 			views.ShotView.prototype.template = Handlebars.compile(source);
 	    }
 	    views.PhotoView.prototype.initialize.call(this, options);

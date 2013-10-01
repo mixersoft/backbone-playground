@@ -19,25 +19,9 @@ views.PhotoView = Backbone.View.extend({
 		'dblclick img': 'onShowPreview',
 	},
 	
-	register_handlebar_helpers : function(){
-		Handlebars.registerHelper('ratingStars', function(rating, options) {
-			var rating = rating || 0, out = "";
-			for(var i=1; i<=5; i++) {
-				out = out + "<icon class='icon-star"+(i>rating ? "-empty" : "")+"'></icon>";
-			}
-		  	return out;
-		});
-		Handlebars.registerHelper('fullText', function(string, options) {
-			if (string.length > options.length)
-			return options.fn();
-		});
-	},
-	
 	initialize: function(options){
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
-			// compile once, add to Class
-			this.register_handlebar_helpers();
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
 	    this.listenTo(this.model, 'hide', this.onHide);

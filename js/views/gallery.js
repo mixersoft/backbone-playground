@@ -320,7 +320,8 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
     		return;
     	}
     	
-    	var target = self.$el,
+    	var OFFSET_H = 40,
+    		target = self.$el,
     		collection = this.collection,
         	selfB = target.offset().top+target.height(),
         	windowT = $(window).scrollTop(),
@@ -328,7 +329,8 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
         	
         // find current visible page
         var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
-        self.$('.body .page').each(function(i,item){
+        if (!scrollDir) return;
+        _.each(self.$('.body .page'), function(item, i ,l){
         	if (scrollDir=='down') {
 	        	if (visiblePg && item.offsetTop > windowB)
 	        	{
@@ -337,7 +339,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 	        	} 
         	} else { // page up
 	        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
-	        		if (item.offsetTop < windowT) visiblePg = item;
+	        		if (item.offsetTop-OFFSET_H < windowT) visiblePg = item;
 	        		return false;
 	        	} 
         	}

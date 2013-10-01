@@ -15,13 +15,10 @@ mixins.UiActions = {
 	close: function() { /* ... */ },
 	
     detectScrollDirection : function () {
-        if (window.pageYOffset > _lastScrollTop) {
-        	_lastScrollTop = window.pageYOffset;
-            return "down";
-        } else {
-        	_lastScrollTop = window.pageYOffset;
-            return "up";
-        }
+        var dir = (window.pageYOffset > _lastScrollTop) ? "down" : "up";
+        if (window.pageYOffset == _lastScrollTop) return false;
+        _lastScrollTop = window.pageYOffset;
+        return dir;
     },
 	
 	scrollIntoView: function(target) {

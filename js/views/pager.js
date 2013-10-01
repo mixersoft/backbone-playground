@@ -4,11 +4,11 @@
 
 		events: {
 			'click a.first': 'gotoFirst',
-			'click a.prev': 'gotoPrev',
-			'click a.next': 'gotoNext',
+			'click .item.prev': 'gotoPrev',
+			'click .item.next': 'gotoNext',
 			'click a.last': 'gotoLast',
-			'click a.page': 'gotoPage',
-			'click .howmany a': 'changeCount',
+			'click .item.link': 'gotoPage',
+			'click .howmany': 'changeCount',
 			'click a.sortAsc': 'sortByAscending',
 			'click a.sortDsc': 'sortByDescending',
 			'click a.filter': 'filter'
@@ -41,10 +41,10 @@
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
-			_.each(this.$('ul.page li > a.page, ul.page li > span'), function(item){
+			_.each(this.$('.pagination .page .item'), function(item){
 				var page = $(item).text();
 				if (this.collection.fetchedServerPages[page]) {
-					$(item).parent().addClass('loaded');
+					$(item).addClass('loaded');
 				}
 			}, this);
 		},
@@ -57,11 +57,13 @@
 
 		gotoPrev: function (e) {
 			e.preventDefault();
+			e.stopImmediatePropagation();
 			this.collection.prevPage({ merge: true, remove: false });
 		},
 
 		gotoNext: function (e) {
 			e.preventDefault();
+			e.stopImmediatePropagation();
 			this.collection.nextPage({ merge: true, remove: false });
 		},
 
@@ -157,11 +159,10 @@
 		},
 		
 		renderLoading: function (page) {
-			$('body').addClass('wait');
-			_.each(this.$('ul.page > li a'), function(v){
-				if (v.text==page) {
-					$(v).css({padding: '2px 8px'})
-						.html('<i class="icon-spinner icon-spin icon-small" data-page="'+page+'"><i>');
+			// $('body').addClass('wait');
+			_.each(this.$('.item.link'), function(v){
+				if (v.textContent==page) {
+					$(v).html('<i class="icon-spinner icon-spin icon-small" data-page="'+page+'"><i>');
 					return false;
 				}
 			}, this);

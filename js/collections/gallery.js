@@ -50,11 +50,17 @@ var GalleryCollection =	{
 		this.paginator_core.dataType = this.backend.dataType;
 		if (snappi.qs.page) this.paginator_ui.currentPage = snappi.qs.page;
 		if (snappi.qs.perpage) this.paginator_ui.perPage = snappi.qs.perpage;
+		if (snappi.qs.rating) this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
 		// end
 		
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);
+		this.listenTo(this, 'filterChanged', this.filterChanged);
+	},
+	
+	comparator: function( photo ){
+		return photo.get('dateTaken');
 	},
 	
 	/**
@@ -141,15 +147,41 @@ var GalleryCollection =	{
 			remove: false,
 		};
 		hiddenshotCollection.fetch(hiddenshot_options);
+	}, 
+	filterChanged: function (filter) {
+		console.log("filterChanged" + JSON.stringify(filter));
+		_.each(filter, function(v,k,l){
+			switch (k) {
+				case 'rating':
+					snappi.qs.rating = filter.rating
+					// this.collection.setFilter(fields, filter);
+				break;
+			}
+		})
+		console.info("filterChanged: fetch, current page="+this.currentPage);
+		var options = { 
+			merge: true, 
+			remove: false,
+			sort: true,
+			// TODO: define collection.comparator 
+		};
+		options.success = function(){
+			console.log("GalleryCollection.filterChanged() success");
+		} 
+		this.fetch(options);
 	}
 };
 
 var setup_DisplayOptions = {
+	// override GalleryDisplayOptions.ui_defaults
 	gallery_display_options_ui: {
 		'size': [
 			{label:'S', size: 100, active:'active' },
 			{label:'M', size: 160,  },
 			{label:'L', size: 240, },
+		],
+		'rating': [
+			{label: 0, active:'active' },
 		],
 	}
 }

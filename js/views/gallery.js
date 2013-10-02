@@ -235,6 +235,11 @@ var GalleryView = {
 if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
 		var p, pageModels = []; 
 		_.each(collection.models, function(model, i){
+			/*
+			 * TODO: requestPage changes onFilterChanged
+			 * add collection.comparator and repaginate or sort algo
+			 * requestPage set in mixins.RestApi.parseShot_Assets()
+			 */
 			p = model.get('clientPage') || model.get('requestPage') || 9999;
 			if (p == collection.currentPage) {
 				this.addOne(model, options);	
@@ -388,14 +393,19 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			pageContainer = container;
 		} else {
 			pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-			if (pageContainer.length && (!container || !container.children().length)) {
+			if (pageContainer.length && !(container && container.children().length)) {
 				container = pageContainer;
-				// page already rendered, no new elements to render
-			} 
+				// page already rendered, no new elements to add, refreshLayout()
+			} else {
+				// TODO: need to sort in collection first!!!!!!!!!
+				pageContainer.append(container.children());
+				stale = true;
+				// page already rendered, AND new elements to add, 
+			}
 		}
 		if (pageContainer.length && container && container.children().length) {
-			// container could hold offscreen ThumbnailViews
-			// render if stale 
+				// page already rendered, no new elements to add, 
+				// but refreshLayout() ?? 
 		} else if (pageContainer.length==0) {
 			pageContainer = $(this.templates.pageTemplate(collection))
 			var p, 

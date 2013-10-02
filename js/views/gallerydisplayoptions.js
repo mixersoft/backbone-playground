@@ -18,30 +18,38 @@ var GalleryDisplayOptionsView = {
 	
 	collection: "required",
 	
-	template_source: "#markup #GalleryDisplayOptions.underscore",
+	template_source: "#markup #GalleryDisplayOptions.handlebars",
 	
 	ui_defaults: {	// default settings, override in this.collection.gallery_display_options_ui
-		'style': [{label:'Gallery',active:'active'},{label:'Filmstrip'},{label:'Lightbox',disabled:'disabled'}],
+		'style': [
+			{label:'Gallery', active:'active'},
+			{label:'Filmstrip'},
+			{label:'Lightbox', disabled:'disabled'}
+		],
 		'size': [
 			{label:'S', size: 100, active:'active' },
 			{label:'M', size: 160, },
 			{label:'L', size: 240, },
+		],
+		'rating': [
+			{label: 0, active:'active' },
 		],
 	},
 	
 	events: {
 		'click .size.btn-group .btn':'onSetThumbSize',
 		'click .style.btn-group .btn':'onSetLayout',
-		'change .sort':'onFilter',
-		'change .filter':'onSort',
+		'click .filter': 'onFilterClick',
+		'change .filter':'onFilterChanged',
 	},
 	
 	initialize: function(){
-		var source = $(this.template);
-		var settings = { interpolate : /\{\{(.+?)\}\}/g, };
-		this.template = _.template($(this.template_source).html(), null, settings);
+		if(!($.isFunction(this.template))) {
+			var source = $(this.template_source).html();	
+			views.GalleryDisplayOptionsView.prototype.template = Handlebars.compile(source);
+	    }
 		
-		// initialize with querystring override
+		// initialize with querystring/GalleryCollection override
 		var setup = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
 		var qs = mixins.Href.parseQueryString();
 		if (qs.size) {	// override display-option size from url
@@ -56,7 +64,7 @@ var GalleryDisplayOptionsView = {
 	},
 	
 	render: function(){
-		// note: the 'model' comes from requestPager.collection.gallery_display_options_ui?
+		// note: the 'model' comes from requestPager.collection.gallery_display_options_ui
 		this.$el.html( this.template( this.collection.gallery_display_options_ui ) );
 	},
 	
@@ -79,8 +87,23 @@ var GalleryDisplayOptionsView = {
 	onSetLayoutEngine: function(){
 		// grid, flickr, isotope, or filmstrip layout
 	},
-	onFilter: function(){
-		// also check PagerView.getFilterField/getFilterValue()/filter()
+	onFilterClick: function(e){
+// console.info("filter rating clicked");
+		switch ($(e.currentTarget).data('filter')) {
+			case "rating": 
+				var STAR_W = 11, 
+					PADDING_LEFT = 10,
+					$target = $(e.target),
+					targetX = e.clientX - $target.offset().left,
+					value = Math.ceil((targetX - PADDING_LEFT)/STAR_W);
+				if (value > 5) value = 5;
+				if (value <= 0) value = "off";
+				this.collection.trigger('filterChanged', {rating: value});	
+			break;
+		}
+	},
+	onFilterChanged: function(filter){
+		// render new filter values
 	},
 	onSort: function(){
 		// also check PagerView.sortByAscending()

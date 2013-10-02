@@ -122,6 +122,13 @@ body {
 .gallery .header .pager .pagination {
     margin: 0;
 }
+.gallery .header .pager .pagination .item {
+    border: 1px solid #DDDDDD;
+    display: block;
+    font-size: 11.9px;
+    line-height: 20px;
+    padding: 2px 10px;
+}
 .pager.vertical-right {
     padding: 20px 0 20px 20px;
     position: fixed;
@@ -190,19 +197,29 @@ body.wait {
 .pager .pagination {
     color: #0088CC;
 }
-.pager .pagination a, .pager .pagination span {
-    border-radius: 0 0 0 0;
-    color: inherit;
+.pager .pagination .item {
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
 }
-.pager .pagination .disabled a, .pager .pagination .disabled span {
-    background-color: #F5F5F5;
+.pager .pagination .page-label {
+    background-color: #EEEEEE;
 }
-.pager .pagination .loaded a, .pager .pagination .loaded span {
+.pager .pagination .link {
+    cursor: pointer;
+}
+.pager .pagination .loaded {
     color: #0064CD;
     font-weight: bold;
 }
-.pager .pagination .pag-label {
-    background-color: #EEEEEE;
+.pager .pagination .active {
+    background-color: #CDE5FF;
+    color: #0064CD;
+    cursor: default;
+    font-weight: bold;
+}
+.pager .pagination .disabled {
+    background-color: #F5F5F5;
+    cursor: default;
 }
 .pager.vertical-right {
     background: none repeat scroll 0 0 rgba(0, 0, 0, 0.2);

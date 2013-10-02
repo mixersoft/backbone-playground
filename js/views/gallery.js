@@ -118,10 +118,17 @@ var GalleryView = {
 		/*
 		 * create delegated views
 		 */
-		this.pager = new views.PagerView({
-			el: this.$('.header .pager'),
-			collection : this.collection,
-		});
+		if (1 && "use Timeline") {
+			this.timeline = new views.TimelineView({
+				el: this.$('.header .pager'),
+				collection : this.collection,
+			});
+		} else {
+			this.pager = new views.PagerView({
+				el: this.$('.header .pager'),
+				collection : this.collection,
+			});
+		}
 		this.displayOptions = new views.GalleryDisplayOptionsView({
 			el: this.$('.header .display-options'),
 			collection : this.collection,

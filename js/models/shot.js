@@ -44,7 +44,8 @@ var extend = function(classDef){
 
 var Shot = {
 	
-	url: function(options){
+	urlRoot: function(options){
+		return '/shot';
 		options = options || this.toJSON();
 		return this.templates['url_shot'](options);
 	},
@@ -82,6 +83,13 @@ var Shot = {
 			hiddenshot: new HiddenshotCollection([this])
 		})
 	},
+	
+	destroy: function(){
+		// Any events you wish to switch off ( if you have any )
+		var hiddenshot = this.get('hiddenshot');
+		hiddenshot.stopListening().destroy();
+		Backbone.Model.prototype.destroy.apply(this, options);  
+	}
 };
 
 /*

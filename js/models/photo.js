@@ -66,8 +66,6 @@ models.Photo = Backbone.Model.extend({
 	initialize: function(attributes, options){
 		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
 		this.set( attributes );
-		this.listenTo(this, 'request', this.request);
-		this.listenTo(this, 'change', this.change);
 	},
 	sync: function(method, model, options) {
 		options = _.extend(options,

@@ -14,8 +14,93 @@ var extend = function(classDef){
 	);
 }
 
-var _useNodeBackend = {
+/*
+ * Collection: HiddenshotCollection
+ * 	constructor called by models.Shot.hiddenshot = new HiddenShotCollection([this])
+ * properties:
+ * methods:
+ */
+var HiddenshotCollection = {
+	
+	model: models.Photo,
+	
+	templates: {
+		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=id%>/Usershot/min:typeset/.json'),
+	},
+	
+	url: function(){
+		var collection = this;
+		return this.backend.url.apply(collection, arguments);
+	},
+	
+	initialize: function(models, options){
+		// HACK: support for either node or cakephp backend, see Backend static class
+		// this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
+		switch (snappi.qs.backend) {
+			case 'node': case 'nodejs': 
+				this.backend = Backend['nodejs']; break;
+			case 'file':  
+				// no separate file backend, use cake
+			case 'cake': case 'cakephp': 
+			default:
+				this.backend = Backend['cakephp']; break;		
+		}
+		this.dataType = this.backend.dataType;
+		// end
+		
+		// HiddenshotCollection attr
+		if (models.length==1 && models[0] instanceof snappi.models.Shot) {
+			// assume the 1st model is bestshot
+			var m = models[0];
+			this.shot_core = {
+				id: m.get('shotId'),
+				count: m.get('shotCount'),
+				bestshot: m,
+				active: null,		// don't get this values until shot_extras
+				owner_id: null,
+				priority: null,
+				stale: true,
+			}
+		} else {
+			throw "Hiddenshot Collection must be initialized with exactly 1 models.Shot";
+		}
+		this.listenTo(this, 'request', this.request);
+	},
+	
+	// stack: Collection.parse > mixin.parseShot > Shot.initialize > Shot.parse
+	parse: function( response ){
+		var collection = this;
+		return this.backend.parse.apply(collection, arguments);
+	},
+	request: function(collection, xhr, queryOptions){
+		// $('body').addClass('wait');
+	},
+	
+};
+
+
+
+/*
+ * Backend - static class, wrapper for different dev backends
+ * 	'cakephp': original cakephp backend. DEFAULT
+ * 		- a lot of bloat, but AAA properly implemented
+ * 		- ex:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
+ * 	'nodejs': nodejs, minimal REST API implemented in node.js, 
+ * 		- use hostname=nodejs host, ?backend=node 
+ * 		- GET eliminates a lot of bloat
+ * 		- PUT/PATCH partially implemented using CakePHP backend
+ * 		- WARNING: still USES BACKDOOR AUTHENTICATION, not appropriate for PRODUCTION release
+ * 		- ex: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
+ * 	'bootstrap': uses JS file with static JSON
+ * 		- use ?bootstrap=[2011|mb|venice]
+ * 		- see /js/snappi-bootstrap.js    
+ */
+var Backend = function(){}
+
+// template: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
+Backend.nodejs = {
 	dataType: 'json',
+	baseurl: 'localhost:3000', // nodejs.hostname
 	url: function(){
 		var collection = this, 
 			qs = snappi.qs,	
@@ -47,21 +132,21 @@ var _useNodeBackend = {
 		if (collection.shot_core.bestshot.get('id') !== collection.shot_core.id) {
 			throw "ERROR: current bestshot does not match shot_extras result";
 		}
-		$('body').removeClass('wait');
-		return photos;		
-	},
+		// $('body').removeClass('wait');
+		return photos;		},
 }
-var _useCakephpBackend = {
+
+// template:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
+Backend.cakephp = {
 	dataType: 'jsonp',
-	url: function(){
+	url:  function(){
 		var collection = this, 
 			qs = snappi.qs,	
 			hostname = collection.hostname();
 		var data = _.extend({hostname: hostname}, collection.shot_core);
 		var url = collection.templates['url_shot'](data);
-		return url;
-	},
-	parse: function(response){
+		return url;	},
+	parse: function(response) {
 		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
 			photos = []
 			bestshotId = this.shot_core.bestshot.get('photoId');
@@ -80,65 +165,11 @@ var _useCakephpBackend = {
 		if (this.shot_core.bestshot.get('id') !== this.shot_core.id) {
 			throw "ERROR: current bestshot does not match shot_extras result";
 		}
-		$('body').removeClass('wait');
+		// $('body').removeClass('wait');
 		return photos;
 	},
 }
 
-/*
- * Collection: HiddenshotCollection
- * 	constructor called by models.Shot.hiddenshot = new HiddenShotCollection([this])
- * properties:
- * methods:
- */
-var HiddenshotCollection = {
-	
-	model: models.Photo,
-	
-	templates: {
-		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=id%>/Usershot/min:typeset/.json'),
-	},
-	
-	url: function(){
-		var collection = this;
-		return this.backend.url.apply(collection, arguments);
-	},
-	
-	initialize: function(models, options){
-		// HACK: support for either node or cakephp backend
-		this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
-		this.dataType = this.backend.dataType;
-		// end
-		
-		// HiddenshotCollection attr
-		if (models.length==1 && models[0] instanceof snappi.models.Shot) {
-			// assume the 1st model is bestshot
-			var m = models[0];
-			this.shot_core = {
-				id: m.get('shotId'),
-				count: m.get('shotCount'),
-				bestshot: m,
-				active: null,		// don't get this values until shot_extras
-				owner_id: null,
-				priority: null,
-				stale: true,
-			}
-		} else {
-			throw "Hiddenshot Collection must be initialized with exactly 1 models.Shot";
-		}
-		this.listenTo(this, 'request', this.request);
-	},
-	
-	// stack: Collection.parse > mixin.parseShot > Shot.initialize > Shot.parse
-	parse: function( response ){
-		var collection = this;
-		return this.backend.parse.apply(collection, arguments);
-	},
-	request: function(collection, xhr, queryOptions){
-		$('body').addClass('wait');
-	},
-	
-};
 
 
 // put it all together at the bottom

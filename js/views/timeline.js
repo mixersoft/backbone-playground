@@ -28,7 +28,7 @@ var TimelineView = {
 
 		// tagName: 'aside',
 		
-		template_source: "#markup #PagerBootstrap.underscore",
+		template_source: "#markup #Timeline.underscore",
 
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
@@ -36,30 +36,27 @@ var TimelineView = {
 				// compile once, add to Class
 				views.TimelineView.prototype.template = _.template(source);
 		    }
-		    var collection = this.collection;
-			var qs = snappi.qs
-			if (qs.perpage) collection.perPage = collection.paginator_ui.perPage = parseInt(qs.perpage);
-
-		    // this.listenTo(collection, 'reset', this.render);
-		    this.listenTo(collection, 'timeline-sync', this.render);
-		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
-		    this.listenTo(collection, 'xhr-fetch-page', this.renderLoading);
-		},
-		render: function (collection, resp, options) {
-			// note: the 'model' comes from requestPager.collection.info()
-			var paging = this.collection.info();
-			paging.showing = this.collection.models.length;
-			var html = this.template(paging);
-			this.$el.html(html);
-			_.each(this.$('.pagination .page .item'), function(item){
-				var page = $(item).text();
-				if (this.collection.fetchedServerPages[page]) {
-					$(item).addClass('loaded');
-				}
-			}, this);
+		    this.listenTo(this.model, 'sync', this.render);
+		    this.listenTo(this.collection, 'sync', this.renderState);
 		},
 		
-
+		// triggered by Timeline."sync"
+		render: function (model, resp, options) {
+			console.log("Timeline.render"); 
+			var html = this.template(this.model.toJSON());
+			this.$el.html(html);
+		},
+		
+		renderState: function(collection, resp, xhr){
+			var timeline_attr = this.model.toJSON(),
+				i = timeline_attr.active,
+				period = timeline_attr.periods[i],
+				key = period.period+'-'+timeline_attr.currentZoom;
+			timeline_attr.fetched[key] = "check filter to confirm";
+			this.$el.html(this.template(this.model.toJSON()));
+			return;
+		},
+		
 		gotoFirst: function (e) {
 			e.preventDefault();
 			this.collection.goTo(this.collection.information.firstPage, { merge: true, remove: false });
@@ -68,13 +65,26 @@ var TimelineView = {
 		gotoPrev: function (e) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			this.collection.prevPage({ merge: true, remove: false });
-		},
+			var model_attr = this.model.toJSON(),
+				index = model_attr.active-1,
+				fetched_key = model_attr.currentZoom+'-'+model_attr.periods[index].period;
+			if (model_attr.fetched[fetched_key]) {
+				console.warn("TODO: check if filter has changed, active="+index)
+				// just scroll
+			} else 
+				this.model.set('active', index);		},
 
 		gotoNext: function (e) {
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			this.collection.nextPage({ merge: true, remove: false });
+			var model_attr = this.model.toJSON(),
+				index = model_attr.active+1,
+				fetched_key = model_attr.currentZoom+'-'+model_attr.periods[index].period;
+			if (model_attr.fetched[fetched_key]) {
+				console.warn("TODO: check if filter has changed, active="+index)
+				// just scroll
+			} else 
+				this.model.set('active', index);
 		},
 
 		gotoLast: function (e) {
@@ -84,11 +94,22 @@ var TimelineView = {
 
 		gotoPeriod: function (e) {
 			e.preventDefault();
-			var page = $(e.target).text();
-			this.collection.goTo(page,{ merge: true, remove: false });
+			var index, 
+				label = $(e.target).text(),
+				model_attr = this.model.toJSON();
+			_.each(model_attr.periods, function(e,i,l){
+				if (label.indexOf(e.label)===0) {
+					index = i;
+					return false;
+				}
+			});	
+			if (model_attr.active == index) {
+				console.warn("TODO: check if filter has changed, active="+index)
+			}
+			this.model.set('active', index);
 		},
 
-		changeCount: function (e) {
+		changePeriod: function (e) {
 			e.preventDefault();
 			var per = $(e.target).text();
 			this.collection.rendered = {};		// reset

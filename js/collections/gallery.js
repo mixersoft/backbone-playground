@@ -30,10 +30,6 @@ var GalleryCollection =	{
 	
 	model : models.Photo,	// snappi.models.Shot	
 	
-	events: {
-		// 'repaginate':'repaginate',		// doesn't work for Collections
-	},
-	
 	initialize: function(){
 		// HACK: support for either node or cakephp backend, see Backend static class
 		// this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
@@ -52,7 +48,6 @@ var GalleryCollection =	{
 		if (snappi.qs.perpage) this.paginator_ui.perPage = snappi.qs.perpage;
 		if (snappi.qs.rating) this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
 		// end
-		
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);

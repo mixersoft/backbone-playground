@@ -64,7 +64,8 @@ var LayoutEngines = {
 var GalleryView = {
 	el: ".gallery",
 	
-	collection: null,	// Backbone.Paginator
+	collection: null,	// Backbone.Paginator.requestPager
+	timeline: null, 	// models.Timeline
 	
 	templates: {
 		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
@@ -77,6 +78,28 @@ var GalleryView = {
 	},
 	
 	initialize: function(attributes, options){
+		/**
+		 * app lifecycle for timeline
+		 * - GalleryView.render()
+		 * - TimelineView.render()
+		 * --> Timeline.fetch() 
+		 * 		> trigger Timeline."sync"
+		 * - GalleryCollection.onTimelineSync()
+		 * 		> trigger Timeline."change:active"
+		 * - GalleryCollection.onTimelineChangePeriod()
+		 * - GalleryCollection.fetch() 
+		 * 		> trigger collection.sync
+		 * - GalleryView.addPage() handles GalleryCollection."sync"
+		 * - TimelineView.renderState() handles GalleryCollection."sync"
+		 * 
+		 * click .pager .item.link
+		 * 		> trigger Timeline."change:active"
+		 *  
+		 */
+		
+		// ???: should this.model = models.Timeline? creating a custom attr here
+		this.timeline = attributes.timeline;
+		
 		this.render();
 		/*
 		 * NOTE: get containerWidth BEFORE rendering Views, to avoid an unnecssary layout/paint
@@ -85,7 +108,11 @@ var GalleryView = {
 		this.$el.data('outerW', this.$('.body').outerWidth());
 		$('body').data('winH', $(window).height());
 		$('body').data('winW', $(window).width());
-		
+
+		// timeline controls collection
+		this.listenTo(this.timeline, 'sync', this.onTimelineSync);
+		this.listenTo(this.timeline, 'change:active', this.onTimelineChangePeriod);
+
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
 		this.listenTo(collection, 'refreshLayout', this.refreshLayout);
@@ -111,29 +138,61 @@ var GalleryView = {
 			var shots = collection.parse(json);
 			collection.pager({ remove: false });
 		}
+		if (snappi.PAGER_STYLE == 'timeline') {}
 		else collection.pager({ remove: false });
 	},
 	
 	render: function(){
+		
 		/*
 		 * create delegated views
 		 */
-		if (1 && "use Timeline") {
-			this.timeline = new views.TimelineView({
+		if (snappi.PAGER_STYLE == 'timeline'){
+			new snappi.views.TimelineView({
 				el: this.$('.header .pager'),
-				collection : this.collection,
+				model: this.timeline,
+				collection: this.collection,
 			});
+			this.timeline.fetch(); 
 		} else {
 			this.pager = new views.PagerView({
 				el: this.$('.header .pager'),
 				collection : this.collection,
 			});
 		}
+		
 		this.displayOptions = new views.GalleryDisplayOptionsView({
 			el: this.$('.header .display-options'),
 			collection : this.collection,
 		});
 	},
+	
+	onTimelineSync : function(timeline, resp, options) {
+		console.log("GalleryView.timeline.'sync'");
+		var settings = timeline.toJSON(),
+			active = settings.active || 0,
+			current = settings.periods[active],
+			options = {
+				from: current.from,
+				to: current.to,
+				// filter: current.filter,
+			}
+			timeline.set('active', active);
+	},
+	
+	onTimelineChangePeriod : function(timeline) {
+		console.log("GalleryView.timeline.'change:active'");
+		period = timeline.get('periods')[timeline.changed.active];
+		options = {
+			from: period.from,
+			to: period.to,
+		}
+		this.collection.fetch({
+			remove: false,
+			data: options
+		});
+	},
+	
 	refreshLayout: function(options) {
 		var pages = this.$('.body .page');
 		_.each(pages, function(pageContainer, i){
@@ -378,7 +437,10 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				}
 			}
 		}
-	    this.collection.trigger('scrollPage', scrollPage, scrollDir);
+		if (snappi.PAGER_STYLE == 'timeline')
+	    	this.timeline.trigger('scrollPage', scrollPage, scrollDir);
+		else 	// TODO: refactor, legacy for .pager
+	    	this.collection.trigger('scrollPage', scrollPage, scrollDir);
         
     },
     

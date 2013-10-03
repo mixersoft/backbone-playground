@@ -8,7 +8,7 @@
  */
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	views.Timeline = Backbone.View.extend(
+	views.TimelineView = Backbone.View.extend(
 		// add mixins
 		classDef
 	);
@@ -41,7 +41,7 @@ var TimelineView = {
 			if (qs.perpage) collection.perPage = collection.paginator_ui.perPage = parseInt(qs.perpage);
 
 		    // this.listenTo(collection, 'reset', this.render);
-		    this.listenTo(collection, 'sync', this.render);
+		    this.listenTo(collection, 'timeline-sync', this.render);
 		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
 		    this.listenTo(collection, 'xhr-fetch-page', this.renderLoading);
 		},

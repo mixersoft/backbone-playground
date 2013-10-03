@@ -18,6 +18,7 @@
 	$(function() {
 		var mixins = snappi.mixins;
 		snappi.qs = mixins.Href.parseQueryString();		// global parsed qs
+		snappi.PAGER_STYLE = 'timeline';
 		
 		// config image server, to set explicitly, use &host=[hostname]
 		var imgHost = {};		// default is snappi[N].snaphappi.com
@@ -28,12 +29,14 @@
 			};
 		}
 		mixins.Href.imgServer(imgHost);
-		
-		snappi.collections.paginatedGallery = new snappi.collections.GalleryCollection();
-		snappi.views.app = new snappi.views.GalleryView({
-			collection : snappi.collections.paginatedGallery
-		});
-		
+		var timeline = new snappi.models.Timeline(), 
+			collection = new snappi.collections.GalleryCollection(),
+			app = new snappi.views.GalleryView({
+				collection : collection,
+				timeline: timeline, 		 
+			});
+		// for debugging
+		snappi.collections.paginatedGallery = collection;
 	});
 })();
 

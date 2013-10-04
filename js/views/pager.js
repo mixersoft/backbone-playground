@@ -33,7 +33,7 @@
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
 		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
-		    this.listenTo(collection, 'xhr-fetch-page', this.renderLoading);
+		    this.listenTo(collection, 'xhr-fetching', this.renderLoading);
 		},
 		render: function (collection, resp, options) {
 			// note: the 'model' comes from requestPager.collection.info()

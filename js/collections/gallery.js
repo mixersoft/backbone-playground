@@ -54,10 +54,26 @@ var GalleryCollection =	{
 		this.listenTo(this, 'filterChanged', this.filterChanged);
 	},
 	
-	comparator: function( photo ){
-		return photo.get('dateTaken');
+	// comparator: function( photo ){
+		// return photo.get('dateTaken');
+	// },
+	comparator: function( a,b ){
+		var aVal = a.get('dateTaken'),
+			bVal = b.get('dateTaken'),
+			ret;
+		if (aVal < bVal) ret = -1;
+		else if (aVal > bVal) ret = 1;
+		else ret=0;
+		if (snappi.qs.direction == 'desc') ret *= -1;
+		return ret;
 	},
-	
+	request: function(collection, xhr, queryOptions){
+		var index;
+		if (snappi.PAGER_STYLE == 'timeline') index = "timeline should know"
+		else index = this.currentPage;
+		this.trigger('xhr-fetching', index);
+		if (_DEBUG) console.time("GalleryCollection.fetch()");
+	},
 	/**
 	 * repaginate models for client side paging
 	 * - adds shot.clientPage
@@ -230,11 +246,6 @@ var setup_Paginator = {
 	server_api: {	
 		// custom parameters appended to querystring via queryAttributes
 	},
-	request: function(collection, xhr, queryOptions){
-		var check; // GalleryCollection
-		this.trigger('xhr-fetch-page', this.currentPage);
-		if (_DEBUG) console.time("GalleryCollection.fetch()");
-	},
 }
 
 /*
@@ -320,7 +331,13 @@ Backend.nodejs = {
 	dataType: 'json',
 	baseurl: 'localhost:3000', // nodejs.hostname
 	url: function(){
-		var collection = this, 
+		var url; 
+			
+		if (snappi.PAGER_STYLE == 'timeline'){
+			// override from GalleryView.onTimelineChangePeriod
+			url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs']);
+		} else {
+			var collection = this, 
 			qs = snappi.qs,	
 			defaults = {
 				sort: 'score',
@@ -329,12 +346,10 @@ Backend.nodejs = {
 				ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
 			},
 			request = _.defaults(qs, defaults);
-			// override with live data
-			request.page = collection.currentPage;
+			request.page = collection.currentPage;		
 			request.perpage = collection.perPage;
-			 
-		var url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs'])+$.param(request);
-		// var url = _.template('/asset.json?', Backend['nodejs'])+$.param(request);
+			url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs'])+$.param(request);
+		}
 		return url;
 	},
 	parse: function(response){

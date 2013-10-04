@@ -21,7 +21,7 @@ mixins.UiActions = {
         return dir;
     },
 	
-	scrollIntoView: function(target) {
+	scrollIntoView: function(target, complete) {
 		var top, next, target, NAVBAR_OFFSET_H = 40;
 		if (!target.jquery) target = $(target);
 		
@@ -30,7 +30,9 @@ mixins.UiActions = {
 	        // console.log(e.hash);
 	        var delta = target.offset().top-NAVBAR_OFFSET_H - $(window).scrollTop();
 	        if (delta < 0 || delta > 50) {
-	        	$('html, body').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 500);
+	        	$('html').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
+	        		300, 
+	        		complete);
 	        } 
 	    }
 	    return target;
@@ -40,7 +42,7 @@ mixins.UiActions = {
 	 * 	NOTE: use this method to avoid triggering a collection.fetch() in onContainerScroll() 
  	 * @param {Object} target, jquery node
 	 */
-	scrollBottomAlmostIntoView: function(target) {
+	scrollBottomAlmostIntoView: function(target, complete) {
 		var top, bottom, next, target, OFFSET_H = 40;
 		if (!target.jquery) target = $(target);
 		
@@ -55,7 +57,11 @@ mixins.UiActions = {
 	        	windowB = windowT + windowH;
 	        var delta = Math.min(targetB - windowB, targetT-windowT)-OFFSET_H;
 	        if (delta < 0 || delta > 50) {
-	        	$('html, body').animate({scrollTop: windowT+delta}, 500);
+	        	console.info("target="+target.data('period'))
+	        	console.info("animate scrollTop="+(windowT+delta)+", windowT="+windowT+", delta="+delta );
+	        	$('html').animate({scrollTop: windowT+delta}, 
+	        		300, 
+	        		complete);
 	        } 
 	    }
 	    return target;

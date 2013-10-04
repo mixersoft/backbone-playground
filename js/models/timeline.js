@@ -47,7 +47,40 @@ var TimelineModel = {
 			var allowed = ['zoom', 'type', 'userid', 'ownerid', 'backend', 'direction', 'show-hidden', 'from', 'to', 'rating'];
 			allowed.unshift(qs);
 			return _.pick.apply(this, allowed );
-		}
+		},
+		/**
+		 *  get period from timeline
+		 *  @param i int (optional) selected period, default active
+		 */  
+		getActive: function(model, i){
+			model = model.toJSON();
+			if (i!==0) i = i || model.active;
+			model.currentPeriod = model.periods[i];
+			return model;
+		},
+		/** 
+		 * set model.fetched={} to track fetched periods
+		 * @param that TimelineView, use this when calling
+		 * @param i int, index of fetched period, usually model.active
+		 */
+		setFetched: function(that, i){
+			var model = that.toJSON();
+			if (i!==0) i = i || model.active;
+			// set by reference, "deep-copy" attr 
+			model.fetched[TimelineModel.helper.getFetchedKey(i, model)] = "check filter to confirm";
+			return model;
+		},
+		getFetchedKey: function(i, model){
+			model = model || this.toJSON();
+			i = i || model.active;
+			period = model.periods[i];
+			return period.period+'-'+model.currentZoom;
+		},
+		isFetched: function(i, model){
+			model = model || this.toJSON();
+			i = i || model.active;
+			return model.fetched[TimelineModel.helper.getFetchedKey(i, model)];
+		},
 	},
 	
 	// backbone methods

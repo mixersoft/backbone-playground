@@ -69,12 +69,12 @@ var GalleryView = {
 	
 	templates: {
 		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
+		periodTemplate: _.template('<% var period=periods[active].period %> <div class="page" data-zoom="<%=currentZoom%>" data-period="<%=period%>"></div>'),
 	},
 	
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
-		'scroll': 'onContainerScroll',	 
 	},
 	
 	initialize: function(attributes, options){
@@ -127,10 +127,6 @@ var GalleryView = {
 		this.listenTo(collection, 'layout-complete', function(){
 		});
 		
-		// calls colletion.sync and makes request from DB
-		this.$el.addClass('debounce');
-		$(window).on('scroll', $.proxy(this.onContainerScroll, this));
-		
 		// initial XHR fetch or bootstrap
 		if (snappi.qs.backend && snappi.qs.backend=='file') {
 			var user = snappi.qs.owner || 'venice';	// valid = [venice|mb|2011]
@@ -181,15 +177,40 @@ var GalleryView = {
 	},
 	
 	onTimelineChangePeriod : function(timeline) {
-		console.log("GalleryView.timeline.'change:active'");
+		console.log("GalleryView.timeline.'change:active', i="+timeline.changed.active);
+		if (timeline.helper.isFetched.call(timeline, timeline.changed.active)) {
+			// scroll to an already fetched period, should NOT trigger XHR fetch
+			var that = this,
+				pageContainer = this.timeline_helper.getPeriodContainer$(this);
+			$('.pager').addClass('xhr-fetching')	
+			this.scrollIntoView(pageContainer, function(){
+				that.collection.trigger('xhr-ui-ready');
+			});
+			return;
+		};
 		period = timeline.get('periods')[timeline.changed.active];
 		options = {
 			from: period.from,
 			to: period.to,
+			page: 1,		// should be able to paginate within a period
+			perpage: 20,
+			sort: 'top-rated',
+			direction: 'desc',
 		}
-		this.collection.fetch({
+		var that = this,
+			collection = this.collection, 
+			qs = snappi.qs,	
+			defaults = {
+				userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
+				ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
+			},
+			request = _.defaults(options, qs, defaults);
+		collection.fetch({
 			remove: false,
-			data: options
+			data: options,
+			complete: function() {
+				that.collection.trigger('xhr-fetched');
+			},
 		});
 	},
 	
@@ -376,75 +397,48 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 		// also called from PagerView.changeCount()
 	},
 	
-	/**
-     * Called on the scroll event of the container element.  Used only in the non-paginated mode.
-     * When the scroll threshold is reached a new page of thumbs is requested.
-     * @param event e - the scroll event object
-     */
-    onContainerScroll : _.throttle(function(){
-    	this._scrollSpy();
-    }, 200, {leading: false}),
-    
-    _scrollSpy : function(e) {
-    	self = this;
-    	if (self.$el.hasClass('debounce')) {
-    		return;
-    	}
-    	
-    	var OFFSET_H = 40,
-    		target = self.$el,
-    		collection = this.collection,
-        	selfB = target.offset().top+target.height(),
-        	windowT = $(window).scrollTop(),
-        	windowB = windowT + $(window).height();
-        	
-        // find current visible page
-        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
-        if (!scrollDir) return;
-        _.each(self.$('.body .page'), function(item, i ,l){
-        	if (scrollDir=='down') {
-	        	if (visiblePg && item.offsetTop > windowB)
-	        	{
-	        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
-	        		return false;
-	        	} 
-        	} else { // page up
-	        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
-	        		if (item.offsetTop-OFFSET_H < windowT) visiblePg = item;
-	        		return false;
-	        	} 
-        	}
-        	visiblePg = item;
-        });
-        
-        var scrollPage = $(visiblePg).data('page');
-// console.log('scroll to page='+scrollPage);        
-        
-        var nextPage = scrollDir=='down' ? this.collection.currentPage+1 : this.collection.currentPage-1;
-			
-		if (nextPage !== scrollPage && 0 < nextPage && nextPage <= this.collection.totalPages) 
-		{
-			// TODO: how can we debounce this if the page load times
-			//	are indeterminant? want to debounce AFTER load complete?
-			if (!this.collection.fetchedServerPages[nextPage]) {
-				// check for fetch
-				if (nextPage > scrollPage && selfB > windowB) {
-					// skip bottomPage fetch until see bottom, selfB < windowB
-				} else {	
-					self.$el.addClass('debounce');
-					this.collection.goTo(nextPage,{ merge: true, remove: false });
-					return;
-				}
-			}
-		}
-		if (snappi.PAGER_STYLE == 'timeline')
-	    	this.timeline.trigger('scrollPage', scrollPage, scrollDir);
-		else 	// TODO: refactor, legacy for .pager
-	    	this.collection.trigger('scrollPage', scrollPage, scrollDir);
-        
-    },
-    
 
+	timeline_helper: {
+		/**
+		 * @param create boolean (optional), if truthy then create if not found
+		 * @param index int (optional), default active, unless period index provided 
+		 */
+		getPeriodContainer$: function(that, create, index){
+			var find_template = '.page[data-zoom="<%=currentZoom%>"][data-period="<%=currentPeriod.period%>"]',
+				timeline = that.timeline.helper.getActive(that.timeline, index),
+				selector = _.template(find_template, timeline),
+				item$ = that.$(selector);
+			if (!item$.length && create){
+				var create_template = '<div class="page" data-zoom="<%=currentZoom%>" data-period="<%=currentPeriod.period%>"></div>';
+				item$ = $(_.template(create_template, timeline));
+			}
+			return item$.length ? item$ : false;
+		},
+		createPeriodContainers$: function(that, timeline, $body) {
+			// create missing pageContainers	
+			var $current, 
+				$before = false, 
+				fetched_key;
+			_.each(timeline.periods, function(e,i,l){
+				if (i >= timeline.active) {
+					return false;  // found
+				}
+				$current = that.timeline_helper.getPeriodContainer$(that, false, i);
+				fetched_key = that.timeline.helper.getFetchedKey(i,timeline);
+				if ($current && timeline.fetched[fetched_key]) {
+					// already loaded, should already be created
+				} else if (!$current) {	
+					// create, insert empty pageContainer
+					$current =  that.timeline_helper.getPeriodContainer$(that, 'create', i);
+					if ($before) $current.insertAfter($before);
+					else $body.prepend($current);
+				} 
+				$before = $current;
+			});
+			return $before;
+		},
+	},
+	
 	/**
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
@@ -452,6 +446,81 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
  	 * @param Object options, default={force: false, scroll: true}
 	 */
 	renderBody: function(container, options){
+		
+		if (snappi.PAGER_STYLE == 'timeline') {
+			this.renderBody_Period.apply(this, arguments);
+		} else {
+			this.renderBody_Page.apply(this, arguments);
+		
+			var that = this;
+			_.delay(function(that){
+				that.$el.removeClass('debounce');
+			}, 1000, this);
+		}
+		// for debugging
+		if (_DEBUG) this.introspect();
+	},
+	
+	renderBody_Period: function(container, options){
+		options = options || {};
+		var that = this,
+			stale = options.force || false, 
+			collection = this.collection,
+			pageContainer;
+		
+		if (container && container.hasClass('page')) {
+			pageContainer = container; // container is already onscreen
+		} else {
+			pageContainer = this.timeline_helper.getPeriodContainer$(this);
+			if (pageContainer && !(container && container.children().length)) {
+				container = pageContainer; // NO container, user current active pageContainer
+				// page already rendered, no new elements to add, refreshLayout()
+			} else if (pageContainer){
+				// TODO: need to sort in collection first!!!!!!!!!
+				pageContainer.append(container.children());
+				stale = true;
+				// page already rendered, AND new elements to add, 
+			}
+		}
+		if (pageContainer && container && container.children().length) {
+				// page already rendered, no new elements to add, 
+				// but refreshLayout() ?? 
+		} else if (!pageContainer) {
+			var $before = $current = null, 
+				body = this.$('.body'),
+				timeline = this.timeline.toJSON();
+				
+			$before = this.timeline_helper.createPeriodContainers$(this, timeline, body);
+			
+			pageContainer = this.timeline_helper.getPeriodContainer$(this, 'create');
+			if (!$before) body.prepend(pageContainer);
+			else pageContainer.insertAfter($before);
+			stale = true;
+		} 
+		
+		if (stale === true){
+			/*
+			 * the actual layout render statement
+			 */
+			var thumbs = container.find('> div');  // container.find('.thumb');
+			if (pageContainer !== container) pageContainer.append(thumbs);
+			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
+			/*
+			 * end
+			 */
+			// a new page was added. cleanup GalleryView
+			this.$el.css('min-height', $(window).outerHeight()-160);
+		}
+		if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+			that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
+				that.scrollIntoView(pageContainer, function(){
+					that.collection.trigger('xhr-ui-ready');
+				});
+				
+			});
+		}
+	},
+	renderBody_Page: function(container, options){
 		options = options || {};
 		var that = this,
 			stale = options.force || false, 
@@ -511,15 +580,15 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
 				// what is the best way? Stop the listener?
 				that.$el.addClass('debounce');
-				that.scrollBottomAlmostIntoView(pageContainer);
+				that.scrollIntoView(pageContainer, function(){
+					that.collection.trigger('xhr-ui-ready');
+					that.$el.removeClass('debounce');		
+				});
+				
 console.log('GalleryView.renderBody() first chunk ready to view');				
 			});
 		}
-		_.delay(function(that){
-			that.$el.removeClass('debounce');
-		}, 1000, this);
-		// for debugging
-		if (_DEBUG) this.introspect();
+		
 	},
 	// debugging
 	introspect: function() {

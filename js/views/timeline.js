@@ -38,6 +38,10 @@ var TimelineView = {
 		    }
 		    this.listenTo(this.model, 'sync', this.render);
 		    this.listenTo(this.collection, 'sync', this.renderState);
+		    this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
+		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
+		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
+		    
 		},
 		
 		// triggered by Timeline."sync"
@@ -45,17 +49,103 @@ var TimelineView = {
 			console.log("Timeline.render"); 
 			var html = this.template(this.model.toJSON());
 			this.$el.html(html);
+			
+			$(window).on('scroll', $.proxy(this.onContainerScroll, this));
 		},
 		
-		renderState: function(collection, resp, xhr){
-			var timeline_attr = this.model.toJSON(),
-				i = timeline_attr.active,
-				period = timeline_attr.periods[i],
-				key = period.period+'-'+timeline_attr.currentZoom;
-			timeline_attr.fetched[key] = "check filter to confirm";
-			this.$el.html(this.template(this.model.toJSON()));
-			return;
+		helper: {
+			getCurrentPeriod$: function(that){
+				var model = that.model.toJSON(),
+					data = {
+						currentZoom: model.currentZoom,
+						currentPeriod: model.periods[model.active].period
+					},
+					selector = _.template('.page .item.period-<%= currentPeriod %>[data-zoom="<%= currentZoom %>"]', data),
+					$item = that.$(selector);
+				return $item.length ? $item : false;
+			},
+			scrollSpy : function(e) {
+		    	self = this;
+		    	if (self.$el.hasClass('xhr-fetching')) {
+		    		return;
+		    	}
+		    	
+		    	var OFFSET_H = 40,
+		    		target = self.$el,
+		    		collection = this.collection,
+		        	selfB = target.offset().top+target.height(),
+		        	windowT = $(window).scrollTop(),
+		        	windowB = windowT + $(window).height();
+		        	
+		        // find current visible page
+		        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
+		        if (!scrollDir) return;
+		        _.each($('.gallery .body .page'), function(item, i ,l){
+		        	if (scrollDir=='down') {
+			        	if (visiblePg && item.offsetTop > windowB)
+			        	{
+			        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
+			        		return false;
+			        	} 
+		        	} else { // page up
+			        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
+			        		if (item.offsetTop-OFFSET_H < windowT) visiblePg = item;
+			        		return false;
+			        	} 
+		        	}
+		        	visiblePg = item;
+		        });
+		        
+		        var nextPage, scrollPage = $(visiblePg).data('period');
+		// console.log('scroll to page='+scrollPage);        
+	        	var settings = this.model.toJSON(),
+	        		nextPage = scrollDir=='down' ? settings.active+1 : settings.active-1;
+	        	nextPage = (nextPage < 0) ? 0 : (nextPage > settings.periods.length -1) ? settings.periods.length -1 : nextPage;
+	        	if (this.model.helper.isFetched(nextPage, settings)) {
+	        		var doNotFetch = {silent:true}
+	        		this.model.set('active', nextPage, doNotFetch);
+	        		this.renderState();
+	        	} else	{
+	        		if (!this.$el.hasClass('xhr-fetching')) 
+	        			this.model.set('active', nextPage);
+	        		else console.info("cancel fetch on scrollspy because still fetching")
+	        	}
+		    },
+
 		},
+		
+		// render Loading spinner when page load is requested
+		renderFetching: function(){
+			this.$el.addClass('xhr-fetching');		// use to debounce scroll
+			var spinner = '<i class="icon-spinner icon-spin icon-small"><i>';
+			var found = TimelineView.helper.getCurrentPeriod$(this); 
+			if (found) found.html(spinner);
+		},
+		
+		// render Loading spinner when page load is requested
+		renderFetched: function(){
+			this.renderState();
+			_.delay(function(that){
+				// console.warn("remove xhr-fetching");
+				that.$el.removeClass('xhr-fetching');		// use to debounce scroll
+			}, 300, this)
+		},
+		
+		// render timeline, show fetched periods
+		renderState: function(){
+			var model = this.model.helper.setFetched(this.model); 
+			this.$el.html(this.template(model));
+		},
+		
+		/**
+	     * Called on the scroll event of the container element.  Used only in the non-paginated mode.
+	     * When the scroll threshold is reached a new page of thumbs is requested.
+	     * @param event e - the scroll event object
+	     */
+	    onContainerScroll : _.throttle(function(){
+	    	this.helper.scrollSpy.call(this);
+	    }, 200, {leading: false}),
+	    		
 		
 		gotoFirst: function (e) {
 			e.preventDefault();
@@ -122,16 +212,6 @@ var TimelineView = {
 			this.render();
 		},
 		
-		renderLoading: function (page) {
-			// $('body').addClass('wait');
-			_.each(this.$('.item.link'), function(v){
-				if (v.textContent==page) {
-					$(v).html('<i class="icon-spinner icon-spin icon-small" data-page="'+page+'"><i>');
-					return false;
-				}
-			}, this);
-		},
-
 	};
 	
 // put it all together at the bottom

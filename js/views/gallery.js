@@ -112,6 +112,7 @@ var GalleryView = {
 		// timeline controls collection
 		this.listenTo(this.timeline, 'sync', this.onTimelineSync);
 		this.listenTo(this.timeline, 'change:active', this.onTimelineChangePeriod);
+		this.listenTo(this.timeline, 'change:filters', this.onTimelineChangeFilter);
 
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
@@ -160,6 +161,7 @@ var GalleryView = {
 		this.displayOptions = new views.GalleryDisplayOptionsView({
 			el: this.$('.header .display-options'),
 			collection : this.collection,
+			timeline: this.timeline,
 		});
 	},
 	
@@ -189,22 +191,17 @@ var GalleryView = {
 			return;
 		};
 		period = timeline.get('periods')[timeline.changed.active];
-		options = {
-			from: period.from,
-			to: period.to,
-			page: 1,		// should be able to paginate within a period
-			perpage: 20,
-			sort: 'top-rated',
-			direction: 'desc',
-		}
-		var that = this,
-			collection = this.collection, 
-			qs = snappi.qs,	
-			defaults = {
-				userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
-				ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
+		var options = {
+				from: period.from,
+				to: period.to,
+				page: 1,		// should be able to paginate within a period
+				perpage: 20,
+				sort: 'top-rated',
+				direction: 'desc',
 			},
-			request = _.defaults(options, qs, defaults);
+			that = this,
+			collection = this.collection, 
+			options = _.defaults(timeline.get('filters'), options, timeline.xhr_defaults);
 		collection.fetch({
 			remove: false,
 			data: options,
@@ -212,6 +209,10 @@ var GalleryView = {
 				that.collection.trigger('xhr-fetched');
 			},
 		});
+	},
+	
+	onTimelineChangeFilter : function(timeline) {
+		console.log("Filter changed");
 	},
 	
 	refreshLayout: function(options) {

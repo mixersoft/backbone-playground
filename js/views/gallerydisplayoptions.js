@@ -89,6 +89,8 @@ var GalleryDisplayOptionsView = {
 	},
 	onFilterClick: function(e){
 // console.info("filter rating clicked");
+		var filters = this.timeline.get('filters'),
+			changed = false;
 		switch ($(e.currentTarget).data('filter')) {
 			case "rating": 
 				var STAR_W = 11, 
@@ -98,9 +100,12 @@ var GalleryDisplayOptionsView = {
 					value = Math.ceil((targetX - PADDING_LEFT)/STAR_W);
 				if (value > 5) value = 5;
 				if (value <= 0) value = "off";
-				this.collection.trigger('filterChanged', {rating: value});	
+				filters['rating'] = value;
+				changed = true;
+				// this.collection.trigger('filterChanged', {rating: value});	
 			break;
 		}
+		if (changed) this.timeline.set('filters', filters);
 	},
 	onFilterChanged: function(filter){
 		// render new filter values

@@ -21,11 +21,15 @@ var TimelineModel = {
 		direction: 'desc',			// sort by most-recent
 		periods: [],				// "pages"
 		fetched: {},				// periods fetched in this session
+		filters: {
+			zoom: 'month',
+		},				// filters, exclude time
 	},
 	
 	xhr_defaults: {
-		zoom: 'month',
 		direction: 'desc',
+		userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
+		ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
 	}, 
 	
 	urlRoot: function() {
@@ -43,8 +47,14 @@ var TimelineModel = {
 	
 	// helper functions
 	helper: {
-		mergeQsParams: function(qs){
-			var allowed = ['zoom', 'type', 'userid', 'ownerid', 'backend', 'direction', 'show-hidden', 'from', 'to', 'rating'];
+		pickQsDefaults: function(qs){
+			var options, allowed = ['type', 'userid', 'ownerid', 'backend', 'direction'];
+			allowed.unshift(qs);
+			options = _.pick.apply(this, allowed );
+			return options;
+		},
+		pickQsFilters: function(qs){
+			var allowed = ['zoom', 'show-hidden', 'rating', 'from', 'to'];
 			allowed.unshift(qs);
 			return _.pick.apply(this, allowed );
 		},
@@ -58,6 +68,7 @@ var TimelineModel = {
 			model.currentPeriod = model.periods[i];
 			return model;
 		},
+		
 		/** 
 		 * set model.fetched={} to track fetched periods
 		 * @param that TimelineView, use this when calling
@@ -102,7 +113,10 @@ var TimelineModel = {
 	},
 	
 	initialize: function(attributes, options){
-		this.xhr_defaults = _.defaults(this.helper.mergeQsParams(snappi.qs), this.xhr_defaults);
+		this.xhr_defaults = _.defaults(this.helper.pickQsDefaults(snappi.qs), this.xhr_defaults);
+		// type overrides ownerid
+		if (this.xhr_defaults.type) delete this.xhr_defaults.ownerid;
+		this.set('filters', this.helper.pickQsFilters(snappi.qs), {silent: true});
 		this.set( attributes );
 	},
 	

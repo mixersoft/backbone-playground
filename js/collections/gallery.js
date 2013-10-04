@@ -51,7 +51,7 @@ var GalleryCollection =	{
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);
-		this.listenTo(this, 'filterChanged', this.filterChanged);
+		// this.listenTo(this, 'filterChanged', this.filterChanged);
 	},
 	
 	// comparator: function( photo ){

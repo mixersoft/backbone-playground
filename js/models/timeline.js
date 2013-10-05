@@ -37,7 +37,7 @@ var TimelineModel = {
 		var xhr = {
 			baseurl: 'localhost:3000' 
 		}
-		var url = _.template('http://<%=baseurl%>/timeline.json?', xhr)+$.param(this.xhr_defaults);
+		var url = _.template('http://<%=baseurl%>/timeline.json?', xhr); // +$.param(this.xhr_defaults);
 		return url;	
 	},	
 	
@@ -54,9 +54,10 @@ var TimelineModel = {
 			return options;
 		},
 		pickQsFilters: function(qs){
-			var allowed = ['zoom', 'show-hidden', 'rating', 'from', 'to'];
+			var options, allowed = ['zoom', 'show-hidden', 'rating', 'from', 'to'];
 			allowed.unshift(qs);
-			return _.pick.apply(this, allowed );
+			options = _.defaults(_.pick.apply(this, allowed ), this.defaults.filters);
+			return options;
 		},
 		/**
 		 *  get period from timeline
@@ -113,11 +114,12 @@ var TimelineModel = {
 	},
 	
 	initialize: function(attributes, options){
+		this.set( attributes );
 		this.xhr_defaults = _.defaults(this.helper.pickQsDefaults(snappi.qs), this.xhr_defaults);
 		// type overrides ownerid
 		if (this.xhr_defaults.type) delete this.xhr_defaults.ownerid;
-		this.set('filters', this.helper.pickQsFilters(snappi.qs), {silent: true});
-		this.set( attributes );
+		this.set('filters', this.helper.pickQsFilters.call(this, snappi.qs), {silent: true});
+		var check;
 	},
 	
 	sync: function(method, model, options) {
@@ -133,6 +135,8 @@ var TimelineModel = {
 			// // if (beforeSend) return beforeSend.apply(this, arguments);
 			// // else return true;
 		// // }
+		options.data.page = 1;
+		options.data.perpage = 99;
 	    Backbone.sync(method, model, options);
 	},
 	// public methods

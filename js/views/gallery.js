@@ -150,7 +150,8 @@ var GalleryView = {
 				model: this.timeline,
 				collection: this.collection,
 			});
-			this.timeline.fetch(); 
+			var options = this.timeline_helper.getFetchOptions(this);
+			this.timeline.fetch({data: options}); 
 		} else {
 			this.pager = new views.PagerView({
 				el: this.$('.header .pager'),
@@ -190,19 +191,9 @@ var GalleryView = {
 			});
 			return;
 		};
-		period = timeline.get('periods')[timeline.changed.active];
-		var options = {
-				from: period.from,
-				to: period.to,
-				page: 1,		// should be able to paginate within a period
-				perpage: 20,
-				sort: 'top-rated',
-				direction: 'desc',
-			},
-			that = this,
-			collection = this.collection, 
-			options = _.defaults(timeline.get('filters'), options, timeline.xhr_defaults);
-		collection.fetch({
+		var options = this.timeline_helper.getFetchOptions(this),
+			that = this;
+		that.collection.fetch({
 			remove: false,
 			data: options,
 			complete: function() {
@@ -212,7 +203,19 @@ var GalleryView = {
 	},
 	
 	onTimelineChangeFilter : function(timeline) {
-		console.log("Filter changed");
+		console.log("GalleryView Filter changed");
+		// update TimelineView to reflect current filter
+		// might have to filter collection.models, too
+		// isFetched() should compare filter  
+		var options = this.timeline_helper.getFetchOptions(this),
+			that = this;
+		that.collection.fetch({
+			remove: false,
+			data: options,
+			complete: function() {
+				that.collection.trigger('xhr-fetched');
+			},
+		});
 	},
 	
 	refreshLayout: function(options) {
@@ -438,6 +441,23 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			});
 			return $before;
 		},
+		getFetchOptions: function(that){
+			var timeline = that.timeline,
+				period = timeline.get('periods')[timeline.get('active')],
+				options = {
+					page: 1,		// should be able to paginate within a period
+					perpage: 20,	// for collection, but not timeline
+					sort: 'top-rated',
+					direction: 'desc',
+					filters: timeline.get('filters'),
+				};
+			if (period) {
+				options.from = period.from;
+				options.to = period.to;	
+			}	
+			options = _.defaults(options, timeline.xhr_defaults);
+			return options;
+		}
 	},
 	
 	/**

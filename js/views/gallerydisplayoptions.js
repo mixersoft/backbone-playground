@@ -15,7 +15,8 @@ var extend = function(classDef){
 var GalleryDisplayOptionsView = {
 
 	el: "required",
-	
+
+	timeline: "required",	
 	collection: "required",
 	
 	template_source: "#markup #GalleryDisplayOptions.handlebars",
@@ -43,7 +44,8 @@ var GalleryDisplayOptionsView = {
 		'change .filter':'onFilterChanged',
 	},
 	
-	initialize: function(){
+	initialize: function(attributes, options){
+		this.timeline = attributes.timeline;
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
 			views.GalleryDisplayOptionsView.prototype.template = Handlebars.compile(source);
@@ -89,7 +91,7 @@ var GalleryDisplayOptionsView = {
 	},
 	onFilterClick: function(e){
 // console.info("filter rating clicked");
-		var filters = this.timeline.get('filters'),
+		var filters = _.clone(this.timeline.get('filters')),
 			changed = false;
 		switch ($(e.currentTarget).data('filter')) {
 			case "rating": 
@@ -108,7 +110,7 @@ var GalleryDisplayOptionsView = {
 		if (changed) this.timeline.set('filters', filters);
 	},
 	onFilterChanged: function(filter){
-		// render new filter values
+		// console.log("GalleryDisplayOptions Filter changed");
 	},
 	onSort: function(){
 		// also check PagerView.sortByAscending()

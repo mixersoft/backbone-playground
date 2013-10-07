@@ -147,6 +147,7 @@ var GalleryCollection =	{
 				viewClass : 'PhotoView',
 				wrap: false, 
 			});
+			// us GalleryView.addedHiddenshots to add .showing class
 			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
 		}
 		var hiddenshotCollection = model.get('hiddenshot');

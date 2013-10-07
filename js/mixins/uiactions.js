@@ -7,6 +7,11 @@
 	var _lastScrollTop = 0;
         
 mixins.UiActions = {
+	
+	TIMINGS: {
+		xhr_ui_debounce: 300,			// ui debounce after XHR success 
+		thumb_fade_transition: 300,		// same as CSS transition: all 300ms linear 100ms;
+	},
 
 	toggle: function() { /* ... */ },
 

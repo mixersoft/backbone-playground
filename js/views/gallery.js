@@ -289,22 +289,32 @@ var GalleryView = {
 		// console.log("collection add for models, count="+this.collection.models.length);
 	},
 	/**
+	 * add Hiddenshots AFTER XHR fetch(), 
 	 * @param Object options, 
 	 * 	options.shotId #[shotId].shot-wrap
 	 *  options.bestshot instanceof models.Shot 
 	 */
 	addedHiddenshots : function(models, options) {
+		var $thumb, 
+			$shot = this.$('#'+options.shotId);
+		if (!$shot.length) throw "Trying to insert into missing shot, shotId="+options.shotId;
+		$shot.addClass('showing');
 		_.each(models, function(item, i){
 			if (item == options.bestshot) return;	// skip bestshot
-			this.addOne(item, options);
+			$thumb = this.addOne(item, options);
+			// options.shotId set in this.addedHiddenshots()
+			// add Hiddenshot with .fade.fade-out class
+			//TODO: move this to ShotView?
+			$thumb.addClass('fade').addClass('fade-out');
+			$shot.append($thumb); 
 		}, this);
 		// get current page
 		var $page = _getPageFromModel(this, options.bestshot);
 		this.renderBody($page, {force: true, scroll: false});
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
-	addPage : function(models, options) {
-		options = $.extend(options || {}, {
+	addPage : function(models, resp, xhr) {
+		var options = {
 			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
 			offscreenTop : _.template(
 				'top:<%=top%>px;',
@@ -312,7 +322,7 @@ var GalleryView = {
 					top: Math.max(this.$el.height(),$(window).height()) 
 				}
 			),
-		});
+		};
 		
 		/*
 		 * NOTE: used collection.pager({remove: false}) to append new models 
@@ -348,7 +358,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 	 * 		shotId: append item to #[shotId].shot-wrap
 	 * 		bestshot: models.Shot, 
 	 * }  
-	 * @return HTMLElement
+	 * @return jQuery
 	 */
 	addOne : function( item, options ) {
 		options = options || {};
@@ -364,30 +374,21 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			} else $parent = this.$('.body');
 			
 			$thumb = thumb.render(options).$el;
-			
-			if (item instanceof snappi.models.Shot) {
-				// as determined by GalleryCollection.parse()
+			// either 1) models.Shot && bestshot, or 
+			// 2a) models.Photo, or 2b) models.Photo && hiddenshot 
+			if (viewClass == views.ShotView) {
+				// bestshot, as determined by GalleryCollection.parse()
 				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
 				$parent.append($thumb.addClass('shot-wrap'));
-			} else if (!!options.shotId) {
-				// options.shotId set in this.addedHiddenshots()
-				$shotEl = this.$('#'+options.shotId);
-				if ($shotEl.length) {
-					$shotEl.append($thumb); // add $thumb.$('.thumb')???
-				} else {
-					throw "Trying to insert into missing shot, shotId="+options.shotId;
-				}
-			} else {
+			} else if (viewClass == views.PhotoView) {
 				// item instanceof models.Photo
-				$parent.append($thumb);
-			}
-			
-			return thumb.el;
+				if (!options.shotId) $parent.append($thumb);
+				// hiddenshot if !!options.shotId
+				// > append in GallView.addedHiddenshots() 
+			}	
+			return thumb.$el;
 		} else {
-			// TODO: already added, is ThumbView updated automatically?
 			console.log("already added");
-			// move offscreen then move back???
-			// options.offscreen.append($thumb);
 		}
 	},
 	
@@ -472,11 +473,6 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			this.renderBody_Period.apply(this, arguments);
 		} else {
 			this.renderBody_Page.apply(this, arguments);
-		
-			var that = this;
-			_.delay(function(that){
-				that.$el.removeClass('debounce');
-			}, 1000, this);
 		}
 		// for debugging
 		if (_DEBUG) this.introspect();
@@ -540,6 +536,9 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				
 			});
 		}
+		_.defer(function(){
+			that.$('.fade-out').removeClass('fade-out');
+		});
 	},
 	renderBody_Page: function(container, options){
 		options = options || {};
@@ -609,6 +608,14 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 console.log('GalleryView.renderBody() first chunk ready to view');				
 			});
 		}
+		_.defer(function(){
+			that.$('.fade-out').removeClass('fade-out');
+		});
+
+		// TODO: deprecate .debounce? use '.xhr-fetching' instead?
+		_.delay(function(that){
+			that.$el.removeClass('debounce');
+		}, 1000, this);
 		
 	},
 	// debugging

@@ -18,6 +18,7 @@
 	$(function() {
 		var mixins = snappi.mixins;
 		snappi.qs = mixins.Href.parseQueryString();		// global parsed qs
+		snappi.TIMINGS = mixins.UiActions.TIMINGS;
 		snappi.PAGER_STYLE = 'timeline';
 		
 		// config image server, to set explicitly, use &host=[hostname]

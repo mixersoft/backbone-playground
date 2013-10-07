@@ -16,7 +16,7 @@ views.ShotView = views.PhotoView.extend({
 	events: {
 		'click .rotate': 'onRotate',
 		'click .rating': 'onRatingClick',
-		'click .show-hidden-shot': 'onShowHiddenShot',
+		'click .show-hidden-shot': 'onHiddenshotToggle',
 		'dblclick img': 'onShowPreview',
 	},
 	
@@ -40,50 +40,44 @@ views.ShotView = views.PhotoView.extend({
 		}	
 		this.$el.html( this.template( m ) );
 		this.$el.attr('id', m.shotId);
-		_.defer(function(that, model){
-			if (model.shotId) {
-				// shot_index = that.hashShotId(model.shotId);
-				// that.$el.addClass('shot-'+ shot_index);
-				if (model.bestshotId == model.photoId) { 
-					that.$('.thumb').addClass('bestshot');
-				} else {
-					throw "Error: views.ShotView created for hiddenshot";
-					that.$('.thumb').addClass('hiddenshot');
-				}
-			}
-			if (model.orientationLabel) that.$el.addClass(model.orientationLabel);
-		}, this, m);
+		this.$('.thumb').addClass('bestshot ' + m.orientationLabel);
 		return this;
 	},
 	
 	
-	onShowHiddenShot: function(e){
+	onHiddenshotToggle: function(e){
 		e.preventDefault();
-		var action = this.$el.hasClass('showing') ? 'hide' : 'show';
+		var that = this, 
+			action = this.$el.hasClass('showing') ? 'hide' : 'show';
 		switch (action) {
 			case 'show':
-				if (this.$el.hasClass('showing')) return;
-console.info("show hiddenshot for id="+this.model.get('id'));
+// console.info("show hiddenshot for id="+this.model.get('id'));
+				// triggers GallColl."fetchHiddenShots" 
+				// 		> Shot."fetchedHiddenshots"
+				//		> GallView."addedHiddenshots" 
+				//			> GallView.addOne(), GallView.renderBody()
 				this.collection.trigger('fetchHiddenShots', {
 					model: this.model,
 				});
 				break;
 			case 'hide':
+				// immediate, no XHR request, triggers PhotoView."hide"
 				_.each(this.model.get('hiddenshot').models, function(model,k,l){
 					if (!(model instanceof snappi.models.Shot)) {
-						// get view from model Id
-						model.trigger('hide');	// view.remove()
+						model.trigger('hide');	// PhotoView.onHide() calls remove()
 					}
 				}, this);
-				if (this.$el.removeClass('showing'));
-				this.collection.trigger('pageLayoutChanged', null, this.$el);
+				this.$el.removeClass('showing');
+				_.delay(function(){
+					that.collection.trigger('pageLayoutChanged', null, that.$el);	
+				}, snappi.TIMINGS.thumb_fade_transition)
 				break;
 		}
 	},
-	
+	// deprecate, ???: are model listenTos delegated?
 	onFetchedHiddenshots: function(collection, response, options){
-		console.info("Thumbview: fetchHiddenshots completed");
-		this.$el.addClass('showing')
+		// this.$el.addClass('showing')
+		console.info("???: are View.listenTo(model) bindings delegated?");
 	},
 	
 });

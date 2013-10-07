@@ -30,31 +30,21 @@ views.PhotoView = Backbone.View.extend({
 	
 	render: function(options){
 		options = options || {};
-		var m = this.model.toJSON();
-		if (options.wrap === false) {		// do NOT wrap hiddenshots
-			var $wrap = $(this.template( m ));
-			this.$el.html( $wrap.children() );
-			this.$el.attr('id', m.photoId).addClass('thumb');
-		} else {
+		var m = this.model.toJSON(),
+			isHiddenshot = m.shotId && m.shotCount;
+		
+		if (isHiddenshot) {
+			var $wrap = $(this.template( m )),
+				$thumb = this.$el;
+			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
+			$thumb.attr('id', m.photoId)
+				.addClass('thumb hiddenshot '+m.orientationLabel);
+		} else { // Photo
 			if (options.offscreen) {
 				m.top = options.offscreenTop;
 			}
 			this.$el.html( this.template( m ) );
 		}
-		_.defer(function(that, model){
-			if (m.shotId && m.shotCount) {
-				// shot_index = views.ShotView.prototype.hashShotId(model.shotId);
-				// that.$el.addClass('shot-'+ shot_index);
-				if (m.bestshotId == m.photoId) { 
-					// that.$('.thumb').addClass('bestshot');
-					throw "Error: got models.Shot when expecting models.Photo";
-				} else if (that.$el.is('.thumb')) {
-					that.$el.addClass('hiddenshot');
-				} else {
-					that.$('.thumb').addClass('hiddenshot');
-				}
-			}
-		}, this, this.model);
 		return this;
 	},
 	
@@ -93,7 +83,12 @@ views.PhotoView = Backbone.View.extend({
 	},
 	
 	onHide : function(){
-		this.remove();
+		var that = this;
+		this.$el.addClass('fade-out');
+		_.delay(function(that){
+			that.remove();
+			// trigger ONE pageLayout AFTER remove
+		}, snappi.TIMINGS.thumb_fade_transition, this)
 	}
 });
 

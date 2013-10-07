@@ -128,7 +128,7 @@ var TimelineView = {
 			_.delay(function(that){
 				// console.warn("remove xhr-fetching");
 				that.$el.removeClass('xhr-fetching');		// use to debounce scroll
-			}, 300, this)
+			}, snappi.TIMINGS.xhr_ui_debounce, this);
 		},
 		
 		// render timeline, show fetched periods

@@ -41,6 +41,12 @@ body {
     float: left;
     margin: 0;
 }
+
+
+
+
+
+
 .thumb, .thumb.crop-wrap {
     height: auto;
     width: auto;
@@ -235,3 +241,17 @@ body.wait {
 .gallery .body .thumb {
     transition-property: transform, opacity, top, left;
 }
+
+
+/*
+ * manually added - move to main.less
+ */
+
+.fade {
+  transition: all 300ms linear 100ms;
+  transform: translate3d(0,0,0);
+  opacity: 1;
+}
+.fade.fade-out {
+  opacity: 0;
+} 

@@ -247,21 +247,21 @@ var GalleryView = {
 					keep_model.push(model);
 			}, that);
 			// do in GalleryCollection
-			// that.collection.reset(keep, options);
-			// var check = options.previousModels;
+			options = {silent:true};
+			that.collection.remove(remove_model, options);
+			var filtered = _.union(that.collection.filteredModels||[], remove_model);
+			that.collection.filteredModels = filtered;
 			
 			// render page
 			_.delay(function(){
-				options = {silent:true};
-				that.collection.remove(remove_model, options);
-				var check = options;
 				that.collection.trigger('refreshLayout', null, that.$el);	
 			}, snappi.TIMINGS.thumb_fade_transition+100)
 		} else {
-			// mark all pages a stale
-			that.timeline.set('fetched', {}, {silent: true});
+			// mark all pages a stale, 
+			// done in Timeline.validate_ChangeFilter()
 			
-			// addback filtered models???
+			// filter filtered models, then addback
+			// or addback then filter
 			_.each(that.collection.filtered || {}, function(){
 				console.warn("TODO: addback filtered models???	");
 			}, this);
@@ -273,6 +273,8 @@ console.log(options.filters);
 				remove: false,
 				data: options,
 				complete: function() {
+					// timeline.fetched[] already marked as true
+					// no one currently listening, maybe TimelineView?
 					that.collection.trigger('xhr-fetched');
 				},
 			});

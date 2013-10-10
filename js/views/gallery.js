@@ -410,27 +410,36 @@ console.log(options.filters);
 		/*
 		 * NOTE: used collection.pager({remove: false}) to append new models 
 		 */
-		var collection = this.collection,
-			start = (collection.currentPage-1) * collection.perPage,
-			end = Math.min(start + collection.perPage, collection.models.length);
-			
-		// use audition.requestPage to manage paging
-		// TODO: model.get('clientPage') || model.get('requestPage')
-if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
-		var p, pageModels = []; 
-		_.each(collection.models, function(model, i){
-			/*
-			 * TODO: requestPage changes onFilterChanged
-			 * add collection.comparator and repaginate or sort algo
-			 * requestPage set in mixins.RestApi.parseShot_Assets()
-			 */
-			p = model.get('clientPage') || model.get('requestPage') || 9999;
-			if (p == collection.currentPage) {
-				this.addOne(model, options);	
-			}
-		}, this);
-if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-			
+		var collection = this.collection;
+		
+		if (snappi.PAGER_STYLE == 'timeline') {
+			// ?? how do you detect NEW models from sync? use resp.assets
+			var new_models = _.pluck(resp.assets,'id');
+			_.each(collection.models, function(model,k,l){
+				if (new_models.indexOf(model.get('photoId')) >=0 ) {
+					this.addOne(model, options);
+				}
+			}, this);
+		} else {
+			// use audition.requestPage to manage paging
+			// TODO: model.get('clientPage') || model.get('requestPage')
+	if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
+			var p, pageModels = []; 
+			var start = (collection.currentPage-1) * collection.perPage,
+				end = Math.min(start + collection.perPage, collection.models.length);
+			_.each(collection.models, function(model, i){
+				/*
+				 * TODO: requestPage changes onFilterChanged
+				 * add collection.comparator and repaginate or sort algo
+				 * requestPage set in mixins.RestApi.parseShot_Assets()
+				 */
+				p = model.get('clientPage') || model.get('requestPage') || 9999;
+				if (p == collection.currentPage) {
+					this.addOne(model, options);	
+				}
+			}, this);
+	if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
+		}	
 		this.renderBody(options.offscreen || this.$('.body'));
 	},
 	
@@ -586,9 +595,8 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				container = pageContainer; // NO container, user current active pageContainer
 				// page already rendered, no new elements to add, refreshLayout()
 			} else if (pageContainer){
-				// TODO: need to sort in collection first!!!!!!!!!
-				pageContainer.html('');
-				pageContainer.append(container.children());
+				// pageContainer.html('');
+				// pageContainer.append(container.children());
 				stale = true;
 				// page already rendered, AND new elements to add, 
 			}
@@ -610,28 +618,30 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 		} 
 		
 		if (stale === true){
-			/*
-			 * the actual layout render statement
-			 */
 			var thumbs = container.find('> div');  // container.find('.thumb');
-			if (pageContainer !== container) {
-				// replace .empty-label
-				pageContainer.html(thumbs);
+			if (thumbs.length) {
+				/*
+				 * the actual layout render statement
+				 */
+				if (pageContainer !== container) {
+					// replace .empty-label
+					if (thumbs.length) pageContainer.html(thumbs);
+				}
+				if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+					that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
+						that.scrollIntoView(pageContainer, function(){
+							that.collection.trigger('xhr-ui-ready');
+						});
+						
+					});
+				}
+				this.layout['Typeset'].call(this, pageContainer, thumbs);
+				/*
+				 * end
+				 */
+				// a new page was added. cleanup GalleryView
+				this.$el.css('min-height', $(window).outerHeight()-160);
 			}
-			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
-			/*
-			 * end
-			 */
-			// a new page was added. cleanup GalleryView
-			this.$el.css('min-height', $(window).outerHeight()-160);
-		}
-		if (options.scroll !== false) {	// false for hiddenshot, otherwise true
-			that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-				that.scrollIntoView(pageContainer, function(){
-					that.collection.trigger('xhr-ui-ready');
-				});
-				
-			});
 		}
 		_.defer(function(){
 			that.$('.fade-out').removeClass('fade-out');

@@ -28,7 +28,7 @@ var extend = function(classDef){
 	
 var GalleryCollection =	{
 	
-	model : models.Photo,	// snappi.models.Shot	
+	// model : models.Photo,	
 	
 	initialize: function(){
 		// HACK: support for either node or cakephp backend, see Backend static class
@@ -46,7 +46,9 @@ var GalleryCollection =	{
 		this.paginator_core.dataType = this.backend.dataType;
 		if (snappi.qs.page) this.paginator_ui.currentPage = snappi.qs.page;
 		if (snappi.qs.perpage) this.paginator_ui.perPage = snappi.qs.perpage;
-		if (snappi.qs.rating) this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
+		if (snappi.qs.rating) {
+			this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
+		}
 		// end
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);

@@ -38,7 +38,7 @@ views.PhotoView = Backbone.View.extend({
 				$thumb = this.$el;
 			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
 			$thumb.attr('id', m.photoId)
-				.addClass('thumb hiddenshot '+m.orientationLabel);
+				.addClass('thumb hiddenshot '+m.orientationLabel);	// required for no wrap
 		} else { // Photo
 			if (options.offscreen) {
 				m.top = options.offscreenTop;

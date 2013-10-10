@@ -104,7 +104,7 @@
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
 		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to hide duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{#if score}}score{{else}}0{{/if}}">{{#if score}}score{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
+		    					<span class="score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
 		    					<a href="#" class='rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
 		    					</a>
@@ -141,7 +141,7 @@
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
 		    					{{#if shotCount}}<a class='show-hidden-shot best' href="#" title='click to show {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{#if score}}score{{else}}0{{/if}}">{{#if score}}score{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
+		    					<span class="score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
 		    					<a href="#" class='rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
 		    					</a>

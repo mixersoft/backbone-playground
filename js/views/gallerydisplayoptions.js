@@ -37,6 +37,8 @@ var GalleryDisplayOptionsView = {
 		],
 	},
 	
+	ui_settings: {},
+	
 	events: {
 		'click .size.btn-group .btn':'onSetThumbSize',
 		'click .style.btn-group .btn':'onSetLayout',
@@ -52,14 +54,13 @@ var GalleryDisplayOptionsView = {
 	    }
 		
 		// initialize with querystring/GalleryCollection override
-		var setup = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
+		this.ui_settings = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
 		var qs = mixins.Href.parseQueryString();
 		if (qs.size) {	// override display-option size from url
-			_.map(setup.size, function(o){
+			_.map(this.ui_settings.size, function(o){
 				o.active = (o.label == qs.size.toUpperCase()) ? 'active' : '';
 			});
 		}
-		this.collection.gallery_display_options_ui = setup; 
 		
 	    this.render();
 		this.listenTo(this.collection, 'refreshLayout', this.render);
@@ -67,7 +68,7 @@ var GalleryDisplayOptionsView = {
 	
 	render: function(){
 		// note: the 'model' comes from requestPager.collection.gallery_display_options_ui
-		this.$el.html( this.template( this.collection.gallery_display_options_ui ) );
+		this.$el.html( this.template( this.ui_settings ) );
 	},
 	
 	
@@ -91,8 +92,7 @@ var GalleryDisplayOptionsView = {
 	},
 	onFilterClick: function(e){
 // console.info("filter rating clicked");
-		var filters = _.clone(this.timeline.get('filters')),
-			changed = false;
+		var changed = {};
 		switch ($(e.currentTarget).data('filter')) {
 			case "rating": 
 				var STAR_W = 11, 
@@ -100,14 +100,12 @@ var GalleryDisplayOptionsView = {
 					$target = $(e.target),
 					targetX = e.clientX - $target.offset().left,
 					value = Math.ceil((targetX - PADDING_LEFT)/STAR_W);
-				if (value > 5) value = 5;
-				if (value <= 0) value = "off";
-				filters['rating'] = value;
-				changed = true;
-				// this.collection.trigger('filterChanged', {rating: value});	
+					changed['rating'] = value;
+					this.ui_settings['rating'][0].label = value;
 			break;
 		}
-		if (changed) this.timeline.set('filters', filters);
+		this.timeline.set('filters', changed, {validate:true});
+		// if (filters['changed']) this.timeline.set('filters', filters);
 	},
 	onFilterChanged: function(filter){
 		// console.log("GalleryDisplayOptions Filter changed");

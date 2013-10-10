@@ -69,7 +69,7 @@ views.ShotView = views.PhotoView.extend({
 				}, this);
 				this.$el.removeClass('showing');
 				_.delay(function(){
-					that.collection.trigger('pageLayoutChanged', null, that.$el);	
+					that.collection.trigger('pageLayoutChanged', null, {child: that.$el});	
 				}, snappi.TIMINGS.thumb_fade_transition)
 				break;
 		}

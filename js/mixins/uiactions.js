@@ -21,6 +21,7 @@ mixins.UiActions = {
 	
     detectScrollDirection : function () {
         var dir = (window.pageYOffset > _lastScrollTop) ? "down" : "up";
+// console.log("scroll?? dir="+dir+", window.pageYOffset="+ window.pageYOffset +", _lastScrollTop="+ _lastScrollTop);        
         if (window.pageYOffset == _lastScrollTop) return false;
         _lastScrollTop = window.pageYOffset;
         return dir;
@@ -37,7 +38,10 @@ mixins.UiActions = {
 	        if (delta < 0 || delta > 50) {
 	        	$('html').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
 	        		300, 
-	        		complete);
+	        		function(){
+	        			_lastScrollTop = window.pageYOffset;
+	        			if (_.isFunction(complete)) complete.apply(this, arguments);
+	        		});
 	        } 
 	    }
 	    return target;
@@ -66,7 +70,10 @@ mixins.UiActions = {
 	        	console.info("animate scrollTop="+(windowT+delta)+", windowT="+windowT+", delta="+delta );
 	        	$('html').animate({scrollTop: windowT+delta}, 
 	        		300, 
-	        		complete);
+	        		function(){
+	        			_lastScrollTop = window.pageYOffset;
+	        			if (_.isFunction(complete)) complete.apply(this, arguments);
+	        		});
 	        } 
 	    }
 	    return target;

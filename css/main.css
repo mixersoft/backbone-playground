@@ -255,3 +255,12 @@ body.wait {
 .fade.fade-out {
   opacity: 0;
 } 
+
+.gallery .page .empty-label {
+    text-align: center;
+    color: #999;
+    font-weight: bold;
+    font-size: 1.2em;
+    line-height: 1.6;
+    cursor: pointer
+}

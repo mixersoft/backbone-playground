@@ -36,6 +36,7 @@ var TimelineView = {
 				// compile once, add to Class
 				views.TimelineView.prototype.template = _.template(source);
 		    }
+		    this.listenTo(this.model, 'gotoPeriod', this.gotoPeriod);
 		    this.listenTo(this.model, 'sync', this.render);
 		    this.listenTo(this.collection, 'sync', this.renderState);
 		    this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
@@ -99,16 +100,20 @@ var TimelineView = {
 		        var nextPage, scrollPage = $(visiblePg).data('period');
 		// console.log('scroll to page='+scrollPage);        
 	        	var settings = this.model.toJSON(),
-	        		nextPage = scrollDir=='down' ? settings.active+1 : settings.active-1;
-	        	nextPage = (nextPage < 0) ? 0 : (nextPage > settings.periods.length -1) ? settings.periods.length -1 : nextPage;
-	        	if (this.model.helper.isFetched(nextPage, settings)) {
-	        		var doNotFetch = {silent:true}
-	        		this.model.set('active', nextPage, doNotFetch);
-	        		this.renderState();
-	        	} else	{
+	        		nextPage,
+	        		nextFetchedPage;
+        		nextPage = scrollDir=='down' ? settings.active+1 : settings.active-1;
+        		nextPage = (nextPage < 0) ? 0 : (nextPage > settings.periods.length -1) ? settings.periods.length -1 : nextPage;
+        		nextFetchedPage = this.model.helper.nextFetched(scrollDir, settings.active, settings);
+        		// BUG: cannot detect e.ctrlKey on scroll event!!!
+	        	if (false && nextPage != nextFetchedPage) { // fetch next page, if necessary
 	        		if (!this.$el.hasClass('xhr-fetching')) 
 	        			this.model.set('active', nextPage);
 	        		else console.info("cancel fetch on scrollspy because still fetching")
+	        	} else if (nextFetchedPage) {
+	        		var doNotFetch = {silent:true}
+	        		this.model.set('active', nextFetchedPage, doNotFetch);
+	        		this.renderState();
 	        	}
 		    },
 
@@ -142,8 +147,8 @@ var TimelineView = {
 	     * When the scroll threshold is reached a new page of thumbs is requested.
 	     * @param event e - the scroll event object
 	     */
-	    onContainerScroll : _.throttle(function(){
-	    	this.helper.scrollSpy.call(this);
+	    onContainerScroll : _.throttle(function(e){
+	    	this.helper.scrollSpy.call(this, e);
 	    }, 200, {leading: false}),
 	    		
 		
@@ -181,18 +186,23 @@ var TimelineView = {
 			e.preventDefault();
 			this.collection.goTo(this.collection.information.lastPage, { merge: true, remove: false });
 		},
-
-		gotoPeriod: function (e) {
+		// 
+		gotoPeriod: function (e, where) {
 			e.preventDefault();
 			var index, 
 				label = $(e.target).text(),
-				model_attr = this.model.toJSON();
-			_.each(model_attr.periods, function(e,i,l){
-				if (label.indexOf(e.label)===0) {
-					index = i;
-					return false;
-				}
-			});	
+				model_attr = this.model.toJSON(),
+				where = where || {label: label};
+				period = _.findWhere(model_attr.periods, where);
+			// _.each(model_attr.periods, function(e,i,l){
+				// if (label.indexOf(e.label)===0) {
+					// index = i;
+					// return false;
+				// }
+			// });	
+			if (!period) return false;
+			
+			index = model_attr.periods.indexOf(period);
 			if (model_attr.active == index) {
 				console.warn("TODO: check if filter has changed, active="+index)
 			}

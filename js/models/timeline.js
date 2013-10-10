@@ -93,6 +93,17 @@ var TimelineModel = {
 			i = i || model.active;
 			return model.fetched[TimelineModel.helper.getFetchedKey(i, model)];
 		},
+		nextFetched: function(dir, i, model) {
+			model = model || this.toJSON();
+			i = i || model.active,
+			keys = _.keys(model.fetched);
+			while (i>0 && i < model.periods.length-1){
+				if (dir=="up") i--;
+				else i++;
+				if (TimelineModel.helper.isFetched(i, model)) return i;
+			}
+			return false;
+		}
 	},
 	
 	// backbone methods
@@ -119,7 +130,6 @@ var TimelineModel = {
 		// type overrides ownerid
 		if (this.xhr_defaults.type) delete this.xhr_defaults.ownerid;
 		this.set('filters', this.helper.pickQsFilters.call(this, snappi.qs), {silent: true});
-		var check;
 	},
 	
 	sync: function(method, model, options) {
@@ -139,7 +149,40 @@ var TimelineModel = {
 		options.data.perpage = 99;
 	    Backbone.sync(method, model, options);
 	},
+	
+	validate: function(attrs) {
+		if (attrs['filters']) {
+			this.validate_ChangeFilter(attrs);
+		}
+	},
+	
 	// public methods
+	/**
+	 * validate Timeline.filters changes before filterChange event
+	 * 		should be the FIRST listener for Timeline."change:filter"  
+ 	* @param {Object} attrs, attrs.filters changed by reference
+	 */
+	validate_ChangeFilter:function(attrs){
+		// see if you can stop propagation
+		var validated = {fetch: false},
+			before = this.get('filters');
+		_.each(attrs['filters'], function(value,key,l){
+			switch (key){
+				case "rating":
+					if (value > 5) value = 5;
+					if (value <= 0) value = "off";
+					validated['rating'] = value;
+					if ( !before['rating'] ) before['rating'] = 0;
+					if ( /off|none/.test(validated['rating']) ) 
+						validated['fetch'] = true;
+					else if ( validated['rating'] <  before['rating'] ) 
+						validated['fetch'] = true;  
+				break;
+			}	
+		});
+		// these assignment by reference are "silent"
+		_.extend(attrs['filters'],validated);
+	} 
 	
 }
 

@@ -23,7 +23,7 @@ var extend = function(classDef){
 
 var LayoutEngines = {
 	layout: {
-		Typeset: function(container, items, options){
+		Typeset: function(container, items, options, more){
 			var that = this,
 				layoutState,
 				displayOptions = that.collection.gallery_display_options_ui,
@@ -34,27 +34,27 @@ var LayoutEngines = {
 				thumbsContainer: container || that.$('.body'),		// or .body .page[data-page=N]
 				targetHeight: displayOptionSize.size,
 				_layout_y: 0,					// start at page top
-				// success: function(){},		// pipeline success
+				// more: function(){},			// pipeline before layout complete 
 			}	
-			
 			/*
 			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
 			 */
-			qs = that.parseQueryString();
-			if (qs['no-image']) layoutOptions.noImageSrc = qs['no-image']==true; 	 
+			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']==true;
+			
 			// _.defer(function(that){
 				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
 					container, 
 					items,				// if null, will layout all .thumbs IMG in container
 					that.collection,
-					layoutOptions
+					layoutOptions,
+					more
 				);
-				if (layout) {
-					// append, if necessary
-			        if (!$.contains(container.get(0), layout.items.get(0))) {
-			        	container.append(layout.items);
-			        }
-				} ;
+				// if (layout) {
+					// // append, if necessary
+			        // if (!$.contains(container.get(0), layout.items.get(0))) {
+			        	// container.append(layout.items);
+			        // }
+				// } ;
 			// },that);
 			return;
 		},  // end layout.Typeset
@@ -75,6 +75,10 @@ var GalleryView = {
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
+		'click .page .empty-label': function(e){
+			var period = $(e.target).parent().data('period');
+			this.timeline.trigger('gotoPeriod', e, {period: period});
+		},  
 	},
 	
 	initialize: function(attributes, options){
@@ -150,7 +154,7 @@ var GalleryView = {
 				model: this.timeline,
 				collection: this.collection,
 			});
-			var options = this.timeline_helper.getFetchOptions(this);
+			var options = this.timeline_helper.getXhrFetchOptions(this);
 			this.timeline.fetch({data: options}); 
 		} else {
 			this.pager = new views.PagerView({
@@ -191,7 +195,7 @@ var GalleryView = {
 			});
 			return;
 		};
-		var options = this.timeline_helper.getFetchOptions(this),
+		var options = this.timeline_helper.getXhrFetchOptions(this),
 			that = this;
 		that.collection.fetch({
 			remove: false,
@@ -201,36 +205,115 @@ var GalleryView = {
 			},
 		});
 	},
-	
-	onTimelineChangeFilter : function(timeline) {
-		console.log("GalleryView Filter changed");
+	filterFn : {
+		rating: function(model, changed){
+			var remove = model.get('rating') < changed.rating;
+			return remove;
+		},
+		zoom: function(){
+			return false;
+		},
+	},
+	onTimelineChangeFilter : function(timeline, changed) {
+		console.info("GalleryView.onTimelineChangeFilter() Filter changed");
 		// update TimelineView to reflect current filter
 		// might have to filter collection.models, too
 		// isFetched() should compare filter  
-		var options = this.timeline_helper.getFetchOptions(this),
-			that = this;
-		that.collection.fetch({
-			remove: false,
-			data: options,
-			complete: function() {
-				that.collection.trigger('xhr-fetched');
-			},
-		});
+		var that = this,
+			// previous = this.timeline.previousAttributes(),
+			filtered, options;
+		// CHECK if filter requires a fetch
+		// 		for all pages, set page stale=true;
+		
+		if (changed.fetch==false) {
+			var remove, id, 
+				options = {}, 
+				keep_model = [],
+				remove_model = [];
+			_.filter(that.collection.models,function(model,i,l){
+				// handle filtered.changed.rating='off'
+				
+				// find first remove
+				remove = _.find(changed, function(v,key,l){
+					if (that.filterFn[key]) 
+						return that.filterFn[key](model, changed);
+					else return false;
+				})
+				
+				if (remove) {
+					model.trigger('hide');
+					remove_model.push(model);
+				} else 
+					keep_model.push(model);
+			}, that);
+			// do in GalleryCollection
+			// that.collection.reset(keep, options);
+			// var check = options.previousModels;
+			
+			// render page
+			_.delay(function(){
+				options = {silent:true};
+				that.collection.remove(remove_model, options);
+				var check = options;
+				that.collection.trigger('refreshLayout', null, that.$el);	
+			}, snappi.TIMINGS.thumb_fade_transition+100)
+		} else {
+			// mark all pages a stale
+			that.timeline.set('fetched', {}, {silent: true});
+			
+			// addback filtered models???
+			_.each(that.collection.filtered || {}, function(){
+				console.warn("TODO: addback filtered models???	");
+			}, this);
+			
+			options = this.timeline_helper.getXhrFetchOptions(this);
+console.log(options.filters);
+
+			that.collection.fetch({
+				remove: false,
+				data: options,
+				complete: function() {
+					that.collection.trigger('xhr-fetched');
+				},
+			});
+		}
+		
 	},
 	
 	refreshLayout: function(options) {
-		var pages = this.$('.body .page');
-		_.each(pages, function(pageContainer, i){
-			this.layoutPage(pageContainer);
+		var that = this, 
+			index = 0,
+			pageContainer,
+			pages = this.$('.body .page'),
+			hasThumbs = pages.filter(':has(.thumb)'),
+			noThumbs = pages.filter(':not(:has(.thumb))'),
+			noLabel = pages.filter(':not(:has(*))');
+		noThumbs.height("auto");
+		_.each(noLabel, function(v,k,l){
+			var $pageContainer = $(v),
+				template = that.timeline_helper.templates.periodContainerLabel,
+				label = template({label:$pageContainer.data('label')});
+			$pageContainer.html( label );
 		}, this);
-		this.$el.css('min-height', $(window).outerHeight()-160);
+			
+		pageContainer = hasThumbs.get(index++);
+		var	next = function(){
+			pageContainer = hasThumbs.get(index++);
+			if (pageContainer) {
+				that.layoutPage(pageContainer, { more: next });
+				return true;
+			} else return false;
+		};
+		that.layoutPage(pageContainer, { more: next });
+		if (!this.$el.css('min-height')) this.$el.css('min-height', $(window).outerHeight()-160);
 	},
 	/**
-	 * layout a single page, this.$('.body .page') 
+	 * layout a single page, this.$('.body .page')
+	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
 	 */
-	layoutPage: function(pageContainer, $child){
-		if (!pageContainer) pageContainer = $child.closest('.page');
-		var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null);
+	layoutPage: function(pageContainer, options){
+		if (!pageContainer && options.child) pageContainer = options.child.closest('.page');
+		var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null, options, options.more);
 	},
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
@@ -402,22 +485,27 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 		// also called from PagerView.changeCount()
 	},
 	
-
+	// TODO: this helper should be refactored/move
 	timeline_helper: {
+		templates: {
+			selector_PeriodContainer: _.template('.page[data-zoom="<%=currentZoom%>"][data-period="<%=currentPeriod.period%>"]'), 
+			periodContainer: _.template('<div class="page" data-zoom="<%=currentZoom%>" data-period="<%=currentPeriod.period%>"  data-label="<%=currentPeriod.label%>"><div class="empty-label"><%=currentPeriod.label%></div></div>'),
+			periodContainerLabel:_.template('<div class="empty-label"><%=label%></div>'),
+		},
 		/**
 		 * @param create boolean (optional), if truthy then create if not found
 		 * @param index int (optional), default active, unless period index provided 
 		 */
 		getPeriodContainer$: function(that, create, index){
-			var find_template = '.page[data-zoom="<%=currentZoom%>"][data-period="<%=currentPeriod.period%>"]',
+			var helper = that.timeline_helper,
+				template = helper.templates.selector_PeriodContainer,
 				timeline = that.timeline.helper.getActive(that.timeline, index),
-				selector = _.template(find_template, timeline),
-				item$ = that.$(selector);
-			if (!item$.length && create){
-				var create_template = '<div class="page" data-zoom="<%=currentZoom%>" data-period="<%=currentPeriod.period%>"></div>';
-				item$ = $(_.template(create_template, timeline));
+				$item = that.$( template( timeline) );
+			if (!$item.length && create){
+				template = helper.templates.periodContainer; 
+				$item = $( template( timeline) );
 			}
-			return item$.length ? item$ : false;
+			return $item.length ? $item : false;
 		},
 		createPeriodContainers$: function(that, timeline, $body) {
 			// create missing pageContainers	
@@ -442,7 +530,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			});
 			return $before;
 		},
-		getFetchOptions: function(that){
+		getXhrFetchOptions: function(that){
 			var timeline = that.timeline,
 				period = timeline.get('periods')[timeline.get('active')],
 				options = {
@@ -450,15 +538,20 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 					perpage: 20,	// for collection, but not timeline
 					sort: 'top-rated',
 					direction: 'desc',
-					filters: timeline.get('filters'),
+					// filters: timeline.get('filters'),
 				};
+				options.filters = _.clone(timeline.get('filters'));
+				if (options.filters.changed) {
+					options.filters = _.defaults(options.filters.changed, options.filters);
+					delete options.filters.changed;
+				}
 			if (period) {
 				options.from = period.from;
 				options.to = period.to;	
 			}	
 			options = _.defaults(options, timeline.xhr_defaults);
 			return options;
-		}
+		},
 	},
 	
 	/**
@@ -494,6 +587,7 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				// page already rendered, no new elements to add, refreshLayout()
 			} else if (pageContainer){
 				// TODO: need to sort in collection first!!!!!!!!!
+				pageContainer.html('');
 				pageContainer.append(container.children());
 				stale = true;
 				// page already rendered, AND new elements to add, 
@@ -520,7 +614,10 @@ if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 			 * the actual layout render statement
 			 */
 			var thumbs = container.find('> div');  // container.find('.thumb');
-			if (pageContainer !== container) pageContainer.append(thumbs);
+			if (pageContainer !== container) {
+				// replace .empty-label
+				pageContainer.html(thumbs);
+			}
 			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
 			/*
 			 * end

@@ -67,8 +67,9 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * 		note: items may be NEW IMGs rendered offscreen, or
 		 * 			if null, then existing IMGs in container for relayout 
 		 * @param Object options, defaults for layout engine, including 'context' for multi-page layouts
+		 * @param more Function (optional), more layout runs before 'layout-complete'
 		 */	
-		run: function(container, items, collection, options){
+		run: function(container, items, collection, options, more){
 			var engine = mixins.LayoutEngine.Typeset;
 			// TODO: need to keep a static options avail for relayout
 			// ??? clone and render offscreen to limit to 1 browser layout/paint operation? 
@@ -112,20 +113,26 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
            
             var lines;
             var _layoutComplete = function(){
-if (_DEBUG) console.time("Typeset.run _layoutComplete");            
-            	options.outerContainer.removeClass(options.classes.throttle);
-				// if (originalOverflowY != "scroll") {
-	            	// document.body.style["overflow-y"] = originalOverflowY;
-	            	// console.warn("WARNING: body.style.overflow=scroll should be set");
-	            // }
-	            var result = {
-	            	state : options, // return options/state for multi-page layouts using same settings
-	            	items: items
-	            };
-	            return result;
-if (_DEBUG) console.timeEnd("Typeset.run _layoutComplete");            
+            	if (_.isFunction(more)) {
+            		options.outerContainer.removeClass(options.classes.throttle);
+            		more = more();
+            	}
+            	if (!more) {
+            		options.outerContainer.removeClass(options.classes.throttle);
+            		collection.trigger('layout-complete');
+					// if (originalOverflowY != "scroll") {
+		            	// document.body.style["overflow-y"] = originalOverflowY;
+		            	// console.warn("WARNING: body.style.overflow=scroll should be set");
+		            // }
+		            // var result = {
+		            	// state : options, // return options/state for multi-page layouts using same settings
+		            	// items: items
+		            // };
+		            // return result;
+            	}       
             }
-            _.each(chunks, function(chunk, i){
+            if (!chunks.length) _layoutComplete()
+            else _.each(chunks, function(chunk, i){
             	_.defer(function(that){
 		            lines = engine._linebreak.call(this, container, chunk, collection, options);
 		            engine._layout.call(this, lines, options);
@@ -137,10 +144,7 @@ if (_DEBUG) console.timeEnd("Typeset.run _layoutComplete");
 		            	collection.trigger('layout-chunk', i, container, options._layout_y );
 		            	// container.css('height', options._layout_y + "px");
 		            }
-		            if (i==chunks.length-1) {
-		            	_layoutComplete();
-		            	collection.trigger('layout-complete');
-		            }
+		            if (i==chunks.length-1) _layoutComplete();
             	}, this);
             }, this);
 		},

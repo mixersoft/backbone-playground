@@ -198,7 +198,7 @@
 						<li class="item prev <%= state %>">&laquo;</li>
 						<% _.each (periods, function (e,i,l) { 
 								var state = (active == i) ? 'active' : 'link';
-								state += (fetched[e.period+'-'+currentZoom]) ? ' loaded' : '';
+								state += (fetched[e.period+'-'+currentZoom]===true) ? ' loaded' : '';
 							%>
 							<% if (active == i) { %>
 								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>"><%= e.label %></li>

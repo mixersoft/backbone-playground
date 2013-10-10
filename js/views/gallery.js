@@ -124,6 +124,7 @@ var GalleryView = {
 		this.listenTo(collection, 'repaginated', this.refreshPages);
 		this.listenTo(collection, 'add', this.add);
 		this.listenTo(collection, 'sync', this.addPage);
+		this.listenTo(collection, 'addBack', this.addBack);
 		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
 		this.listenTo(collection, 'pageLayoutChanged', this.layoutPage);
 		this.listenTo(collection, 'layout-chunk', function(i, container, height){
@@ -205,81 +206,8 @@ var GalleryView = {
 			},
 		});
 	},
-	filterFn : {
-		rating: function(model, changed){
-			var remove = model.get('rating') < changed.rating;
-			return remove;
-		},
-		zoom: function(){
-			return false;
-		},
-	},
 	onTimelineChangeFilter : function(timeline, changed) {
-		console.info("GalleryView.onTimelineChangeFilter() Filter changed");
-		// update TimelineView to reflect current filter
-		// might have to filter collection.models, too
-		// isFetched() should compare filter  
-		var that = this,
-			// previous = this.timeline.previousAttributes(),
-			filtered, options;
-		// CHECK if filter requires a fetch
-		// 		for all pages, set page stale=true;
-		
-		if (changed.fetch==false) {
-			var remove, id, 
-				options = {}, 
-				keep_model = [],
-				remove_model = [];
-			_.filter(that.collection.models,function(model,i,l){
-				// handle filtered.changed.rating='off'
-				
-				// find first remove
-				remove = _.find(changed, function(v,key,l){
-					if (that.filterFn[key]) 
-						return that.filterFn[key](model, changed);
-					else return false;
-				})
-				
-				if (remove) {
-					model.trigger('hide');
-					remove_model.push(model);
-				} else 
-					keep_model.push(model);
-			}, that);
-			// do in GalleryCollection
-			options = {silent:true};
-			that.collection.remove(remove_model, options);
-			var filtered = _.union(that.collection.filteredModels||[], remove_model);
-			that.collection.filteredModels = filtered;
-			
-			// render page
-			_.delay(function(){
-				that.collection.trigger('refreshLayout', null, that.$el);	
-			}, snappi.TIMINGS.thumb_fade_transition+100)
-		} else {
-			// mark all pages a stale, 
-			// done in Timeline.validate_ChangeFilter()
-			
-			// filter filtered models, then addback
-			// or addback then filter
-			_.each(that.collection.filtered || {}, function(){
-				console.warn("TODO: addback filtered models???	");
-			}, this);
-			
-			options = this.timeline_helper.getXhrFetchOptions(this);
-console.log(options.filters);
-
-			that.collection.fetch({
-				remove: false,
-				data: options,
-				complete: function() {
-					// timeline.fetched[] already marked as true
-					// no one currently listening, maybe TimelineView?
-					that.collection.trigger('xhr-fetched');
-				},
-			});
-		}
-		
+		this.collection.filterChanged(changed, this)
 	},
 	
 	refreshLayout: function(options) {
@@ -371,7 +299,9 @@ console.log(options.filters);
 		var bootstrap;
 	},
 	add : function(models, options) {
-		// console.log("collection add for models, count="+this.collection.models.length);
+		// Coll.fetch() > success() > Coll.set() > trigger."add" > View.add() > trigger."sync"
+		// sync called AFTER add, thumbViews added in sync
+		console.log("GalleryView add ThumbView for new models, count="+models.length);
 	},
 	/**
 	 * add Hiddenshots AFTER XHR fetch(), 
@@ -444,7 +374,19 @@ console.log(options.filters);
 		}	
 		this.renderBody(options.offscreen || this.$('.body'));
 	},
-	
+	/**
+	 * addBack a removed model, must be added to the correct page
+	 * 	- called by onTimelineChangeFilter(fetch=true)
+	 */
+	addBack : function(models, options) {
+		var sorted = _.sortBy(models, 'dateTaken');
+		this.collection.add(sorted, {merge: true, sort: true});
+		// sort by page
+		// call addOne for each page of models,
+		// but PUT thumbView in the right PAGE
+		
+		
+	},
 	/**
 	 * @param models.Shot item
 	 * @param options { 

@@ -28,7 +28,7 @@ var extend = function(classDef){
 	
 var GalleryCollection =	{
 	
-	// model : models.Photo,	
+	// model : models.Photo,
 	
 	initialize: function(){
 		// HACK: support for either node or cakephp backend, see Backend static class
@@ -162,27 +162,98 @@ var GalleryCollection =	{
 		};
 		hiddenshotCollection.fetch(hiddenshot_options);
 	}, 
-	filterChanged: function (filter) {
-		console.log("filterChanged" + JSON.stringify(filter));
-		_.each(filter, function(v,k,l){
-			switch (k) {
-				case 'rating':
-					snappi.qs.rating = filter.rating
-					// this.collection.setFilter(fields, filter);
-				break;
-			}
-		})
-		console.info("filterChanged: fetch, current page="+this.currentPage);
-		var options = { 
-			merge: true, 
-			remove: false,
-			sort: true,
-			// TODO: define collection.comparator 
-		};
-		options.success = function(){
-			console.log("GalleryCollection.filterChanged() success");
-		} 
-		this.fetch(options);
+	filterFn : {
+		rating: function(model, changed){
+			var remove = model.get('rating') < changed.rating;
+			return remove;
+		},
+		zoom: function(){
+			return false;
+		},
+	},
+	filterChanged: function (changed, galleryView) {
+		console.info("GalleryView.onTimelineChangeFilter() Filter changed");
+		// update TimelineView to reflect current filter
+		// might have to filter collection.models, too
+		// isFetched() should compare filter  
+		var that = this;
+		// previous = this.timeline.previousAttributes(),
+		// CHECK if filter requires a fetch
+		// 		for all pages, set page stale=true;
+		var filtered, remove, id, 
+			options = {}, 
+			keep_models = [],
+			remove_models = [];
+		if (changed.fetch==false) {
+			_.filter(that.models,function(model,i,l){
+				// handle filtered.changed.rating='off'
+				
+				// find first remove
+				remove = _.find(changed, function(v,key,l){
+					if (that.filterFn[key]) 
+						return that.filterFn[key](model, changed);
+					else return false;
+				})
+				
+				if (remove) {
+					model.trigger('hide');
+					remove_models.push(model);
+					// TODO: get the page of thumbView for addBack
+				} else 
+					keep_models.push(model);
+			}, that);
+			// do in GalleryCollection
+			options = {silent:true};
+			that.remove(remove_models, options);
+			var filtered = _.union(that.filteredModels||[], remove_models);
+			that.filteredModels = filtered;
+			
+			// render page
+			_.delay(function(){
+				that.trigger('refreshLayout', null, that.$el);	
+			}, snappi.TIMINGS.thumb_fade_transition+100)
+		} else {
+			// Timeline.validate_ChangeFilter() already marked all pages a stale
+			
+			// filter filtered models, then addback
+			_.filter(that.filteredModels,function(model,i,l){
+				// handle filtered.changed.rating='off'
+				
+				// find first remove
+				remove = _.find(changed, function(v,key,l){
+					if (that.filterFn[key]) 
+						return that.filterFn[key](model, changed);
+					else return false;
+				})
+				
+				if (remove) {
+					remove_models.push(model);
+				} else 
+					keep_models.push(model);
+			}, that);
+			that.filteredModels = remove_models;
+			that.trigger('addBack', keep_models); 
+			_.delay(function(){
+				// create thumbView for added models
+				
+				// ???: what is the delay here?
+				that.trigger('refreshLayout', null, that.$el);	
+			}, snappi.TIMINGS.thumb_fade_transition+100);
+			
+			
+			options = galleryView.timeline_helper.getXhrFetchOptions(galleryView);
+console.log(options.filters);
+
+			that.fetch({
+				remove: false,
+				data: options,
+				complete: function() {
+					// timeline.fetched[] already marked as true
+					// no one currently listening, maybe TimelineView?
+					that.trigger('xhr-fetched');
+				},
+			});
+		}
 	}
 };
 

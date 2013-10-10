@@ -210,7 +210,7 @@ var GalleryCollection =	{
 			
 			// render page
 			_.delay(function(){
-				that.trigger('refreshLayout', null, that.$el);	
+				that.trigger('refreshLayout');	
 			}, snappi.TIMINGS.thumb_fade_transition+100)
 		} else {
 			// Timeline.validate_ChangeFilter() already marked all pages a stale
@@ -232,15 +232,26 @@ var GalleryCollection =	{
 					keep_models.push(model);
 			}, that);
 			that.filteredModels = remove_models;
-			that.trigger('addBack', keep_models); 
-			_.delay(function(){
-				// create thumbView for added models
-				
-				// ???: what is the delay here?
-				that.trigger('refreshLayout', null, that.$el);	
-			}, snappi.TIMINGS.thumb_fade_transition+100);
+			// why is this Triggered?
 			
+			var addBack_photoIds = [];
+			_.each(keep_models, function(v,k,l){
+				addBack_photoIds.push(v.get('photoId'));
+			});
+			that.add(keep_models, {merge: true, sort: true});
+			galleryView.trigger('addBack', that, addBack_photoIds);
 			
+			// render page, then remove .fade-out 
+			_.defer(function(){
+				galleryView.$('.page .thumb.fade-out').removeClass('fade-out');
+				that.trigger('refreshLayout');	
+			});
+			
+			// check if fetch still required
+			// is filter complete after addBack?
+			
+if ("works to here") return;
+						
 			options = galleryView.timeline_helper.getXhrFetchOptions(galleryView);
 console.log(options.filters);
 

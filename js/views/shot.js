@@ -33,6 +33,7 @@ views.ShotView = views.PhotoView.extend({
 	},
 	
 	render: function(options){
+		options = options || {};
 		var shot_index, 
 			m = this.model.toJSON();
 		if (options.offscreen) {

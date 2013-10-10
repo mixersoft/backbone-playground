@@ -124,7 +124,7 @@ var GalleryView = {
 		this.listenTo(collection, 'repaginated', this.refreshPages);
 		this.listenTo(collection, 'add', this.add);
 		this.listenTo(collection, 'sync', this.addPage);
-		this.listenTo(collection, 'addBack', this.addBack);
+		this.listenTo(this, 'addBack', this.addBack);
 		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
 		this.listenTo(collection, 'pageLayoutChanged', this.layoutPage);
 		this.listenTo(collection, 'layout-chunk', function(i, container, height){
@@ -210,7 +210,7 @@ var GalleryView = {
 		this.collection.filterChanged(changed, this)
 	},
 	
-	refreshLayout: function(options) {
+	refreshLayout: function() {
 		var that = this, 
 			index = 0,
 			pageContainer,
@@ -378,14 +378,32 @@ var GalleryView = {
 	 * addBack a removed model, must be added to the correct page
 	 * 	- called by onTimelineChangeFilter(fetch=true)
 	 */
-	addBack : function(models, options) {
-		var sorted = _.sortBy(models, 'dateTaken');
-		this.collection.add(sorted, {merge: true, sort: true});
-		// sort by page
-		// call addOne for each page of models,
-		// but PUT thumbView in the right PAGE
-		
-		
+	addBack : function(collection, photoIds, options) {
+		var $before, $after, 
+			model, photoId, 
+			viewClass, thumbView;
+		_.find(collection.models, function(model,i,l){
+			if (photoIds.indexOf(model.get('photoId'))>-1){
+				// insert new thumbView after before
+				viewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
+				thumbView = new viewClass({model:model, collection: collection});
+				thumbView.render();
+				
+				if (i==0) {
+					// check that before is not on a page boundary, before = this.$('#'+photoId)
+					photoId = collection.models[1].get('photoId');
+					$after = this.$(".thumb:first-child").parent();
+					// check that before is not on a page boundary, before = this.$('#'+photoId)
+					$after.before(thumbView.$el);
+				} else {
+					photoId = collection.models[i-1].get('photoId');
+					// find thumbView for model before
+					$before = this.$('#'+photoId).parent();
+					// check that before is not on a page boundary, before = this.$('#'+photoId)
+					$before.after(thumbView.$el);
+				}
+			}
+		}, this);
 	},
 	/**
 	 * @param models.Shot item

@@ -57,6 +57,7 @@ var TimelineModel = {
 			var options, allowed = ['zoom', 'show-hidden', 'rating', 'from', 'to'];
 			allowed.unshift(qs);
 			options = _.defaults(_.pick.apply(this, allowed ), this.defaults.filters);
+			if (options.rating) options.rating = parseFloat(options.rating);
 			return options;
 		},
 		/**
@@ -79,7 +80,7 @@ var TimelineModel = {
 			var model = that.toJSON();
 			if (i!==0) i = i || model.active;
 			// set by reference, "deep-copy" attr 
-			model.fetched[TimelineModel.helper.getFetchedKey(i, model)] = "check filter to confirm";
+			model.fetched[TimelineModel.helper.getFetchedKey(i, model)] = true;
 			return model;
 		},
 		getFetchedKey: function(i, model){
@@ -103,7 +104,17 @@ var TimelineModel = {
 				if (TimelineModel.helper.isFetched(i, model)) return i;
 			}
 			return false;
-		}
+		},
+		/**
+		 * mark fetched as stale when filterChanged requires XHR request
+		 */ 
+		resetFetched: function(that, beforeFilter, afterFilter){
+			var markAsStale = that.get('fetched');
+			_.each(markAsStale, function(v,k,l){
+				markAsStale[k] = beforeFilter; // !==true is stale
+			});
+			that.set('fetched', markAsStale, {silent:true});
+		},
 	},
 	
 	// backbone methods
@@ -133,18 +144,7 @@ var TimelineModel = {
 	},
 	
 	sync: function(method, model, options) {
-		// options = _.defaults(options, this.xhr_defaults);
-		// var useRestApi = true;
-		// switch (method) {
-			// case 'patch': case 'put': // append Wo attrs if necessary
-			// break;
-		// }
-		// // var beforeSend = options.beforeSend;
-		// // options.beforeSend = function(xhr, options){
-			// // if (!useRestApi) options.url += '/.json';	// for CakePhp form
-			// // if (beforeSend) return beforeSend.apply(this, arguments);
-			// // else return true;
-		// // }
+		// timeline fetch paging does not follow asset paging
 		options.data.page = 1;
 		options.data.perpage = 99;
 	    Backbone.sync(method, model, options);
@@ -162,7 +162,7 @@ var TimelineModel = {
 	 * 		should be the FIRST listener for Timeline."change:filter"  
  	* @param {Object} attrs, attrs.filters changed by reference
 	 */
-	validate_ChangeFilter:function(attrs){
+	validate_ChangeFilter: function(attrs){
 		// see if you can stop propagation
 		var validated = {fetch: false},
 			before = this.get('filters');
@@ -182,6 +182,9 @@ var TimelineModel = {
 		});
 		// these assignment by reference are "silent"
 		_.extend(attrs['filters'],validated);
+		if (validated.fetch == true) {
+			this.helper.resetFetched(this, before, validated);
+		}
 	} 
 	
 }

@@ -19,7 +19,7 @@
 		var mixins = snappi.mixins;
 		snappi.qs = mixins.Href.parseQueryString();		// global parsed qs
 		snappi.TIMINGS = mixins.UiActions.TIMINGS;
-		snappi.PAGER_STYLE = 'timeline';
+		snappi.PAGER_STYLE = 'timeline'; // timeline, placeline, page
 		
 		// config image server, to set explicitly, use &host=[hostname]
 		var imgHost = {};		// default is snappi[N].snaphappi.com
@@ -30,10 +30,16 @@
 			};
 		}
 		mixins.Href.imgServer(imgHost);
-		var timeline = new snappi.models.Timeline(), 
-			collection = new snappi.collections.GalleryCollection(null,
-				{
-					sort: timeline.get('direction')
+		var timeline; 
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': timeline = new snappi.models.Timeline(); break;
+			case 'placeline': timeline = new snappi.models.Placeline(); break;
+			case 'page': break;
+		} 
+		
+		var collection = new snappi.collections.GalleryCollection(null,
+			{
+				sort: timeline.get('direction')
 			}),
 			app = new snappi.views.GalleryView({
 				collection : collection,

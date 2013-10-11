@@ -236,13 +236,13 @@ var getPlace = function (placeUrl, success){
 		FlickrApi.get(method, options, success);
 };
 
-mixins.FlickrPlaces = {
+var exports = {
 	initialize: function(force){
 		if (place_db.cached && !force) {
 			place_db.cached = JSON.parse(place_db.cached);
 			console.log(place_db.cached);
 		}
-		mixins.FlickrPlaces.loadPlaceDb(placeUrls, place_db, function(place_db){
+		exports.loadPlaceDb(placeUrls, place_db, function(place_db){
 			$('#json').html(place_db.cached);
 		});
 	},
@@ -319,5 +319,9 @@ mixins.FlickrPlaces = {
 	 	}	
 	},
 }
+
+mixins.FlickrPlaces = {
+	'FlickrApi': exports,
+};
 
 })( snappi.mixins);

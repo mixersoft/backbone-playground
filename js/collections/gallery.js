@@ -6,6 +6,7 @@
 var extend = function(classDef){
 	var options = _.extend({}, 
 		mixins.RestApi,
+		mixins.FlickrPlaces,
 		mixins.Href, 
 		classDef,
 		setup_Paginator, 
@@ -432,24 +433,30 @@ Backend.nodejs = {
 	baseurl: 'localhost:3000', // nodejs.hostname
 	url: function(){
 		var url; 
-			
-		if (snappi.PAGER_STYLE == 'timeline'){
-			// override from GalleryView.onTimelineChangePeriod
-			url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs']);
-		} else {
-			var collection = this, 
-			qs = snappi.qs,	
-			defaults = {
-				sort: 'score',
-				direction : 'desc',
-				userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
-				ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
-			},
-			request = _.defaults(qs, defaults);
-			request.page = collection.currentPage;		
-			request.perpage = collection.perPage;
-			url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs'])+$.param(request);
-		}
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline':
+				// override from GalleryView.onTimelineChangePeriod
+				url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs']); 
+				break;
+			case 'placeline':
+				url = this.FlickrAPI.photos()
+				break;
+			case 'page':
+			default: 
+				var collection = this, 
+				qs = snappi.qs,	
+				defaults = {
+					sort: 'score',
+					direction : 'desc',
+					userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
+					ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
+				},
+				request = _.defaults(qs, defaults);
+				request.page = collection.currentPage;		
+				request.perpage = collection.perPage;
+				url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs'])+$.param(request); 
+				break;
+		} 	
 		return url;
 	},
 	parse: function(response){

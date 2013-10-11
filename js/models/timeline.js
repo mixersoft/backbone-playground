@@ -61,12 +61,12 @@ var TimelineModel = {
 			return options;
 		},
 		/**
-		 *  get period from timeline
+		 *  get model.Timeline with currentPeriod set
 		 *  @param i int (optional) selected period, default active
 		 */  
 		getActive: function(model, i){
-			model = model.toJSON();
-			if (i!==0) i = i || model.active;
+			if (model instanceof Backbone.Model) model = model.toJSON();
+			if (_.isUndefined(i)) i = model.active || 0;
 			model.currentPeriod = model.periods[i];
 			return model;
 		},

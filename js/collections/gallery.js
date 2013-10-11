@@ -30,7 +30,7 @@ var GalleryCollection =	{
 	
 	// model : models.Photo,
 	
-	initialize: function(){
+	initialize: function(models, options){
 		// HACK: support for either node or cakephp backend, see Backend static class
 		// this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
 		switch (snappi.qs.backend) {
@@ -49,11 +49,16 @@ var GalleryCollection =	{
 		if (snappi.qs.rating) {
 			this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
 		}
+		if (options.sort) this.timeline_ui.direction = options.sort;
 		// end
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);
 		// this.listenTo(this, 'filterChanged', this.filterChanged);
+		this.listenTo(this, 'change:direction', function(dir){
+			this.timeline_ui.direction = dir; 
+			return "how do we listing to a change in TimelineView???"
+		});
 	},
 	
 	// comparator: function( photo ){
@@ -66,7 +71,8 @@ var GalleryCollection =	{
 		if (aVal < bVal) ret = -1;
 		else if (aVal > bVal) ret = 1;
 		else ret=0;
-		if (snappi.qs.direction == 'desc') ret *= -1;
+		// check models.Timeline.get('direction)
+		if (this.timeline_ui.direction == 'desc') ret *= -1;
 		return ret;
 	},
 	request: function(collection, xhr, queryOptions){
@@ -250,15 +256,21 @@ var GalleryCollection =	{
 			// check if fetch still required
 			// is filter complete after addBack?
 			
-if ("works to here") return;
+// if ("works to here") return;
 						
 			options = galleryView.timeline_helper.getXhrFetchOptions(galleryView);
 console.log(options.filters);
-
+			// fetch() > Coll."sync" > success(), View.addPage() > complete()
 			that.fetch({
 				remove: false,
 				data: options,
+				success: function(){
+console.info("Collection.filterChanged success()");
+					// don't let addPage() add offscreen
+					// how?					
+				},
 				complete: function() {
+console.info("Collection.filterChanged complete()");					
 					// timeline.fetched[] already marked as true
 					// no one currently listening, maybe TimelineView?
 					that.trigger('xhr-fetched');
@@ -279,6 +291,9 @@ var setup_DisplayOptions = {
 		'rating': [
 			{label: 0, active:'active' },
 		],
+	}, 
+	timeline_ui: {
+		direction: 'desc',
 	}
 }
 

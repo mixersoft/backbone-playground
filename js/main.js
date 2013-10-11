@@ -31,7 +31,10 @@
 		}
 		mixins.Href.imgServer(imgHost);
 		var timeline = new snappi.models.Timeline(), 
-			collection = new snappi.collections.GalleryCollection(),
+			collection = new snappi.collections.GalleryCollection(null,
+				{
+					sort: timeline.get('direction')
+			}),
 			app = new snappi.views.GalleryView({
 				collection : collection,
 				timeline: timeline, 		 

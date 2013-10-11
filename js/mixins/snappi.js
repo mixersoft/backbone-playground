@@ -98,6 +98,7 @@
 					caption: row.caption,
 					batchId: parseInt(row.batchId),
 					dateTaken: new Date(row.dateTaken.replace(' ', 'T')), 
+					TS_UTC: parseInt(row.TS_UTC),
 					// ts: row.Photo.TS,
 					H: preview.imageHeight,
 					W: preview.imageWidth,

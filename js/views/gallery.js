@@ -329,29 +329,45 @@ var GalleryView = {
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, resp, xhr) {
-		var options = {
-			offscreen : $('<div class="body"></div>'),	// build page in orphaned el
-			offscreenTop : _.template(
-				'top:<%=top%>px;',
-				{ 	// set CSS transition start point offscreen
-					top: Math.max(this.$el.height(),$(window).height()) 
-				}
-			),
-		};
-		
 		/*
-		 * NOTE: used collection.pager({remove: false}) to append new models 
+		 *  Coll.fetch() > Coll."sync" > success(), View.addPage() > complete() 
 		 */
-		var collection = this.collection;
+		var collection = this.collection,
+			$pageContainer, $thumb, $container, 
+			offscreen = true;
+		// check if pageContainer already exists
+		if (snappi.PAGER_STYLE == 'timeline') {
+			$pageContainer = this.timeline_helper.getPeriodContainer$(this);
+			// offscreen = $pageContainer ? false : true;
+		} else {
+			offscreen = true;
+		}
+		
+		if (offscreen) {
+			options = {
+				offscreen : $('<div class="body"></div>'),	// build page in orphaned el
+				offscreenTop : _.template(
+					'top:<%=top%>px;',
+					{ 	// set CSS transition start point offscreen
+						top: Math.max(this.$el.height(),$('body').data('winH')) 
+					}
+				),
+			};
+		}
 		
 		if (snappi.PAGER_STYLE == 'timeline') {
 			// ?? how do you detect NEW models from sync? use resp.assets
 			var new_models = _.pluck(resp.assets,'id');
-			_.each(collection.models, function(model,k,l){
+			_.each(collection.models, function(model,i,l){
 				if (new_models.indexOf(model.get('photoId')) >=0 ) {
-					this.addOne(model, options);
+					$thumb = this.addOne(model, options);
 				}
 			}, this);
+			if ($pageContainer) {
+				$container = $pageContainer.append(options.offscreen.children());
+			} else $container = options.offscreen;
+			// $container = offscreen ? options.offscreen : ($pageContainer || this.$('.body')); 	
+			this.renderBody($container);
 		} else {
 			// use audition.requestPage to manage paging
 			// TODO: model.get('clientPage') || model.get('requestPage')
@@ -371,38 +387,50 @@ var GalleryView = {
 				}
 			}, this);
 	if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-		}	
-		this.renderBody(options.offscreen || this.$('.body'));
+			$container = offscreen ? options.offscreen : this.$('.body'); 	
+			this.renderBody($container);
+		}
 	},
 	/**
 	 * addBack a removed model, must be added to the correct page
 	 * 	- called by onTimelineChangeFilter(fetch=true)
 	 */
 	addBack : function(collection, photoIds, options) {
-		var $before, $after, 
-			model, photoId, 
-			viewClass, thumbView;
-		_.find(collection.models, function(model,i,l){
-			if (photoIds.indexOf(model.get('photoId'))>-1){
-				// insert new thumbView after before
-				viewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
-				thumbView = new viewClass({model:model, collection: collection});
-				thumbView.render();
-				
-				if (i==0) {
-					// check that before is not on a page boundary, before = this.$('#'+photoId)
-					photoId = collection.models[1].get('photoId');
-					$after = this.$(".thumb:first-child").parent();
-					// check that before is not on a page boundary, before = this.$('#'+photoId)
-					$after.before(thumbView.$el);
-				} else {
-					photoId = collection.models[i-1].get('photoId');
-					// find thumbView for model before
-					$before = this.$('#'+photoId).parent();
-					// check that before is not on a page boundary, before = this.$('#'+photoId)
-					$before.after(thumbView.$el);
-				}
-			}
+		var sortedAdded=[], sortedIds=[],
+			viewClass, thumbView, 
+			$thumb, $pageContainer,
+			model, after,
+			TS, added_index;
+
+		// sort everything based on collection.sort()		
+		collection.sort();
+		_.each(collection.models, function(e,i,l){
+			var id = e.get('photoId')
+			sortedIds.push(id);
+			if (photoIds.indexOf(id)>-1) sortedAdded.push(id);
+		})
+		
+		_.each(sortedAdded, function(pid,i,l){
+			// create thumbView for added model
+			model = collection.models[sortedIds.indexOf(pid)];
+			viewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
+			thumbView = new viewClass({model:model, collection: collection});
+			$thumb = thumbView.render().$el;
+			
+			// find where to insert $thumb
+			TS = model.get('TS_UTC');
+			$pageContainer = this.timeline_helper.getPeriodContainerByTS$(this, TS);
+console.log("addBack() page="+$pageContainer.data('period'));							
+			added_index = sortedIds.indexOf(pid); 
+			after = _.find($pageContainer.find('.thumb'), function(thumb){
+				return (sortedIds.indexOf(thumb.id) > added_index)
+			});
+			if (after)
+				$(after).parent().before($thumb);
+			else if (!after) {
+				$pageContainer.append($thumb);
+			}	
+
 		}, this);
 	},
 	/**
@@ -440,10 +468,11 @@ var GalleryView = {
 				// hiddenshot if !!options.shotId
 				// > append in GallView.addedHiddenshots() 
 			}	
-			return thumb.$el;
 		} else {
 			console.log("already added");
+			// add to $parent
 		}
+		return $thumb;
 	},
 	
 	onKeyPressNav: function(){
@@ -475,6 +504,28 @@ var GalleryView = {
 			if (!$item.length && create){
 				template = helper.templates.periodContainer; 
 				$item = $( template( timeline) );
+			}
+			return $item.length ? $item : false;
+		},
+		getPeriodContainerByTS$: function(that, TS_UTC, create) {
+			var helper = that.timeline_helper,
+				timeline = that.timeline.toJSON(), 
+				index = false,
+				$item, template;
+			_.find(timeline.periods, function(e, i, l){
+				if (e.from_TS_UTC <= TS_UTC && TS_UTC <= e.to_TS_UTC) {
+					index = i;
+					return true;
+				} else return false;
+			}, this);	
+			if (index === false && create) {
+				template = helper.templates.periodContainer; 
+				timeline = that.timeline.helper.getActive(timeline),
+				$item = $( template( timeline) );
+			} else {
+				template = helper.templates.selector_PeriodContainer,
+				timeline = that.timeline.helper.getActive(timeline, index),
+				$item = that.$( template( timeline) );
 			}
 			return $item.length ? $item : false;
 		},

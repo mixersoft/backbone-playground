@@ -178,8 +178,9 @@ getXhrFetchOptions: function(that){
 		period = timeline.get('periods')[timeline.get('active')],
 		options = {
 			page: 1,		// should be able to paginate within a period
-			perpage: 20,	// for collection, but not timeline
-			sort: 'longitude',
+			// flickr uses per_page, NOT perpage
+			per_page: that.collection.paginator_ui.perPage || 20,	// for collection, but not timeline
+			// collectionSort: 'longitude',	// currently not implemented
 			direction: 'asc',
 			// filters: timeline.get('filters'),
 		};

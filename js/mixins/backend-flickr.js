@@ -17,7 +17,10 @@
 var FlickrApi = mixins.FlickrPlaces['FlickrApi'];
 
 var Flickr = {
-	url: "/wrong/place",
+	getReq: function(method, options){
+		var req = FlickrApi.getUrl(method, options);
+		return req;
+	},
 	getLocalities: function(method, model, options) {
 		var that = this,
 			data = options.data,
@@ -37,9 +40,9 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 					if (next) FlickrApi.getPhotos.apply(that, next);
 					oneComplete();
 				};
-				var fetchOptions = _.clone(data);
-				delete fetchOptions.localities;
-				delete fetchOptions.sort;
+				var fetchOptions = _.omit(_.clone(options.data), ['localities']);
+				// HACK: to force fetch dataType = options.dataType
+				fetchOptions['dataType'] = options.dataType;
 
 				_.each(data.localities, function(e,i,l){
 					fetchOptions.longitude = e.locality_longitude;
@@ -71,12 +74,36 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 		// timeline fetch paging does not follow asset paging
 		switch (method) {
 			case "read":
-				Flickr.getLocalities.call(this, method, model, options);
-				break;
+				if (false) {
+					options.dataType = 'json';
+					Flickr.getLocalities.call(this, method, model, options);
+					break;
+				} // continue below
 			default:
 				options.data.page = 1;
-				options.data.perpage = 99;
 				// hijack method='read'
+				var flickrDefaults = {
+						tags: "landmarks",
+					},
+					xhrDefaults = {
+						dataType: 'json',
+						cache: true,
+					},
+					flickrOptions = _.defaults(options.data, flickrDefaults, xhrDefaults);
+				var req = FlickrApi.getUrl('photos', flickrOptions);
+				options.url = req.url;
+				options.data = req.data;
+				options = _.defaults(options, req.xhrOptions);
+				var success = options.success;
+				options.success = function(resp, status, xhr) {
+					var parsed = req.parse(resp);
+					if (_.isFunction(success)) success(parsed);
+				}; 
+
+				var omitKeys = ['localities', 'backend', 'perpage', 'filters', 'direction'];
+				options.data = _.omit(options.data, omitKeys);
+
+
 			    Backbone.sync.call(this, method, model, options);
 			break;
 		}
@@ -93,6 +120,7 @@ if (_DEBUG) console.time("GalleryCollection: create models");
 			v.origW = v.W;
 			v.H *= scale;
 			v.W *= scale;
+			v.caption = v.title;
 			photos.push(new models.Photo(v));
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		

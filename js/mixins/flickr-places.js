@@ -71,8 +71,8 @@ var FlickrApi = {
 			place_id: '',
 			min_taken_date: '',
 			max_taken_date: '',
-			sort: 'date-taken-desc', // 'interestingness-desc'
-			license: '2,4,5',
+			sort: 'interestingness-desc', // 'date-taken-desc', 'interestingness-desc', 'relevance'
+			// license: '2,4,5',
 			content_type: '1',
 			media: 'photos',
 			extras: 'date_taken,url_m,views,geo',
@@ -80,26 +80,40 @@ var FlickrApi = {
 		}
 	},
 	getApiRequest: function(method, options){
-		options = options || {};
+		options = _.clone(options || {});
 		var qs = _.defaults( options, FlickrApi.querystring[method],  FlickrApi.config.qs);
 		_.each(qs, function(v,k,l){
 			if ( !v ) delete qs[k];
 		});
-		// var url = FlickrApi.config.baseurl + '?' + $.param(qs);
+
+		var xhrOptions = _.pick(options, ['dataType', 'cache']),
+			xhrDefaults = {
+				// data: req.data,
+				dataType: 'jsonp',
+				cache: false,
+			};
+		xhrOptions = _.defaults(xhrOptions, xhrDefaults);	
+		if (xhrOptions.dataType == 'json')  
+			qs['nojsoncallback'] = 1;
+		else if (xhrOptions.dataType == 'jsonp') 
+			xhrOptions['jsonpCallback'] = 'jsonFlickrApi';	
+		
 		return {
 			url: FlickrApi.config.baseurl,
-			data: qs 
+			data: _.omit(qs, ['dataType', 'cache']),
+			xhrOptions: xhrOptions,
 		};
+	},
+	// for use with Backbone.sync
+	getUrl: function(method, options){
+		var req = FlickrApi.getApiRequest(method, options);
+		req['parse'] = FlickrApiParse[method];
+		return req;
 	},
 	get: function(method, options, success){
 		var req = FlickrApi.getApiRequest(method, options);
-		var xhrOptions = {
-			data: req.data,
-			dataType: 'jsonp',
-			jsonpCallback: 'jsonFlickrApi',
-			cache: true,
-		}
-		// xhrOptions = _.defaults(req, xhrOptions);
+		var xhrOptions = req.xhrOptions; 
+		xhrOptions.data = req.data;
 		$.ajax(req.url, xhrOptions)
 			.success(function(){
 				var check;
@@ -181,6 +195,7 @@ var FlickrApiParse = {
 			}
 			parsed.push(row);
 		});
+		// TODO: losing photos.page,pages,perpage,total
 		return parsed;
 	},	
 }
@@ -343,8 +358,16 @@ var exports = {
 				// });
 				if (_.isFunction(cb)) cb(photos);
 			};
-		xhrOptions = _.defaults({place_id: place_id}, options, xhrOptions);	
+		xhrOptions = _.defaults({place_id: place_id}, options, xhrOptions);
+		var omitKeys = ['localities', 'backend', 'perpage', 'filters', 'direction', 'sort'];
+		xhrOptions = _.omit(xhrOptions, omitKeys);	
 		FlickrApi.get(method,xhrOptions,success);
+	},
+	getUrl: function(method, options) {
+		method = method || 'photos';
+		var allowed = _.keys(FlickrApi.querystring);
+		if (allowed.indexOf(method)==-1) return false;
+		else return FlickrApi.getUrl(method,options);
 	},
 	/*
 	 * get timeline, currently unused

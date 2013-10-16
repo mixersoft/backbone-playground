@@ -67,7 +67,8 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * 		note: items may be NEW IMGs rendered offscreen, or
 		 * 			if null, then existing IMGs in container for relayout 
 		 * @param Object options, defaults for layout engine, including 'context' for multi-page layouts
-		 * @param more Function (optional), more layout runs before 'layout-complete'
+		 * @param more Function (optional), more layout runs before 'layout-complete', i.e. layout more '.body .page' elements
+		 *		Note: chunks are laid out within a single .body .page element		
 		 */	
 		run: function(container, items, collection, options, more){
 			var engine = mixins.LayoutEngine.Typeset;
@@ -100,15 +101,18 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             } 
             
             // chunk layout based on window size
-            var chunks=[], end, stop = items.length;
+            var chunks=[], last=0, end, stop = items.length;
             var CHUNK_SIZE = Math.ceil($('body').data('winH')*$('body').data('winW') / (options.targetHeight*options.targetHeight*1.3)); 
             for (var c=0; (c*CHUNK_SIZE)<stop; c++){
+            	if (chunks.length) CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             	end = (c+1)*CHUNK_SIZE;
             	if ((stop-end) < CHUNK_SIZE/2) {
-            		chunks.push(items.slice(c*CHUNK_SIZE, stop));
+            		chunks.push(items.slice(last, stop));
             		break;
-            	} else chunks.push(items.slice(c*CHUNK_SIZE, Math.min(end, stop)));
-            	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
+            	} else {
+            		chunks.push(items.slice(last, Math.min(end, stop)));
+            		last = Math.min(end, stop)
+            	}
             }
            
             var lines;
@@ -132,21 +136,27 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	}       
             }
             if (!chunks.length) _layoutComplete()
-            else _.each(chunks, function(chunk, i){
-            	_.defer(function(that){
-		            lines = engine._linebreak.call(this, container, chunk, collection, options);
-		            engine._layout.call(this, lines, options);
-					if (i==0){
-			            // add class to indicate layout engine after 1st chunk rendered
-		            	options.outerContainer.addClass(options.classes.boundingbox);
-		            }		            
-		            if (i < chunks.length) {
-		            	collection.trigger('layout-chunk', i, container, options._layout_y );
-		            	// container.css('height', options._layout_y + "px");
-		            }
-		            if (i==chunks.length-1) _layoutComplete();
-            	}, this);
-            }, this);
+            else { 
+            	// layout each chunk BEFORE calling layoutComplete
+            	var oneComplete = _.after(chunks.length, function(){
+            		_layoutComplete()
+            	})
+            	_.each(chunks, function(chunk, i){
+	            	_.defer(function(that){
+			            lines = engine._linebreak.call(this, container, chunk, collection, options);
+			            engine._layout.call(this, lines, options);
+						if (i==0){
+				            // add class to indicate layout engine after 1st chunk rendered
+			            	options.outerContainer.addClass(options.classes.boundingbox);
+			            }		            
+			            if (i < chunks.length) {
+			            	collection.trigger('layout-chunk', i, container, options._layout_y );
+			            	oneComplete();
+			            }
+			            // if (i==chunks.length-1) _layoutComplete();
+	            	}, this);
+	            }, this);
+            }
 		},
 		/**
 		 * @param jquery container, .gallery .body, GalleryView.$(.body .page)

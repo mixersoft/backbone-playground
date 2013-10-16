@@ -41,6 +41,8 @@ var GalleryCollection =	{
 			case 'flickr': 
 				this.backend = this.Backend['Flickr']; 
 				this.sync = this.Backend['Flickr'].sync;
+				this.sortBy_0 = 'longitude';
+				this.sortBy_1 = 'dateTaken';
 				break;
 			case 'file':  
 				this.backend = this.Backend['File']; break;
@@ -70,21 +72,37 @@ var GalleryCollection =	{
 	// comparator: function( photo ){
 		// return photo.get('dateTaken');
 	// },
-	comparator: function( a,b ){
-		var aVal = a.get('dateTaken'),
-			bVal = b.get('dateTaken'),
+	sortBy_0: 'dateTaken', 
+	sortBy_1: 'score', 
+	comparator: function( a, b, sortBy ){
+		sortBy = sortBy || this.sortBy_0;
+
+		var aVal = a.get(sortBy),
+			bVal = b.get(sortBy),
 			ret;
+
 		if (aVal < bVal) ret = -1;
 		else if (aVal > bVal) ret = 1;
-		else ret=0;
+		else return (this.sortBy_1) ? this.comparator(a,b, this.sortBy_1) : 0;
 		// check models.Timeline.get('direction)
 		if (this.timeline_ui.direction == 'desc') ret *= -1;
 		return ret;
 	},
+
+
 	request: function(collection, xhr, queryOptions){
 		var index;
-		if (snappi.PAGER_STYLE == 'timeline') index = "timeline should know"
-		else index = this.currentPage;
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				index = "timeline should know"
+				break;
+			case 'placeline':
+				index = "placeline should know";
+				break;
+			case 'page':
+				index = this.currentPage;
+				break;
+		}
 		this.trigger('xhr-fetching', index);
 		if (_DEBUG) console.time("GalleryCollection.fetch()");
 	},

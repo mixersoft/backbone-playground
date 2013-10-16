@@ -1,4 +1,4 @@
-// /js/models/timeline.js
+// /js/models/placeline.js
 (function ( models, mixins ) {
 	
 
@@ -9,17 +9,21 @@
  */
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	models.Placeline = Backbone.Model.extend(
+	var options = _.extend( {},
+		// add mixins
 		mixins.FlickrPlaces,
 		classDef
+	);
+	models.Placeline = Backbone.Model.extend(
+		options
 	);
 }
 
 var PlacelineModel = {
 	defaults: {
-		currentZoom: 'country',		// flickr place_type = zoom setting
-		active: null,				// active "page" at currentZoom
-		direction: 'asc',			// sort by longitude
+		currentZoom: 'country',		// timeline zoom setting
+		active: null,					// active "page" at currentZoom
+		direction: 'asc',			// sort by most-recent
 		periods: [],				// "pages"
 		fetched: {},				// periods fetched in this session
 		filters: {
@@ -28,11 +32,13 @@ var PlacelineModel = {
 	},
 	
 	xhr_defaults: {
-		direction: 'asc',
+		
 	}, 
 	
-	url: function() {
-		return this.FlickrApi.get();	// "bootstrap FlickrAPI.getPlaces();	
+	urlRoot: function() { 
+		// HIJACKED!!! see this.sync()
+		console.error("Placeline.urlRoot(), method=read is handled by sync(), others???")
+		return false;
 	},	
 	
 	templates: {
@@ -114,18 +120,54 @@ var PlacelineModel = {
 	// backbone methods
 	parse: function( response ){
 		console.log("Placeline.parse");
-		var attr = {};
-		attr.periods = response.timeline;
-		var toMySQLDate = function(m){
-			// datestring with NO TZ conversion
-			m.from = new Date(m.from_TS_UTC*1000).toISOString().substr(0,19).replace('T','%20');
-			m.to = new Date(m.to_TS_UTC*1000).toISOString().substr(0,19).replace('T','%20');
-		}
-		_.each(attr.periods, function(v,k,l){
-			toMySQLDate(v);
+		
+		var attr = {
+			active: 0, 			// do we need active here?
+			currentZoom: response.place_type,
+			direction: 'asc',
+			periods: [],
+			fetched: {},		// should fetch ALL periods
+			filters: {
+				// zoom: response.place_type,  // same as currentZoom
+			},
+		};
+		attr.filters['zoom'] = attr.currentZoom;
+		var o, index, keys = _.uniq(_.pluck(response.places, 'name'));
+		_.each(response.places, function(e,i,l){
+			
+			switch(attr.currentZoom) {
+				case 'country': 
+				// case 'region':
+					index = keys.indexOf(e.name);
+					try {
+						attr.periods[index].localities.push({
+							locality_place_id: e.locality_place_id,
+							locality_longitude: e.locality_longitude
+						});
+					} catch (ex) {
+						o = _.clone(e);
+						o['label'] = e.name;
+						o['period'] = e.place_id;
+						// o['place_type'] = e.place_type;
+						o.localities = [{
+							locality_place_id: e.locality_place_id,
+							locality_longitude: e.locality_longitude
+						}]
+						delete o.locality_longitude;
+						delete o.locality_place_id;
+						attr.periods.push(o); 	
+					}
+					break;
+				default:
+					attr.periods[i]['label'] = e.name;
+					attr.periods[i]['period'] = e.place_id;
+					break;
+			}
 		});
-		attr.currentZoom = response.request.zoom;
-		attr.direction = response.request.direction;
+		// sort localities
+		_.each(attr.periods, function(e,i,l){
+			e.localities = _.sortBy(e.localities, 'locality_longitude');
+		})
 		return attr;
 	},
 	
@@ -139,9 +181,24 @@ var PlacelineModel = {
 	
 	sync: function(method, model, options) {
 		// timeline fetch paging does not follow asset paging
-		options.data.page = 1;
-		options.data.perpage = 99;
-	    Backbone.sync(method, model, options);
+		switch (method) {
+			case "read":
+				var FlickrApi = model.FlickrApi; 
+				var zoom = model.get('currentZoom'), 
+					attrs = FlickrApi.getPlaces(zoom, {}, function(attrs){
+						if (options.success) options.success.apply(model, arguments)
+						model.trigger('sync', model);					
+					});	
+				break;
+			default:
+				options.data.page = 1;
+				options.data.perpage = 99;
+				// hijack method='read'
+				
+			    Backbone.sync(method, model, options);
+
+			break;
+		}
 	},
 	
 	validate: function(attrs) {
@@ -185,5 +242,5 @@ var PlacelineModel = {
 
 // put it all together at the bottom
 extend(PlacelineModel);	
-
-})( snappi.models, snappi.mixins );
+var check;
+})( snappi.models , snappi.mixins);

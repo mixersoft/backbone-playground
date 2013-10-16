@@ -7,6 +7,7 @@ var extend = function(classDef){
 	var options = _.extend({}, 
 		mixins.UiActions,
 		mixins.Href,
+		mixins.PagerHelpers, 	// for Timeline|Placeline|Page helpers
 		LayoutEngines, 
 		classDef
 	);
@@ -114,9 +115,23 @@ var GalleryView = {
 		$('body').data('winW', $(window).width());
 
 		// timeline controls collection
-		this.listenTo(this.timeline, 'sync', this.onTimelineSync);
-		this.listenTo(this.timeline, 'change:active', this.onTimelineChangePeriod);
-		this.listenTo(this.timeline, 'change:filters', this.onTimelineChangeFilter);
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				this.listenTo(this.timeline, 'sync', this['Pager']['Timeline']['GalleryView'].onTimelineSync);
+				this.listenTo(this.timeline, 'change:active', this['Pager']['Timeline']['GalleryView'].onTimelineChangePeriod);
+				this.listenTo(this.timeline, 'change:filters', this['Pager']['Timeline']['GalleryView'].onTimelineChangeFilter);
+				break;
+			case 'placeline': 
+				this.listenTo(this.timeline, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);
+				this.listenTo(this.timeline, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
+				this.listenTo(this.timeline, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
+				// HACK: because render() is called too soon.
+				this.timeline.trigger('sync', this.timeline, null);	// sync already fired for cached place_db
+				this.timeline.trigger('change:active', this.timeline);	// sync already fired for cached place_db
+				break;
+			case 'page': 
+				break;
+		} 
 
 		var collection = this.collection;
 		this.listenTo(collection, 'reset', this.addAll);
@@ -140,8 +155,14 @@ var GalleryView = {
 			var shots = collection.parse(json);
 			collection.pager({ remove: false });
 		}
-		if (snappi.PAGER_STYLE == 'timeline') {}
-		else collection.pager({ remove: false });
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+			case 'placeline': 
+				break;
+			case 'page':
+				collection.pager({ remove: false }); 
+				break;
+		} 
 	},
 	
 	render: function(){
@@ -149,65 +170,49 @@ var GalleryView = {
 		/*
 		 * create delegated views
 		 */
-		if (snappi.PAGER_STYLE == 'timeline'){
-			new snappi.views.TimelineView({
-				el: this.$('.header .pager'),
-				model: this.timeline,
-				collection: this.collection,
-			});
-			var options = this.timeline_helper.getXhrFetchOptions(this);
-			this.timeline.fetch({data: options}); 
-		} else {
-			this.pager = new views.PagerView({
-				el: this.$('.header .pager'),
-				collection : this.collection,
-			});
-		}
-		
-		this.displayOptions = new views.GalleryDisplayOptionsView({
-			el: this.$('.header .display-options'),
-			collection : this.collection,
-			timeline: this.timeline,
-		});
-	},
-	
-	onTimelineSync : function(timeline, resp, options) {
-		console.log("GalleryView.timeline.'sync'");
-		var settings = timeline.toJSON(),
-			active = settings.active || 0,
-			current = settings.periods[active],
-			options = {
-				from: current.from,
-				to: current.to,
-				// filter: current.filter,
-			}
-			timeline.set('active', active);
-	},
-	
-	onTimelineChangePeriod : function(timeline) {
-		console.log("GalleryView.timeline.'change:active', i="+timeline.changed.active);
-		if (timeline.helper.isFetched.call(timeline, timeline.changed.active)) {
-			// scroll to an already fetched period, should NOT trigger XHR fetch
-			var that = this,
-				pageContainer = this.timeline_helper.getPeriodContainer$(this);
-			$('.pager').addClass('xhr-fetching')	
-			this.scrollIntoView(pageContainer, function(){
-				that.collection.trigger('xhr-ui-ready');
-			});
-			return;
-		};
-		var options = this.timeline_helper.getXhrFetchOptions(this),
-			that = this;
-		that.collection.fetch({
-			remove: false,
-			data: options,
-			complete: function() {
-				that.collection.trigger('xhr-fetched');
-			},
-		});
-	},
-	onTimelineChangeFilter : function(timeline, changed) {
-		this.collection.filterChanged(changed, this)
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				new snappi.views.TimelineView({
+					el: this.$('.header .pager'),
+					model: this.timeline,
+					collection: this.collection,
+				});
+				var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this);
+				this.timeline.fetch({data: options}); 
+				
+				this.displayOptions = new views.GalleryDisplayOptionsView({
+					el: this.$('.header .display-options'),
+					collection : this.collection,
+					timeline: this.timeline,
+				});
+				break;
+			case 'placeline': 
+				new snappi.views.PlacelineView({
+					el: this.$('.header .pager'),
+					model: this.timeline,
+					collection: this.collection,
+				});
+				var xhrOptions = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
+				var that = this,
+					cb = function(){
+					that.displayOptions = new views.GalleryDisplayOptionsView({
+						el: that.$('.header .display-options'),
+						collection : that.collection,
+						timeline: that.timeline,
+					});
+				}
+				this.timeline.fetch({
+					data: xhrOptions,
+					success: cb,
+				}); 
+				break;
+			case 'page': 
+				this.pager = new views.PagerView({
+					el: this.$('.header .pager'),
+	 				collection : this.collection,
+				});
+				break;
+		} 
 	},
 	
 	refreshLayout: function() {
@@ -221,7 +226,7 @@ var GalleryView = {
 		noThumbs.height("auto");
 		_.each(noLabel, function(v,k,l){
 			var $pageContainer = $(v),
-				template = that.timeline_helper.templates.periodContainerLabel,
+				template = that.Pager['Timeline']['GalleryView'].templates.periodContainerLabel,
 				label = template({label:$pageContainer.data('label')});
 			$pageContainer.html( label );
 		}, this);
@@ -336,12 +341,6 @@ var GalleryView = {
 			$pageContainer, $thumb, $container, 
 			offscreen = true;
 		// check if pageContainer already exists
-		if (snappi.PAGER_STYLE == 'timeline') {
-			$pageContainer = this.timeline_helper.getPeriodContainer$(this);
-			// offscreen = $pageContainer ? false : true;
-		} else {
-			offscreen = true;
-		}
 		
 		if (offscreen) {
 			options = {
@@ -354,41 +353,67 @@ var GalleryView = {
 				),
 			};
 		}
-		
-		if (snappi.PAGER_STYLE == 'timeline') {
-			// ?? how do you detect NEW models from sync? use resp.assets
-			var new_models = _.pluck(resp.assets,'id');
-			_.each(collection.models, function(model,i,l){
-				if (new_models.indexOf(model.get('photoId')) >=0 ) {
-					$thumb = this.addOne(model, options);
+
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				//  using !!resp.assets to detect NEW models from sync
+				var added_models = false,
+					resp_models = _.pluck(resp.assets,'id');
+				_.each(collection.models, function(model,i,l){
+					if (resp_models.indexOf(model.get('photoId')) >=0 ) {
+						$thumb = this.addOne(model, options);
+						added_models = true;
+					}
+				}, this);
+
+				if (added_models) {
+					$container = options.offscreen;
+					this.renderBody($container);
+				} else {
+					this.refreshLayout();
 				}
-			}, this);
-			if ($pageContainer) {
-				$container = $pageContainer.append(options.offscreen.children());
-			} else $container = options.offscreen;
-			// $container = offscreen ? options.offscreen : ($pageContainer || this.$('.body')); 	
-			this.renderBody($container);
-		} else {
-			// use audition.requestPage to manage paging
-			// TODO: model.get('clientPage') || model.get('requestPage')
-	if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
-			var p, pageModels = []; 
-			var start = (collection.currentPage-1) * collection.perPage,
-				end = Math.min(start + collection.perPage, collection.models.length);
-			_.each(collection.models, function(model, i){
-				/*
-				 * TODO: requestPage changes onFilterChanged
-				 * add collection.comparator and repaginate or sort algo
-				 * requestPage set in mixins.RestApi.parseShot_Assets()
-				 */
-				p = model.get('clientPage') || model.get('requestPage') || 9999;
-				if (p == collection.currentPage) {
-					this.addOne(model, options);	
+				break;
+			case 'placeline': 
+				$pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this);
+				//  using !!resp.assets to detect NEW models from sync
+				var added_models = false,
+					resp_models = _.pluck(resp,'id');
+				_.each(collection.models, function(model,i,l){
+					if (resp_models.indexOf(model.get('photoId')) >=0 ) {
+						$thumb = this.addOne(model, options);
+						added_models = true;
+					}
+				}, this);
+
+				if (added_models) {
+					$container = options.offscreen;
+					this.renderBody($container);
+				} else {
+					this.refreshLayout();
 				}
-			}, this);
-	if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-			$container = offscreen ? options.offscreen : this.$('.body'); 	
-			this.renderBody($container);
+				break;
+			case 'page': 
+				// use audition.requestPage to manage paging
+				// TODO: model.get('clientPage') || model.get('requestPage')
+		if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
+				var p, pageModels = []; 
+				var start = (collection.currentPage-1) * collection.perPage,
+					end = Math.min(start + collection.perPage, collection.models.length);
+				_.each(collection.models, function(model, i){
+					/*
+					 * TODO: requestPage changes onFilterChanged
+					 * add collection.comparator and repaginate or sort algo
+					 * requestPage set in mixins.RestApi.parseShot_Assets()
+					 */
+					p = model.get('clientPage') || model.get('requestPage') || 9999;
+					if (p == collection.currentPage) {
+						this.addOne(model, options);	
+					}
+				}, this);
+		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
+				$container = offscreen ? options.offscreen : this.$('.body'); 	
+				this.renderBody($container);
+				break;
 		}
 	},
 	/**
@@ -418,8 +443,18 @@ var GalleryView = {
 			$thumb = thumbView.render().$el;
 			
 			// find where to insert $thumb
-			TS = model.get('TS_UTC');
-			$pageContainer = this.timeline_helper.getPeriodContainerByTS$(this, TS);
+			switch (snappi.PAGER_STYLE) {
+				case 'timeline': 
+					TS = model.get('TS_UTC');
+					$pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainerByTS$(this, TS);
+					break;
+				case 'placeline': 
+					$pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainerByLon$(this, TS);
+					break;
+				case 'page':
+					console.warn("incomplete: find pageContainer by requestPage") 
+					break;
+			} 
 console.log("addBack() page="+$pageContainer.data('period'));							
 			added_index = sortedIds.indexOf(pid); 
 			after = _.find($pageContainer.find('.thumb'), function(thumb){
@@ -484,260 +519,27 @@ console.log("addBack() page="+$pageContainer.data('period'));
 		// calls this.collection.howManyPer()
 		// also called from PagerView.changeCount()
 	},
-	
-	// TODO: this helper should be refactored/move
-	timeline_helper: {
-		templates: {
-			selector_PeriodContainer: _.template('.page[data-zoom="<%=currentZoom%>"][data-period="<%=currentPeriod.period%>"]'), 
-			periodContainer: _.template('<div class="page" data-zoom="<%=currentZoom%>" data-period="<%=currentPeriod.period%>"  data-label="<%=currentPeriod.label%>"><div class="empty-label"><%=currentPeriod.label%></div></div>'),
-			periodContainerLabel:_.template('<div class="empty-label"><%=label%></div>'),
-		},
-		/**
-		 * @param create boolean (optional), if truthy then create if not found
-		 * @param index int (optional), default active, unless period index provided 
-		 */
-		getPeriodContainer$: function(that, create, index){
-			var helper = that.timeline_helper,
-				template = helper.templates.selector_PeriodContainer,
-				timeline = that.timeline.helper.getActive(that.timeline, index),
-				$item = that.$( template( timeline) );
-			if (!$item.length && create){
-				template = helper.templates.periodContainer; 
-				$item = $( template( timeline) );
-			}
-			return $item.length ? $item : false;
-		},
-		getPeriodContainerByTS$: function(that, TS_UTC, create) {
-			var helper = that.timeline_helper,
-				timeline = that.timeline.toJSON(), 
-				index = false,
-				$item, template;
-			_.find(timeline.periods, function(e, i, l){
-				if (e.from_TS_UTC <= TS_UTC && TS_UTC <= e.to_TS_UTC) {
-					index = i;
-					return true;
-				} else return false;
-			}, this);	
-			if (index === false && create) {
-				template = helper.templates.periodContainer; 
-				timeline = that.timeline.helper.getActive(timeline),
-				$item = $( template( timeline) );
-			} else {
-				template = helper.templates.selector_PeriodContainer,
-				timeline = that.timeline.helper.getActive(timeline, index),
-				$item = that.$( template( timeline) );
-			}
-			return $item.length ? $item : false;
-		},
-		createPeriodContainers$: function(that, timeline, $body) {
-			// create missing pageContainers	
-			var $current, 
-				$before = false, 
-				fetched_key;
-			_.each(timeline.periods, function(e,i,l){
-				if (i >= timeline.active) {
-					return false;  // found
-				}
-				$current = that.timeline_helper.getPeriodContainer$(that, false, i);
-				fetched_key = that.timeline.helper.getFetchedKey(i,timeline);
-				if ($current && timeline.fetched[fetched_key]) {
-					// already loaded, should already be created
-				} else if (!$current) {	
-					// create, insert empty pageContainer
-					$current =  that.timeline_helper.getPeriodContainer$(that, 'create', i);
-					if ($before) $current.insertAfter($before);
-					else $body.prepend($current);
-				} 
-				$before = $current;
-			});
-			return $before;
-		},
-		getXhrFetchOptions: function(that){
-			var timeline = that.timeline,
-				period = timeline.get('periods')[timeline.get('active')],
-				options = {
-					page: 1,		// should be able to paginate within a period
-					perpage: 20,	// for collection, but not timeline
-					sort: 'top-rated',
-					direction: 'desc',
-					// filters: timeline.get('filters'),
-				};
-				options.filters = _.clone(timeline.get('filters'));
-				if (options.filters.changed) {
-					options.filters = _.defaults(options.filters.changed, options.filters);
-					delete options.filters.changed;
-				}
-			if (period) {
-				options.from = period.from;
-				options.to = period.to;	
-			}	
-			options = _.defaults(options, timeline.xhr_defaults);
-			return options;
-		},
-	},
-	
-	/**
+	/*
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
  	 * 		if offscreen, will also append to this.$('.body')
  	 * @param Object options, default={force: false, scroll: true}
 	 */
 	renderBody: function(container, options){
-		
-		if (snappi.PAGER_STYLE == 'timeline') {
-			this.renderBody_Period.apply(this, arguments);
-		} else {
-			this.renderBody_Page.apply(this, arguments);
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				// this.renderBody_Period.apply(this, arguments);
+				this.Pager['Timeline']['GalleryView'].renderBody.apply(this, arguments);
+				break;
+			case 'placeline':
+				this.Pager['Placeline']['GalleryView'].renderBody.apply(this, arguments);
+				break;
+			case 'page':
+				this.Pager['Page']['GalleryView'].renderBody.apply(this, arguments);
+				break;
 		}
-		// for debugging
-		if (_DEBUG) this.introspect();
 	},
 	
-	renderBody_Period: function(container, options){
-		options = options || {};
-		var that = this,
-			stale = options.force || false, 
-			collection = this.collection,
-			pageContainer;
-		
-		if (container && container.hasClass('page')) {
-			pageContainer = container; // container is already onscreen
-		} else {
-			pageContainer = this.timeline_helper.getPeriodContainer$(this);
-			if (pageContainer && !(container && container.children().length)) {
-				container = pageContainer; // NO container, user current active pageContainer
-				// page already rendered, no new elements to add, refreshLayout()
-			} else if (pageContainer){
-				// pageContainer.html('');
-				// pageContainer.append(container.children());
-				stale = true;
-				// page already rendered, AND new elements to add, 
-			}
-		}
-		if (pageContainer && container && container.children().length) {
-				// page already rendered, no new elements to add, 
-				// but refreshLayout() ?? 
-		} else if (!pageContainer) {
-			var $before = $current = null, 
-				body = this.$('.body'),
-				timeline = this.timeline.toJSON();
-				
-			$before = this.timeline_helper.createPeriodContainers$(this, timeline, body);
-			
-			pageContainer = this.timeline_helper.getPeriodContainer$(this, 'create');
-			if (!$before) body.prepend(pageContainer);
-			else pageContainer.insertAfter($before);
-			stale = true;
-		} 
-		
-		if (stale === true){
-			var thumbs = container.find('> div');  // container.find('.thumb');
-			if (thumbs.length) {
-				/*
-				 * the actual layout render statement
-				 */
-				if (pageContainer !== container) {
-					// replace .empty-label
-					if (thumbs.length) pageContainer.html(thumbs);
-				}
-				if (options.scroll !== false) {	// false for hiddenshot, otherwise true
-					that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-						that.scrollIntoView(pageContainer, function(){
-							that.collection.trigger('xhr-ui-ready');
-						});
-						
-					});
-				}
-				this.layout['Typeset'].call(this, pageContainer, thumbs);
-				/*
-				 * end
-				 */
-				// a new page was added. cleanup GalleryView
-				this.$el.css('min-height', $(window).outerHeight()-160);
-			}
-		}
-		_.defer(function(){
-			that.$('.fade-out').removeClass('fade-out');
-		});
-	},
-	renderBody_Page: function(container, options){
-		options = options || {};
-		var that = this,
-			stale = options.force || false, 
-			collection = this.collection;
-		
-		var pageContainer;
-		if (container && container.hasClass('page')) {
-			pageContainer = container;
-		} else {
-			pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-			if (pageContainer.length && !(container && container.children().length)) {
-				container = pageContainer;
-				// page already rendered, no new elements to add, refreshLayout()
-			} else {
-				// TODO: need to sort in collection first!!!!!!!!!
-				pageContainer.append(container.children());
-				stale = true;
-				// page already rendered, AND new elements to add, 
-			}
-		}
-		if (pageContainer.length && container && container.children().length) {
-				// page already rendered, no new elements to add, 
-				// but refreshLayout() ?? 
-		} else if (pageContainer.length==0) {
-			pageContainer = $(this.templates.pageTemplate(collection))
-			var p, 
-				currentPage = collection.currentPage,
-				body = this.$('.body'),
-				pages = body.find('.page');
-			for (var i=pages.length-1; i>-1 ; i--) {
-				if (pages.eq(i).data('page')<currentPage) {
-					pageContainer.insertAfter(pages.eq(i));
-					currentPage = 'inserted';
-					break;	
-				};
-			}	
-			if (currentPage != 'inserted') body.prepend(pageContainer);
-			stale = true;
-			
-		} 
-		
-		if (stale === true){
-			/*
-			 * the actual layout render statement
-			 */
-			var thumbs = container.find('> div');  // container.find('.thumb');
-			pageContainer.append(thumbs);
-			var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
-			/*
-			 * end
-			 */
-			// a new page was added. cleanup GalleryView
-			this.$el.css('min-height', $(window).outerHeight()-160);
-		}
-		if (options.scroll !== false) {	// false for hiddenshot, otherwise true
-			that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-				// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
-				// what is the best way? Stop the listener?
-				that.$el.addClass('debounce');
-				that.scrollIntoView(pageContainer, function(){
-					that.collection.trigger('xhr-ui-ready');
-					that.$el.removeClass('debounce');		
-				});
-				
-console.log('GalleryView.renderBody() first chunk ready to view');				
-			});
-		}
-		_.defer(function(){
-			that.$('.fade-out').removeClass('fade-out');
-		});
-
-		// TODO: deprecate .debounce? use '.xhr-fetching' instead?
-		_.delay(function(that){
-			that.$el.removeClass('debounce');
-		}, 1000, this);
-		
-	},
 	// debugging
 	introspect: function() {
 		return;
@@ -767,5 +569,5 @@ var _getPageFromModel = function(that, m) {
 }
 // put it all together at the bottom
 extend(GalleryView);
-
+var check;
 })( snappi.views, snappi.mixins );

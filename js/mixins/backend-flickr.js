@@ -83,7 +83,9 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 				options.data.page = 1;
 				// hijack method='read'
 				var flickrDefaults = {
-						tags: "landmarks",
+						// tags: "landmarks",
+						max_taken_date: '2011-12-31 00:00:00',
+						tags: "landmark, tourist, architecture, vista, place",
 					},
 					xhrDefaults = {
 						dataType: 'json',

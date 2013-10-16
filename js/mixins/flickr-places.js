@@ -72,7 +72,8 @@ var FlickrApi = {
 			min_taken_date: '',
 			max_taken_date: '',
 			sort: 'interestingness-desc', // 'date-taken-desc', 'interestingness-desc', 'relevance'
-			// license: '2,4,5',
+			license: '2,4,5',
+			// max_taken_date: '2012-12-31 00:00:00',
 			content_type: '1',
 			media: 'photos',
 			extras: 'date_taken,url_m,views,geo',
@@ -93,6 +94,12 @@ var FlickrApi = {
 				cache: false,
 			};
 		xhrOptions = _.defaults(xhrOptions, xhrDefaults);	
+
+		// patch key mismatches
+		if (qs['longitude']) {
+			qs['lon'] = qs['longitude'];
+			delete qs['longitude'];
+		}
 		if (xhrOptions.dataType == 'json')  
 			qs['nojsoncallback'] = 1;
 		else if (xhrOptions.dataType == 'jsonp') 

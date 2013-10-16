@@ -115,6 +115,7 @@ var FlickrApi = {
 	getUrl: function(method, options){
 		var req = FlickrApi.getApiRequest(method, options);
 		req['parse'] = FlickrApiParse[method];
+		req.data.per_page *= 3;			// get more and filter by views
 		return req;
 	},
 	get: function(method, options, success){
@@ -186,21 +187,25 @@ var FlickrApiParse = {
 		if (json.stat != 'ok') 
 			console.error("Error: json response error for flickr.photos.search");
 		_.each(json.photos.photo, function(e,i,l){
-			var row = {
-				id: e.id,
-				owner: e.owner,
-				dateTaken : e.datetaken,
-				W: parseInt(e.width_m),
-				H: parseInt(e.height_m),
-				place_id: e.place_id,
-				longitude: parseFloat(e.longitude),
-				views: parseInt(e.views),
-				title: e.title,
-				url: e.url_m.replace('.jpg', '_m.jpg'),
-				flickr_url: 'http://www.flickr.com/photos/' + e.owner + '/' + e.id, 
-				// accuracy: e.accuracy,
+			try {
+				var row = {
+					id: e.id,
+					owner: e.owner,
+					dateTaken : e.datetaken,
+					W: parseInt(e.width_m),
+					H: parseInt(e.height_m),
+					place_id: e.place_id,
+					longitude: parseFloat(e.longitude),
+					views: parseInt(e.views),
+					title: e.title,
+					url: e.url_m.replace('.jpg', '_m.jpg'),
+					flickr_url: 'http://www.flickr.com/photos/' + e.owner + '/' + e.id, 
+					// accuracy: e.accuracy,
+				}
+				parsed.push(row);
+			} catch(ex){
+				console.warn("FlickrApi.photos() parse error");
 			}
-			parsed.push(row);
 		});
 		// TODO: losing photos.page,pages,perpage,total
 		return parsed;

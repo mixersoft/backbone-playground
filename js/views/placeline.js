@@ -190,7 +190,7 @@ var PlacelineView = {
 		gotoPeriod: function (e, where) {
 			e.preventDefault();
 			var index, 
-				label = $(e.target).text(),
+				label = $(e.currentTarget).attr('title'),
 				model_attr = this.model.toJSON(),
 				where = where || {label: label};
 				period = _.findWhere(model_attr.periods, where);
@@ -211,7 +211,7 @@ var PlacelineView = {
 
 		changePeriod: function (e) {
 			e.preventDefault();
-			var per = $(e.target).text();
+			var per = $(e.currentTarget).attr('title');
 			this.collection.rendered = {};		// reset
 			this.collection.trigger('repaginate', per);
 			this.collection.howManyPer(per, { merge: true, remove: false });

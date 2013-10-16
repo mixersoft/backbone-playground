@@ -72,6 +72,7 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 	},
 	sync: function(method, model, options) {
 		// timeline fetch paging does not follow asset paging
+		var that = this;
 		switch (method) {
 			case "read":
 				if (false) {
@@ -82,10 +83,13 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 			default:
 				options.data.page = 1;
 				// hijack method='read'
-				var flickrDefaults = {
+				var perpage = options.data.per_page,
+					flickrDefaults = {
 						// tags: "landmarks",
 						max_taken_date: '2011-12-31 00:00:00',
 						tags: "landmark, tourist, architecture, vista, place",
+						tags: "landmark",
+						sort: 'interestingness-desc',
 					},
 					xhrDefaults = {
 						dataType: 'json',
@@ -99,6 +103,8 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 				var success = options.success;
 				options.success = function(resp, status, xhr) {
 					var parsed = req.parse(resp);
+					parsed = Flickr.sample(parsed, perpage);
+					
 					if (_.isFunction(success)) success(parsed);
 				}; 
 
@@ -115,19 +121,34 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 			photos = [];
 if (_DEBUG) console.time("GalleryCollection: create models");			
 		_.each(parsed, function(v, k, l) {
-			v.photoId = v.id;
-			v.rootSrc = v.url;
-			var scale = 240/500;	// _m is 240px, origH/W is 500px
-			v.origH = v.H;
-			v.origW = v.W;
-			v.H *= scale;
-			v.W *= scale;
-			v.caption = v.title;
-			photos.push(new models.Photo(v));
+			try {
+				v.photoId = v.id;
+				v.rootSrc = v.url;
+				var scale = 240/500;	// _m is 240px, origH/W is 500px
+				v.origH = v.H;
+				v.origW = v.W;
+				v.H *= scale;
+				v.W *= scale;
+				v.caption = v.title;
+				photos.push(new models.Photo(v));
+			} catch(ex){
+				console.warn("models.Photo parse error");
+			}
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		$('body').removeClass('wait');
 		return photos;
+	},
+	sample: function(rows, sampleSize){
+		if (rows.length > sampleSize){
+			return Flickr.sampleByMostViewed(rows, sampleSize);
+		} else return rows;
+		
+	},
+	sampleByMostViewed: function(rows, sampleSize){
+		// grab "most-viewed" as a proxy for top-rated
+		var sorted = _.sortBy(rows, 'views');
+		return sorted.slice(-1*sampleSize);	
 	},	
 }
 

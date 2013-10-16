@@ -228,7 +228,7 @@
 			<script id="Placeline" class='underscore' type="text/html">
 				<div class='pagination pagination-centered pagination-small'>
 					<ul class='page'>
-						<li class="item page-label">Period</li>
+						<li class="item page-label">Place</li>
 						<% var state = (active == 0) ? 'disabled' : 'link'; %> 
 						<li class="item prev <%= state %>">&laquo;</li>
 						<% _.each (periods, function (e,i,l) { 
@@ -236,9 +236,9 @@
 								state += (fetched[e.period+'-'+currentZoom]===true) ? ' loaded' : '';
 							%>
 							<% if (active == i) { %>
-								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>"><%= e.label %></li>
+								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>" title="<%= e.label %>"><icon class="icon-circle"></icon></li>
 							<% } else { %>
-								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>"><%= e.label %></li>
+								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>" title="<%= e.label %>"><icon class="icon-circle"></icon></li>
 							<% } %>
 						<% }); %>
 						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
@@ -278,9 +278,7 @@
 			</script>
         </div>
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
-
+        <script src="js/vendor/jquery-1.10.1.min.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
         <script src="js/vendor/underscore.js"></script>
         <script src="js/vendor/handlebars.js"></script>

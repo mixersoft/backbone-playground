@@ -78,19 +78,22 @@ onPlacelineSync : function(placeline, resp, options) {
 	placeline.set('active', active);	
 },
 onPlacelineChangePeriod : function(placeline) {
-	console.log("GalleryView.placeline.'change:active', i="+placeline.changed.active);
-	if (placeline.helper.isFetched.call(placeline, placeline.changed.active)) {
+	var that = this,
+		index = placeline.changed && placeline.changed.active || placeline.get('active');
+		isFetched = placeline.helper.isFetched.call(placeline, index),
+		$pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this, placeline, index);
+console.log("GalleryView.placeline.'change:active', i="+index);
+
+	if (isFetched && $pageContainer.find('.thumb').length) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
-		var that = this,
-			pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this);
 		$('.pager').addClass('xhr-fetching')	
-		this.scrollIntoView(pageContainer, function(){
+		this.scrollIntoView($pageContainer, function(){
 			that.collection.trigger('xhr-ui-ready');
 		});
 		return;
 	};
-	var options = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this),
-		that = this;
+	var options = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
+
 	that.collection.fetch({
 		remove: false,
 		data: options,
@@ -200,6 +203,8 @@ getXhrFetchOptions: function(that){
 
 
 	}, // end GalleryView
+	GalleryModel: {
+	}
 }
 
 var Pager = _.extend(mixins.PagerHelpers && mixins.PagerHelpers['Pager']  || {}, {

@@ -18,7 +18,7 @@
         </style>
         <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
         <!-- <link rel="stylesheet" href="css/main.less"  type="text/less"> -->
-		<!-- <script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script> -->
+		<!-- // <script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script> -->
 		<link rel="stylesheet" href="css/main.css">
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
     </head>
@@ -85,7 +85,7 @@
         
         <div id="markup" class="hide">
         	<script id="PhotoTemplate" class='handlebars' type="text/x-handlebars-template">
-	        	<div id="{{photoId}}" class="thumb fade fade-out {{orientationLabel}}" style="{{top}}{{position}}">
+	        	<div id="{{photoId}}" class="thumb fade fade-out {{zoom}} {{orientationLabel}}" style="{{top}}{{position}}">
 	        		<div class="crop-wrap">
 	        			<div class="crop">
 	        				<img class="" src="" 
@@ -106,23 +106,23 @@
 						</div>
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
-		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to hide duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
-		    					<a href="#" class='rating' title='rating: {{rating}}'>
+		    					{{#if shotCount}}<icon class='btn-icon icon-reorder show-hidden-shot' title='click to hide duplicate shots'>{{shotCount}}</icon>{{/if}}
+		    					<span class="btn-icon score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
+		    					<span class='btn-icon rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
-		    					</a>
+		    					</span>
 	    					</span>
 							<span class="inline-icons right">
-								<a href="#" title='favorite or views (planned)'>{{views}}<icon class='icon-heart active'></icon></a>
-								<a href="#" title='taken: {{dateTaken}}'>{{visits}}<icon class='icon-info-sign'></icon></a>	
-								<a href="#" title='show full screen (planned)'><icon class='icon-resize-full'></icon></a>
+								<icon class='btn-icon icon-heart active' title='favorite or views (planned)'>{{views}}</icon>
+								<icon class='btn-icon icon-info-sign'  title='taken: {{dateTaken}}'></icon>	
+								<icon class='btn-icon icon-resize-full' title='show full screen (planned)'></icon>
 							</span>
 						</div>
 					</div>
 				</div>
 			</script>
 			<script id="ShotTemplate" class='handlebars' type="text/x-handlebars-template">
-	        	<div id="{{photoId}}" class="thumb fade fade-out {{orientationLabel}}" style="{{top}}{{position}}">
+	        	<div id="{{photoId}}" class="thumb fade fade-out {{zoom}} {{orientationLabel}}" style="{{top}}{{position}}">
 	        		<div class="crop-wrap">
 	        			<div class="crop">
 	        				<img class="" src="" 
@@ -143,16 +143,16 @@
 						</div>
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
-		    					{{#if shotCount}}<a class='show-hidden-shot best' href="#" title='click to show {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
-		    					<a href="#" class='rating' title='rating: {{rating}}'>
+		    					{{#if shotCount}}<icon class='btn-icon icon-reorder show-hidden-shot best' title='click to show {{shotCount}} duplicate shots'>{{shotCount}}</icon>{{/if}}
+		    					<span class="btn-icon score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='icon-star{{#unless score}}-empty{{/unless}}'></icon></span>
+		    					<span class='btn-icon rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
-		    					</a>
+		    					</span>
 	    					</span>
 							<span class="inline-icons right">
-								<a href="#" title='favorite (planned)'><icon class='icon-heart active'></icon></a>
-								<a href="#" title='taken: {{dateTaken}}'><icon class='icon-info-sign'></icon></a>	
-								<a href="#" title='show full screen (planned)'><icon class='icon-resize-full'></icon></a>
+								<icon class='btn-icon icon-heart active' title='favorite (planned)'></icon>
+								<icon class='btn-icon icon-info-sign'  title='taken: {{dateTaken}}'></icon>	
+								<icon class='btn-icon icon-resize-full' title='show full screen (planned)'></icon>
 							</span>
 						</div>
 					</div>

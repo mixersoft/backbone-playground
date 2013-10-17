@@ -86,11 +86,12 @@ body {
       margin-top: 2px;
       overflow: visible;
       z-index: 50;
-      > * {
+      > .btn-icon {
         margin-left: 1em;
         cursor: pointer;
+        color: #005580;   /* same as a:hover*/
       }
-      > *:first-child {
+      > .btn-icon:first-child {
         margin-left: 0;
       }
       &.left {
@@ -100,7 +101,7 @@ body {
         float: right;
         text-align: right;
       }
-      a.rating {
+      .btn-icon.rating {
         white-space: nowrap;
         .icon-star {
           whitespace: nowrap;
@@ -108,13 +109,13 @@ body {
       }
     }
     
-    &:hover {   // .meta:hover
+    &:hover {   /* .meta:hover */
       transition: all .15s ease-in-out;
-      a:hover {
+      .btn-icon:hover {
       }
       .bottom-row {
       }
-      span.inline-icons {
+      .inline-icons {
       }
     }
   }
@@ -201,13 +202,9 @@ body.wait {
   background: fade(@black,60%);
     opacity: 1;
     transition: all .15s ease-in-out;
-    a:hover {
+    .btn-icon:hover {
       color: #FFF;
     }
-    // .bottom-row {
-    // }
-    // span.inline-icons {
-    // }
 }
 
 .thumb {
@@ -218,9 +215,6 @@ body.wait {
     text-shadow: 1px 1px 0 black;
     .inline-icons {
       opacity: 0.6;
-      a {
-        text-decoration: none;
-      }
       .show-hidden-shot.best {
         color: @yellow;
       }
@@ -229,10 +223,10 @@ body.wait {
       }
     }
     
-    &:hover {   // .meta:hover
+    &:hover {   /* .meta:hover */
       background: fade(@black,60%);
       opacity: 1;
-      a:hover {
+      .btn-icon:hover {
         color: #FFF;
       }
     }

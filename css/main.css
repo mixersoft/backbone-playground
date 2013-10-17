@@ -243,6 +243,10 @@ body.wait {
 }
 
 
+.gallery.pager-placeline .thumb .meta .bottom-row .inline-icons.left {
+  display: none;
+}
+
 /*
  * manually added - move to main.less
  */

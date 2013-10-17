@@ -115,11 +115,13 @@ var GalleryView = {
 		$('body').data('winW', $(window).width());
 
 		// timeline controls collection
+		this.$el.addClass('pager-'+snappi.PAGER_STYLE);
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
 				this.listenTo(this.timeline, 'sync', this['Pager']['Timeline']['GalleryView'].onTimelineSync);
 				this.listenTo(this.timeline, 'change:active', this['Pager']['Timeline']['GalleryView'].onTimelineChangePeriod);
 				this.listenTo(this.timeline, 'change:filters', this['Pager']['Timeline']['GalleryView'].onTimelineChangeFilter);
+
 				break;
 			case 'placeline': 
 				this.listenTo(this.timeline, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);

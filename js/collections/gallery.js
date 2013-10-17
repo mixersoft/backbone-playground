@@ -83,7 +83,8 @@ var GalleryCollection =	{
 
 		if (aVal < bVal) ret = -1;
 		else if (aVal > bVal) ret = 1;
-		else return (this.sortBy_1) ? this.comparator(a,b, this.sortBy_1) : 0;
+		else 
+			return (!sortBy && this.sortBy_1) ? this.comparator(a,b, this.sortBy_1) : 0;
 		// check models.Timeline.get('direction)
 		if (this.timeline_ui.direction == 'desc') ret *= -1;
 		return ret;

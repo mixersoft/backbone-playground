@@ -93,16 +93,18 @@ console.log("GalleryView.placeline.'change:active', i="+index);
 		return;
 	};
 	var options = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
-
-	that.collection.fetch({
-		remove: false,
-		data: options,
-		success: function(collection, response, options){
-			var check;
-		},
-		complete: function(){
-			that.collection.trigger('xhr-fetched');
-		},
+	_.defer(function(){
+		// for bootstrap: finish init before fetch
+		that.collection.fetch({
+			remove: false,
+			data: options,
+			success: function(collection, response, options){
+				var check;
+			},
+			complete: function(){
+				that.collection.trigger('xhr-fetched');
+			},
+		});
 	});
 	return;
 },

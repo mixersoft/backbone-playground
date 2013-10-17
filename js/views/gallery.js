@@ -105,7 +105,7 @@ var GalleryView = {
 		// ???: should this.model = models.Timeline? creating a custom attr here
 		this.timeline = attributes.timeline;
 		
-		this.render();
+		// this.render();
 		/*
 		 * NOTE: get containerWidth BEFORE rendering Views, to avoid an unnecssary layout/paint
 		 */
@@ -128,8 +128,8 @@ var GalleryView = {
 				this.listenTo(this.timeline, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
 				this.listenTo(this.timeline, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
 				// HACK: because render() is called too soon.
-				this.timeline.trigger('sync', this.timeline, null);	// sync already fired for cached place_db
-				this.timeline.trigger('change:active', this.timeline);	// sync already fired for cached place_db
+				// this.timeline.trigger('sync', this.timeline, null);	// sync already fired for cached place_db
+				// this.timeline.trigger('change:active', this.timeline);	// sync already fired for cached place_db
 				break;
 			case 'page': 
 				break;
@@ -165,6 +165,8 @@ var GalleryView = {
 				collection.pager({ remove: false }); 
 				break;
 		} 
+
+		this.render();
 	},
 	
 	render: function(){

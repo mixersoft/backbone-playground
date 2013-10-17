@@ -21,13 +21,13 @@ var extend = function(classDef){
 
 var PlacelineModel = {
 	defaults: {
-		currentZoom: 'country',		// timeline zoom setting
+		currentZoom: 'world',		// timeline zoom setting
 		active: null,					// active "page" at currentZoom
 		direction: 'asc',			// sort by most-recent
 		periods: [],				// "pages"
 		fetched: {},				// periods fetched in this session
 		filters: {
-			zoom: 'country',
+			zoom: 'world',
 		},				// filters, exclude time
 	},
 	
@@ -136,6 +136,7 @@ var PlacelineModel = {
 		_.each(response.places, function(e,i,l){
 			
 			switch(attr.currentZoom) {
+				case 'world':
 				case 'country': 
 				// case 'region':
 					index = keys.indexOf(e.name);

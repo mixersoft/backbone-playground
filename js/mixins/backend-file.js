@@ -1,6 +1,7 @@
-(function ( mixins ) {
+(function ( mixins, models ) {
 
 var File = {
+	datatype: null,		// for $.ajax request dataType
 	url: function(){ // hijack xhr, just add new models
 		this.listenToOnce(this, 'request', function(collection, xhr, queryOptions){
 			var collection = this, 
@@ -16,7 +17,7 @@ var File = {
 	parsed: null,	// just parse once
 	parse: function(json){
 		var collection = this;
-		if (!Backend['file'].parsed) {
+		if (!Backend['File'].parsed) {
 			var paging = json.response.castingCall.CastingCall.Auditions,
 				serverPaging = {
 					page: collection.currentPage || snappi.qs.page || paging.Page,
@@ -45,14 +46,14 @@ var File = {
 			
 			
 			var parsed = this.parseShot_CC(json.response.castingCall); // from mixin
-			Backend['file'].parsed = parsed;
+			Backend['File'].parsed = parsed;
 		}
 		// slice response to match page/perpage 
 		var start = ((collection.currentPage || serverPaging.page) -1) * collection.perPage,
 			end = start + collection.perPage ,
 			photos = [],
 			i=-1;
-		_.each(Backend['file'].parsed, function(v, k, l) {
+		_.each(Backend['File'].parsed, function(v, k, l) {
 			if (++i < start) return true;
 			if (i >= end) return false;
 			v.requestPage = Math.ceil(i/collection.perPage);
@@ -69,4 +70,4 @@ var Backend = _.extend(mixins.BackendHelpers && mixins.BackendHelpers['Backend']
 mixins.BackendHelpers = mixins.BackendHelpers || {Backend:{}};
 mixins.BackendHelpers['Backend'] = Backend;
 var check;
-})( snappi.mixins);
+})( snappi.mixins, snappi.models);

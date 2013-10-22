@@ -22,14 +22,10 @@
 		snappi.PAGER_STYLE = snappi.qs.pager || 'timeline'; // timeline, placeline, page
 		
 		// config image server, to set explicitly, use &host=[hostname]
-		var imgHost = {};		// default is snappi[N].snaphappi.com
-		if (/snaphappi.com$/.test(mixins.Href.hostname())==false){
-			imgHost = {		// use localhost config for img hosting
-				hostname: mixins.Href.hostname('snappi-dev'),
-				subdomains : [''],
-			};
-		}
-		mixins.Href.imgServer(imgHost);
+		mixins.Href.imgServer({		
+			// use localhost config for img hosting
+			hostname: mixins.Href.hostname(),
+		});
 		var timelinePager; 
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 

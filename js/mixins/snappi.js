@@ -178,13 +178,18 @@
 				// init static
 				var defaults = {
 					hostname: 'snaphappi.com',
-					subdomains: ['snappi.','snappi1.','snappi2.'],
+					subdomains: [''],
 					baseurl: '/svc/STAGING/',
 					template: 'http://{{subdomain}}{{hostname}}{{baseurl}}{{stage}}/.thumbs/{{size}}~{{filename}}',
 				};
 				mixins.Href._imgServer = defaults;
 			}
-			var imgServerCfg = mixins.Href._imgServer = _.extend(mixins.Href._imgServer, cfg || {});
+
+			var imgServerCfg = _.extend(mixins.Href._imgServer, cfg || {});
+			if (imgServerCfg.hostname=='snaphappi.com'){
+				imgServerCfg.subdomains = ['snappi.','snappi1.','snappi2.']; 
+			}
+
 			if (typeof imgServerCfg.template == 'string') {
 				var settings = { interpolate : /\{\{(.+?)\}\}/g, };
 				imgServerCfg.template = _.template(imgServerCfg.template, null, settings);

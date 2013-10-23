@@ -238,6 +238,7 @@ var GalleryCollection =	{
 					},
 					complete: function(){
 						collection.trigger('xhr-fetched');
+						if (_.isFunction(options.complete)) options.complete.apply(collection, arguments);
 					},
 				});
 			})

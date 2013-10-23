@@ -214,15 +214,13 @@ var GalleryView = {
 			fetchOptions: helpers.getXhrPivotOptions(this),
 			success: function(collection, response, options){
 				var check;
-				collection.listenTo(collection, 'xhr-fetched', function(){
-					// wait until AFTER layout
-					_.delay(function(){
-						thumb.get(0).scrollIntoView();		
-					},2000)
-				})
 			},
 			complete: function(){
-				thumb.scrollIntoView();
+				that.collection.listenToOnce(that.collection, 'layout-complete', function(){
+					_.defer(function(){
+						thumb.get(0).scrollIntoView();			
+					})
+				})
 			}
 		});
 	},

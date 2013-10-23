@@ -80,6 +80,7 @@ var GalleryView = {
 			var period = $(e.target).parent().data('period');
 			this.timeline.trigger('gotoPeriod', e, {period: period});
 		},  
+		'click .icon-resize-full': 'onZoom',
 	},
 	
 	initialize: function(attributes, options){
@@ -127,9 +128,11 @@ var GalleryView = {
 				this.listenTo(this.timeline, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);
 				this.listenTo(this.timeline, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
 				this.listenTo(this.timeline, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
-				// HACK: because render() is called too soon.
-				// this.timeline.trigger('sync', this.timeline, null);	// sync already fired for cached place_db
-				// this.timeline.trigger('change:active', this.timeline);	// sync already fired for cached place_db
+
+				// NOTE: this only works when the zoom is changed from the Pager View
+				// but the action initiates from the GalleryView or PhotoView
+				this.listenTo(this.timeline, 'change:zoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeZoom);
+				
 				break;
 			case 'page': 
 				break;
@@ -167,6 +170,55 @@ var GalleryView = {
 		} 
 
 		this.render();
+	},
+
+	/**
+	 * Zoom action
+	 * 		- starts from PhotoView .click
+	 *		- somehow trigger change in Pager, models.Placeline??
+	 * 			- why does the Pager need to know? for pageUp/Dn actions
+	 *		- 
+	 	trigger changeZoom event on placeline, 
+	 	see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
+	 	placelineView/Model knows currentZoom/next zoom
+	 	placeline checks e.currentTarget to know where to insert new page
+	*/
+	onZoom: function(e){
+		e.preventDefault();
+		
+		var that = this, 
+			thumb = null,
+			mPhoto = "should be models.Photo",
+			helpers = this['Pager']['Placeline']['GalleryView'],
+			currentZoom = this.timeline.get('currentZoom'); // TODO: get from pager
+
+		thumb = $(e.currentTarget).closest('.thumb');
+		mPhoto = _.findWhere(this.collection.models, { id: thumb.attr('id') });
+		mPhoto = mPhoto.toJSON();
+
+		var pivot = {
+			place_id: mPhoto.place_id,
+			lat: mPhoto.latitude,
+			lon: mPhoto.longitude,
+			accuracy: mPhoto.accuracy,
+			currentZoom: currentZoom,
+			dir: 'zoom-in',
+			pivot: thumb,
+			pivot_model: mPhoto,	// ???: this needed?
+		}
+		that.timeline.trigger('change:zoom', pivot);
+
+		// return;
+		// ??? shouldn't the fetch be triggered by
+		that.collection.fetchZoom(pivot, {
+			fetchOptions: helpers.getXhrPivotOptions(this),
+			success: function(collection, response, options){
+				var check;
+			},
+			complete: function(){
+				var check;
+			}
+		});
 	},
 	
 	render: function(){
@@ -378,7 +430,6 @@ var GalleryView = {
 				}
 				break;
 			case 'placeline': 
-				$pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this);
 				//  using !!resp.assets to detect NEW models from sync
 				var added_models = false,
 					resp_models = _.pluck(resp,'id');
@@ -523,6 +574,7 @@ console.log("addBack() page="+$pageContainer.data('period'));
 		// calls this.collection.howManyPer()
 		// also called from PagerView.changeCount()
 	},
+
 	/*
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen

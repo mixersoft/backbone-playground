@@ -22,6 +22,18 @@ var PlacelineView = {
 			'click .item.next': 'gotoNext',
 			'click .item.link': 'gotoPeriod',
 			'click .period': 'changePeriod',
+			'mouseenter .zoom .item:not(.page-label)': 'highlightOn',
+			'mouseleave .zoom .item:not(.page-label)': 'highlightOff',
+		},
+
+		highlightOn: function(e){
+			var zoom = $(e.currentTarget).text();
+			$('.gallery .body .thumb.'+zoom).addClass('highlight');
+		},
+
+		highlightOff: function(e){
+			var zoom = $(e.currentTarget).text();
+			$('.gallery .body .thumb.'+zoom).removeClass('highlight');
 		},
 		
 		el: '#pager',
@@ -43,6 +55,8 @@ var PlacelineView = {
 		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
 		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 		    
+		    // fetchZoom(pivot Object) triggered by GalleryView.onZoom()
+		    this.listenTo(this.collection, 'fetchZoom', this.renderPivot); 
 		},
 		
 		// triggered by Timeline."sync"

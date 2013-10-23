@@ -2,7 +2,7 @@
 
 var Placeline = {
 // called by GalleryView
-	GalleryView : {
+	'GalleryView' : {
 renderBody: function(container, options){
 	options = options || {};
 	var that = this,
@@ -13,13 +13,12 @@ renderBody: function(container, options){
 	if (container && container.hasClass('page')) {
 		pageContainer = container; // container is already onscreen
 	} else {
-		pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this);
+		pageContainer = Placeline['GalleryView'].getPeriodContainer$(this);
 		if (pageContainer && !(container && container.children().length)) {
 			container = pageContainer; // NO container, user current active pageContainer
 			// page already rendered, no new elements to add, refreshLayout()
 		} else if (pageContainer){
-			// pageContainer.html('');
-			// pageContainer.append(container.children());
+			// pageContainer.html('').append(container.children());
 			stale = true;
 			// page already rendered, AND new elements to add, 
 		}
@@ -32,9 +31,9 @@ renderBody: function(container, options){
 			body = this.$('.body'),
 			placeline = this.timeline.toJSON();
 			
-		$before = this.Pager['Placeline']['GalleryView'].createPeriodContainers$(this, placeline, body);
+		$before = Placeline['GalleryView'].createPeriodContainers$(this, placeline, body);
 		
-		pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this, 'create');
+		pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, 'create');
 		if (!$before) body.prepend(pageContainer);
 		else pageContainer.insertAfter($before);
 		stale = true;
@@ -47,8 +46,20 @@ renderBody: function(container, options){
 			 * the actual layout render statement
 			 */
 			if (pageContainer !== container) {
-				// replace .empty-label
-				if (thumbs.length) pageContainer.html(thumbs);
+				// remove .empty-label
+				if (pageContainer.find('.thumb').length) {
+console.error("WARNING: just testing fetchZoom. pls fix placeline model first!!!");	
+// insert NEW thumbs in sorted order
+var sort = $('<div></div>');
+pageContainer.append(thumbs);
+_.each(this.collection.models, function(model, i,l){
+	var id = model.get('id');
+	sort.append(pageContainer.find('#'+id).parent());
+});
+pageContainer.append(sort.children());
+thumbs = pageContainer.children();
+				} else 
+					pageContainer.html(thumbs);
 			}
 			if (options.scroll !== false) {	// false for hiddenshot, otherwise true
 				that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
@@ -77,11 +88,34 @@ onPlacelineSync : function(placeline, resp, options) {
 		current = settings.periods[active];
 	placeline.set('active', active);	
 },
+/**
+ * change zoom in Placeline model
+ * 		i.e. zoom = country, region, etc.
+ * @param placeline
+ */
+onPlacelineChangeZoom : function( pivot) {
+	// ???: why isn't this instanceof models.Placeline???
+	var placeline = this.timeline,
+		helper = mixins.BackendHelpers['Backend']['Flickr'],
+		newZoom = helper.getZoom(pivot),
+		filters = placeline.get('filters');
+	filters.zoom = newZoom;
+	placeline.set('filters', filters, {silent:true});
+
+
+	// render placeline
+	// trigger collection.fetch
+},
+/**
+ * change "period" in Placeline model, i.e. next place
+ * 		analogous to next page, next time period
+ * @param placeline models.Placeline
+ */
 onPlacelineChangePeriod : function(placeline) {
-	var that = this,
+	var that = this, //  instanceof GalleryView
 		index = placeline.changed && placeline.changed.active || placeline.get('active');
 		isFetched = placeline.helper.isFetched.call(placeline, index),
-		$pageContainer = this.Pager['Placeline']['GalleryView'].getPeriodContainer$(this, placeline, index);
+		$pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, false, index);
 console.log("GalleryView.placeline.'change:active', i="+index);
 
 	if (isFetched && $pageContainer.find('.thumb').length) {
@@ -92,7 +126,7 @@ console.log("GalleryView.placeline.'change:active', i="+index);
 		});
 		return;
 	};
-	var options = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
+	var options = Placeline['GalleryView'].getXhrFetchOptions(this);
 	_.defer(function(){
 		// for bootstrap: finish init before fetch
 		that.collection.fetch({
@@ -123,12 +157,11 @@ templates: {
  * @param index int (optional), default active, unless period index provided 
  */
 getPeriodContainer$: function(that, create, index){
-	var helper = that.Pager['Placeline']['GalleryView'],
-		template = helper.templates.selector_PeriodContainer,
+	var template = Placeline['GalleryView'].templates.selector_PeriodContainer,
 		timeline = that.timeline.helper.getActive(that.timeline, index),
 		$item = that.$( template( timeline) );
 	if (!$item.length && create){
-		template = helper.templates.periodContainer; 
+		template = Placeline['GalleryView'].templates.periodContainer; 
 		$item = $( template( timeline) );
 	}
 	return $item.length ? $item : false;
@@ -178,6 +211,20 @@ createPeriodContainers$: function(that, timeline, $body) {
 	});
 	return $before;
 },
+/**
+ * change zoom, then call getXhrFetchOptions
+ * @param that GalleryView
+ */
+getXhrPivotOptions: function(that, pivot){
+	var options = this.getXhrFetchOptions(that);
+
+	return options;
+},
+/**
+ * get options from click on Pager period, or pageUp/Dn
+ *		NOT the same as click on pivot
+ * @param that GalleryView
+ */
 getXhrFetchOptions: function(that){
 	var timeline = that.timeline,
 		period = timeline.get('periods')[timeline.get('active')],

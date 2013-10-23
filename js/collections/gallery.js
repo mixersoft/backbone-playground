@@ -192,7 +192,61 @@ var GalleryCollection =	{
 			remove: false,
 		};
 		hiddenshotCollection.fetch(hiddenshot_options);
-	}, 
+	},
+
+	/**
+	 * get Zoom and add to Collection, fired by ThumbnailView via click event
+ 	 * @param {Object} pivot = {
+			place_id: mPhoto.place_id,
+			lat: mPhoto.latitude,
+			lon: mPhoto.longitude,
+			accuracy: mPhoto.accuracy,
+			currentZoom: currentZoom,
+			dir: 'zoom-in',
+			pivot: thumb,
+			pivot_model: mPhoto,	// ???: this needed?
+		}
+ 	 * 
+	 */
+	fetchZoom: function(pivot, options) {
+		var collection = this;
+
+		var newZoom = collection.backend.getZoom(pivot);
+		var req_getPlaceInfo = collection.backend.getReq('zoomOut', {
+			place_id:pivot.place_id
+		});
+		var options_placeInfo = req_getPlaceInfo.xhrOptions;
+		options_placeInfo.url = req_getPlaceInfo.url;
+		options_placeInfo.data = req_getPlaceInfo.data;
+		options_placeInfo.cache = true;
+		var success = options.success;
+		$.ajax(options_placeInfo)
+			.success(function(resp){
+				var curPlace = resp.place,
+					options_Zoom = {
+						place_id: curPlace[newZoom].place_id
+					};
+				_.defaults(options_Zoom, options.fetchOptions)
+				// here is the actual flickr fetch
+				collection.fetch({
+					remove: false,
+					data: options_Zoom,
+					success: function(collection, response, options){
+						var check;
+						// insert around options.pivot
+						if (_.isFunction(success)) success.apply(collection, arguments);
+					},
+					complete: function(){
+						collection.trigger('xhr-fetched');
+					},
+				});
+			})
+			.fail(function(){
+				var check;
+			});
+		return;
+	},
+
 	filterFn : {
 		rating: function(model, changed){
 			var remove = model.get('rating') < changed.rating;
@@ -215,6 +269,7 @@ var GalleryCollection =	{
 			options = {}, 
 			keep_models = [],
 			remove_models = [];
+
 		if (changed.fetch==false) {
 			_.filter(that.models,function(model,i,l){
 				// handle filtered.changed.rating='off'
@@ -281,9 +336,17 @@ var GalleryCollection =	{
 			// check if fetch still required
 			// is filter complete after addBack?
 			
-// if ("works to here") return;
-						
-			options = galleryView.timeline_helper.getXhrFetchOptions(galleryView);
+// NOTE: only tested for pager=timeline	
+var pagerHelper;
+switch (snappi.PAGER_STYLE) {
+	case 'timeline': 
+		pagerHelper = galleryView.Pager['Timeline']
+		break;
+	case 'placeline':
+	case 'page':
+	break;
+}			
+			options = pagerHelper['GalleryView'].getXhrFetchOptions(galleryView);
 console.log(options.filters);
 			// fetch() > Coll."sync" > success(), View.addPage() > complete()
 			that.fetch({

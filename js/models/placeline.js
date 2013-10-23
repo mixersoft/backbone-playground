@@ -27,7 +27,7 @@ var PlacelineModel = {
 		periods: [],				// "pages"
 		fetched: {},				// periods fetched in this session
 		filters: {
-			zoom: 'world',
+			zoom: null,		// set in initialize()
 		},				// filters, exclude time
 	},
 	
@@ -47,6 +47,9 @@ var PlacelineModel = {
 	
 	// helper functions
 	helper: {
+		getZoom: function(pivot){
+			return mixins.FlickrPlaces['FlickrApi'].getZoom(pivot);
+		},
 		pickQsDefaults: function(qs){
 			var options, allowed = ['type', 'userid', 'ownerid', 'backend', 'direction'];
 			allowed.unshift(qs);
@@ -177,7 +180,9 @@ var PlacelineModel = {
 		this.xhr_defaults = _.defaults(this.helper.pickQsDefaults(snappi.qs), this.xhr_defaults);
 		// type overrides ownerid
 		if (this.xhr_defaults.type) delete this.xhr_defaults.ownerid;
-		this.set('filters', this.helper.pickQsFilters.call(this, snappi.qs), {silent: true});
+		var filters =  this.helper.pickQsFilters.call(this, snappi.qs);
+		if (!filters.zoom) filters['zoom'] = this.get('currentZoom');
+		this.set('filters', filters, {silent: true});
 	},
 	
 	sync: function(method, model, options) {

@@ -6,7 +6,7 @@ var api = {
 };
 
 var lookups = {
-	zoom : ['country', 'region', 'locality', 'neighbourhood'],
+	zoom : ['world','country', 'region', 'locality', 'neighbourhood'],
 	place_type_id : {
 		neighbourhood: 22,
 		'22': 'neighbourhood',
@@ -93,7 +93,7 @@ var FlickrApi = {
 		var xhrOptions = _.pick(options, ['dataType', 'cache']),
 			xhrDefaults = {
 				// data: req.data,
-				dataType: 'jsonp',
+				dataType: 'json',
 				cache: false,
 			};
 		xhrOptions = _.defaults(xhrOptions, xhrDefaults);	
@@ -288,6 +288,7 @@ var getPlace = function (placeUrl, success){
 };
 
 var exports = {
+	lookups: lookups,
 	initialize: function(force, cb){
 		if (place_db.cached && !force) {
 			console.log("place_db json string="+place_db.cached.substr(0,40));

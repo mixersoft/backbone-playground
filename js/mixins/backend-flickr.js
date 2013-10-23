@@ -17,6 +17,26 @@
 var FlickrApi = mixins.FlickrPlaces['FlickrApi'];
 
 var Flickr = {
+	getZoom: function(pivot) {
+		var lookups = FlickrApi.lookups,
+			i = lookups.zoom.indexOf(pivot.currentZoom);
+		switch (pivot.dir) {
+			case 'zoom-in':
+				i++;
+				break;
+			case 'zoom-out':
+				i--;
+				break;	
+		}
+		if (i<0) i=0;
+		if (i>=lookups.zoom.length) i=lookups.zoom.length-1; 
+		return lookups.zoom[i];
+	},
+	getZoomPlaceIds: function(place_id, options){
+		FlickrApi.getUrl('zoomOut', {
+			place_id: place_id,
+		}, options.success)	
+	},
 	getReq: function(method, options){
 		var req = FlickrApi.getUrl(method, options);
 		return req;
@@ -114,8 +134,8 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 				options.url = req.url;
 
 				var data_with_querystring_overrides = _.extend(_.clone(req.data),_.pick(snappi.qs, _.keys(req.data)));
-				_.each(snappi.qs, function(v,k){
-					if (v=="null") delete data_with_querystring_overrides[k];
+				_.each(data_with_querystring_overrides, function(v,k){
+					if (v==='null') delete data_with_querystring_overrides[k];
 				})
 				options.data = data_with_querystring_overrides; // req.data;
 				options = _.defaults(options, req.xhrOptions);

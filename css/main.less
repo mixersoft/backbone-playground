@@ -121,6 +121,7 @@ body {
   }
 }
 
+
 .gallery .header {
   margin-top: 10px;
   z-index: 100;
@@ -229,6 +230,23 @@ body.wait {
       .btn-icon:hover {
         color: #FFF;
       }
+    }
+  }
+}
+
+
+
+.thumb {
+  &.highlight {
+    /* placeline CSS */
+    &.world {
+      box-shadow: 0 0 4px 4px darkred;
+    }
+    &.country {
+      box-shadow: 0 0 4px 4px darkorange;
+    }
+    &.region {
+      box-shadow: 0 0 4px 4px darkgoldenrod;
     }
   }
 }

@@ -252,3 +252,18 @@ body.wait {
 .fade.fade-out {
     opacity: 0;
 }
+
+
+.thumb.world.highlight {
+    box-shadow: 0 0 4px 4px darkred;
+}
+
+
+.thumb.country.highlight {
+    box-shadow: 0 0 4px 4px darkorange;
+}
+
+
+.thumb.region.highlight {
+    box-shadow: 0 0 4px 4px DarkGoldenRod;
+}

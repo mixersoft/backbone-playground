@@ -208,15 +208,21 @@ var GalleryView = {
 		}
 		that.timeline.trigger('change:zoom', pivot);
 
-		// return;
+		// ???: should we update pivot.currentZoom??
 		// ??? shouldn't the fetch be triggered by
 		that.collection.fetchZoom(pivot, {
 			fetchOptions: helpers.getXhrPivotOptions(this),
 			success: function(collection, response, options){
 				var check;
+				collection.listenTo(collection, 'xhr-fetched', function(){
+					// wait until AFTER layout
+					_.delay(function(){
+						thumb.get(0).scrollIntoView();		
+					},2000)
+				})
 			},
 			complete: function(){
-				var check;
+				thumb.scrollIntoView();
 			}
 		});
 	},

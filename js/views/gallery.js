@@ -80,7 +80,7 @@ var GalleryView = {
 			var period = $(e.target).parent().data('period');
 			this.timeline.trigger('gotoPeriod', e, {period: period});
 		},  
-		'click .icon-resize-full': 'onZoom',
+		'click .zoom-in': 'onZoom',
 	},
 	
 	initialize: function(attributes, options){

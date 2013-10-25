@@ -17,7 +17,7 @@ views.PhotoView = Backbone.View.extend({
 		'click .rotate': 'onRotate',
 		'click .rating': 'onRatingClick',
 		'dblclick img': 'onShowPreview',
-		'click .icon-heart': 'saveModelAsJson',
+		'click .fa-heart': 'saveModelAsJson',
 	},
 	// for creating flickr/placeline bootstrap file
 	saveModelAsJson: function(e){
@@ -105,7 +105,11 @@ views.PhotoView = Backbone.View.extend({
 			that.remove();
 			// trigger ONE pageLayout AFTER remove
 		}, snappi.TIMINGS.thumb_fade_transition, this)
-	}
+	},
+
+	
+
+
 });
 
 

@@ -124,10 +124,11 @@ body {
     margin: 0;
 }
 .gallery .header .pager .pagination .item {
-    border: 1px solid #DDDDDD;
     display: block;
-    font-size: 11.9px;
     line-height: 20px;
+    padding: 0 10px;
+}
+.gallery .header .pager .pagination .page-label {
     padding: 2px 10px;
 }
 .pager.vertical-right {
@@ -192,6 +193,17 @@ body.wait {
 .thumb .meta:hover .btn-icon:hover {
     color: #FFFFFF;
 }
+.thumb.highlight {
+}
+.thumb.highlight.world {
+    box-shadow: 0 0 4px 4px #8B0000;
+}
+.thumb.highlight.country {
+    box-shadow: 0 0 4px 4px #FF8C00;
+}
+.thumb.highlight.region {
+    box-shadow: 0 0 4px 4px #B8860B;
+}
 .shot-wrap:hover .thumb .meta {
     background: none repeat scroll 0 0 rgba(0, 0, 0, 0.6);
     opacity: 1;
@@ -202,13 +214,14 @@ body.wait {
 }
 .pager .pagination {
     color: #0088CC;
+    font-size: 0.8em;
 }
 .pager .pagination .item {
     background-color: #FFFFFF;
-    border: 1px solid #DDDDDD;
 }
 .pager .pagination .page-label {
     background-color: #EEEEEE;
+    border: 1px solid #DDDDDD;
 }
 .pager .pagination .link {
     cursor: pointer;
@@ -251,19 +264,4 @@ body.wait {
 }
 .fade.fade-out {
     opacity: 0;
-}
-
-
-.thumb.world.highlight {
-    box-shadow: 0 0 4px 4px darkred;
-}
-
-
-.thumb.country.highlight {
-    box-shadow: 0 0 4px 4px darkorange;
-}
-
-
-.thumb.region.highlight {
-    box-shadow: 0 0 4px 4px DarkGoldenRod;
 }

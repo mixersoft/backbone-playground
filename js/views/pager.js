@@ -162,7 +162,7 @@
 			// $('body').addClass('wait');
 			_.each(this.$('.item.link'), function(v){
 				if (v.textContent==page) {
-					$(v).html('<i class="icon-spinner icon-spin icon-small" data-page="'+page+'"><i>');
+					$(v).html('<i class="fa fa-2x fa-spinner fa-spin" data-page="'+page+'"><i>');
 					return false;
 				}
 			}, this);

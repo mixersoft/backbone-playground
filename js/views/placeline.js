@@ -137,7 +137,7 @@ var PlacelineView = {
 		// render Loading spinner when page load is requested
 		renderFetching: function(){
 			this.$el.addClass('xhr-fetching');		// use to debounce scroll
-			var spinner = '<i class="icon-spinner icon-spin icon-small"><i>';
+			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
 			var found = PlacelineView.helper.getCurrentPeriod$(this); 
 			if (found) found.html(spinner);
 			else {

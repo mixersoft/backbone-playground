@@ -20,7 +20,7 @@ mixins.Handlebars = {
 		ratingStars: function(rating, options) {
 			var rating = rating || 0, out = "";
 			for(var i=1; i<=5; i++) {
-				out = out + "<icon class='icon-star"+(i>rating ? "-empty" : "")+"'></icon>";
+				out = out + "<i class='fa fa-star"+(i>rating ? "-o" : "")+"'></i>";
 			}
 		  	return out;
 		},

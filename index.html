@@ -235,11 +235,7 @@
 								var state = (active == i) ? 'active' : 'link';
 								state += (fetched[e.period+'-'+currentZoom]===true) ? ' loaded' : '';
 							%>
-							<% if (active == i) { %>
-								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>" title="<%= e.label %>"><icon class="icon-circle"></icon></li>
-							<% } else { %>
-								<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>" title="<%= e.label %>"><icon class="icon-circle"></icon></li>
-							<% } %>
+							<li class="item <%= state %>" data-period="<%= e.period %>" data-zoom="<%= currentZoom %>" title="<%= e.label %>"><icon class="icon-circle"></icon></li>
 						<% }); %>
 						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
 						<li class="item next <%= state %>">&raquo;</li>

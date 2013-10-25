@@ -211,7 +211,7 @@ var GalleryCollection =	{
 	fetchZoom: function(pivot, options) {
 		var collection = this;
 
-		var newZoom = collection.backend.getZoom(pivot);
+		var newZoom = collection.backend.getZoom(pivot.currentZoom, pivot.dir);
 		var req_getPlaceInfo = collection.backend.getReq('zoomOut', {
 			place_id:pivot.place_id
 		});
@@ -227,6 +227,15 @@ var GalleryCollection =	{
 						place_id: curPlace[newZoom].place_id
 					};
 				_.defaults(options_Zoom, options.fetchOptions)
+				// set models.Placeline.active
+				if (options.placeline) {
+					_.find(options.placeline.get('periods'), function(e,i,l){
+						if (e.place_id==options_Zoom.place_id) {
+							options.placeline.set('active',i,{silent:true});
+							return true;
+						}
+					});
+				}
 				// here is the actual flickr fetch
 				collection.fetch({
 					remove: false,

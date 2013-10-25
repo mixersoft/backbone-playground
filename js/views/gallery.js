@@ -128,10 +128,11 @@ var GalleryView = {
 				this.listenTo(this.timeline, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);
 				this.listenTo(this.timeline, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
 				this.listenTo(this.timeline, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
+				this.listenTo(this.timeline, 'change:currentZoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeCurrentZoom);
 
 				// NOTE: this only works when the zoom is changed from the Pager View
 				// but the action initiates from the GalleryView or PhotoView
-				this.listenTo(this.timeline, 'change:zoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeZoom);
+				// this.listenTo(this.timeline, 'change:zoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeZoom);
 				
 				break;
 			case 'page': 
@@ -190,9 +191,10 @@ var GalleryView = {
 			thumb = null,
 			mPhoto = "should be models.Photo",
 			helpers = this['Pager']['Placeline']['GalleryView'],
-			currentZoom = this.timeline.get('currentZoom'); // TODO: get from pager
+			currentZoom = this.timeline.get('currentZoom'); // TODO: get from data-zoom
 
 		thumb = $(e.currentTarget).closest('.thumb');
+		var pageDataZoom = thumb.closest('.page').data('zoom');
 		mPhoto = _.findWhere(this.collection.models, { id: thumb.attr('id') });
 		mPhoto = mPhoto.toJSON();
 
@@ -201,28 +203,34 @@ var GalleryView = {
 			lat: mPhoto.latitude,
 			lon: mPhoto.longitude,
 			accuracy: mPhoto.accuracy,
-			currentZoom: currentZoom,
+			currentZoom: pageDataZoom,	// timeline zoom
+			// pageDataZoom: pageDataZoom,
 			dir: 'zoom-in',
 			pivot: thumb,
 			pivot_model: mPhoto,	// ???: this needed?
 		}
-		that.timeline.trigger('change:zoom', pivot);
 
-		// ???: should we update pivot.currentZoom??
-		// ??? shouldn't the fetch be triggered by
-		that.collection.fetchZoom(pivot, {
-			fetchOptions: helpers.getXhrPivotOptions(this),
-			success: function(collection, response, options){
-				var check;
-			},
-			complete: function(){
-				that.collection.listenToOnce(that.collection, 'layout-complete', function(){
-					_.defer(function(){
-						thumb.get(0).scrollIntoView();			
+		var success = function(){
+			// fetch photos to reflect currentZoom
+			// delete pivot['pageDataZoom'];  // pivot.currentZoom updated by zoomOnPivot
+			that.collection.fetchZoom(pivot, {
+				placeline: that.timeline,
+				fetchOptions: helpers.getXhrPivotOptions(that),
+				success: function(collection, response, options){
+					var check;
+				},
+				complete: function(){
+					that.collection.listenToOnce(that.collection, 'layout-complete', function(){
+						_.defer(function(){
+							thumb.get(0).scrollIntoView();			
+						})
 					})
-				})
-			}
-		});
+				}
+			});
+		}
+		that.listenToOnce(that.timeline, 'sync:currentZoom', success)
+		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.timeline, pivot);
+
 	},
 	
 	render: function(){

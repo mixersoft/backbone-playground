@@ -32,7 +32,6 @@ renderBody: function(container, options){
 			placeline = this.timeline.toJSON();
 			
 		$before = Placeline['GalleryView'].createPeriodContainers$(this, placeline, body);
-		
 		pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, 'create');
 		if (!$before) body.prepend(pageContainer);
 		else pageContainer.insertAfter($before);
@@ -89,23 +88,50 @@ onPlacelineSync : function(placeline, resp, options) {
 	placeline.set('active', active);	
 },
 /**
- * change zoom in Placeline model
+ * change zoom in Placeline model around pivot
  * 		i.e. zoom = country, region, etc.
- * @param placeline
+ * 	NOTE: the Placeline model determines the next zoom level based on pivot
+ *		external objects must wait until this is known by listenTo 'sync:currentZoom'
+ * @param placeline models.Placeline
+ * @param pivot Object
  */
-onPlacelineChangeZoom : function( pivot) {
+zoomOnPivot : function( placeline, pivot) {
 	// ???: why isn't this instanceof models.Placeline???
-	var placeline = this.timeline,
-		helper = mixins.BackendHelpers['Backend']['Flickr'],
-		newZoom = helper.getZoom(pivot),
-		filters = placeline.get('filters');
-	filters.zoom = newZoom;
-	placeline.set('filters', filters, {silent:true});
-
-
-	// render placeline
-	// trigger collection.fetch
+	var helper = mixins.BackendHelpers['Backend']['Flickr'],
+		newZoom = helper.getZoom(pivot.currentZoom, pivot.dir),
+		filters = _.clone(placeline.get('filters'));
+	if (filters.zoom == newZoom) {
+		placeline.trigger('sync:currentZoom')
+	} else {
+		filters.zoom = newZoom;
+		placeline.set('filters', filters, {silent:true});
+		placeline.set('currentZoom', newZoom);
+	}
 },
+
+// from listenTo 'change:filters'
+onPlacelineChangeFilter : function(placeline, changed) {
+	// this.collection.filterChanged(changed, this)	// for timeline ratings only
+	placeline.fetch(changed);
+},
+
+// from listenTo 'change:currentZoom'
+onPlacelineChangeCurrentZoom : function(placeline, changed) {
+	// this.collection.filterChanged(changed, this)	// for timeline ratings only
+	if (true) {
+		placeline.fetch({
+			zoom:changed,
+			success: function(){
+				// set this.model.active to correct value
+				placeline.trigger('sync:currentZoom')
+				// if (_.isFunction(cb)) cb(placeline);
+			}
+		});
+	} else {
+		// placeline.trigger('sync:currentZoom','did not trigger fetch');
+	}
+},
+
 /**
  * change "period" in Placeline model, i.e. next place
  * 		analogous to next page, next time period
@@ -141,9 +167,6 @@ console.log("GalleryView.placeline.'change:active', i="+index);
 		});
 	});
 	return;
-},
-onPlacelineChangeFilter : function(placeline, changed) {
-	this.collection.filterChanged(changed, this)
 },
 
 

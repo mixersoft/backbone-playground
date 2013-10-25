@@ -51,13 +51,13 @@ var PlacelineModel = {
 			return mixins.FlickrPlaces['FlickrApi'].getZoom(pivot);
 		},
 		pickQsDefaults: function(qs){
-			var options, allowed = ['type', 'userid', 'ownerid', 'backend', 'direction'];
+			var options, allowed = ['zoom','currentZoom'];
 			allowed.unshift(qs);
 			options = _.pick.apply(this, allowed );
 			return options;
 		},
 		pickQsFilters: function(qs){
-			var options, allowed = ['zoom', 'show-hidden', 'rating', 'from', 'to'];
+			var options, allowed = ['zoom'];
 			allowed.unshift(qs);
 			options = _.defaults(_.pick.apply(this, allowed ), this.defaults.filters);
 			if (options.rating) options.rating = parseFloat(options.rating);
@@ -176,8 +176,13 @@ var PlacelineModel = {
 	},
 	
 	initialize: function(attributes, options){
+		attributes = _.defaults( this.helper.pickQsDefaults(snappi.qs) , attributes)
+		if (attributes['zoom']) {
+			attributes['currentZoom'] = attributes['zoom'];
+			delete attributes['zoom'];
+		}
 		this.set( attributes );
-		this.xhr_defaults = _.defaults(this.helper.pickQsDefaults(snappi.qs), this.xhr_defaults);
+		this.xhr_defaults = _.defaults(this.xhr_defaults);
 		// type overrides ownerid
 		if (this.xhr_defaults.type) delete this.xhr_defaults.ownerid;
 		var filters =  this.helper.pickQsFilters.call(this, snappi.qs);

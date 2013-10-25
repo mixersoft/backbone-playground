@@ -17,10 +17,10 @@
 var FlickrApi = mixins.FlickrPlaces['FlickrApi'];
 
 var Flickr = {
-	getZoom: function(pivot) {
+	getZoom: function(zoom, dir) {
 		var lookups = FlickrApi.lookups,
-			i = lookups.zoom.indexOf(pivot.currentZoom);
-		switch (pivot.dir) {
+			i = lookups.zoom.indexOf(zoom);
+		switch (dir) {
 			case 'zoom-in':
 				i++;
 				break;
@@ -32,6 +32,7 @@ var Flickr = {
 		if (i>=lookups.zoom.length) i=lookups.zoom.length-1; 
 		return lookups.zoom[i];
 	},
+	// calls 'flickr.places.getInfo' to get place_ids at coarser zoom levels
 	getZoomPlaceIds: function(place_id, options){
 		FlickrApi.getUrl('zoomOut', {
 			place_id: place_id,
@@ -41,6 +42,8 @@ var Flickr = {
 		var req = FlickrApi.getUrl(method, options);
 		return req;
 	},
+	// get photos for all localities in placeline.model using consecutive XHR requests 
+	// for a given "country" listed in placeUrls, see flickr=places.js
 	getLocalities: function(method, model, options) {
 		var that = this,
 			data = options.data,
@@ -90,6 +93,15 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 				break;
 		}
 	},
+	// for easier visual evaluation. change tags by zoom level
+	setTagByZoom: function(options){
+		switch(options.filters.zoom){
+			case 'world': options.tags = 'landmarks'; break;
+			case 'country': options.tags = 'children'; break;
+			case 'region': options.tags = 'food'; break;
+			case 'locality': options.tags = 'null'; break;
+		}
+	},
 	sync: function(method, model, options) {
 		// timeline fetch paging does not follow asset paging
 		var that = this;
@@ -105,9 +117,9 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 					break;
 				}
 				if (false) {
-					options.dataType = 'json';
-					Flickr.getLocalities.call(this, method, model, options);
-					break;
+					// options.dataType = 'json';
+					// Flickr.getLocalities.call(this, method, model, options);
+					// break;
 				} // continue below
 			default:
 				options.data.page = 1;
@@ -130,10 +142,14 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 						cache: true,
 					},
 					flickrOptions = _.defaults(options.data, flickrDefaults, xhrDefaults);
+
+				Flickr.setTagByZoom(flickrOptions);
+
 				var req = FlickrApi.getUrl('photos', flickrOptions);
 				options.url = req.url;
 
 				var data_with_querystring_overrides = _.extend(_.clone(req.data),_.pick(snappi.qs, _.keys(req.data)));
+				// delete keys with value=='null'
 				_.each(data_with_querystring_overrides, function(v,k){
 					if (v==='null') delete data_with_querystring_overrides[k];
 				})

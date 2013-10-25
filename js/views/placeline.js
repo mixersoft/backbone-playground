@@ -54,9 +54,10 @@ var PlacelineView = {
 		    this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
 		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
 		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
+		    this.listenTo(this.collection, 'change:period', function(){
+
+		    });
 		    
-		    // fetchZoom(pivot Object) triggered by GalleryView.onZoom()
-		    this.listenTo(this.collection, 'fetchZoom', this.renderPivot); 
 		},
 		
 		// triggered by Timeline."sync"
@@ -75,7 +76,7 @@ var PlacelineView = {
 						currentZoom: model.currentZoom,
 						currentPeriod: model.periods[model.active].period
 					},
-					selector = _.template('.page .item.period-<%= currentPeriod %>[data-zoom="<%= currentZoom %>"]', data),
+					selector = _.template('.page .item[data-period="<%= currentPeriod %>"][data-zoom="<%= currentZoom %>"]', data),
 					$item = that.$(selector);
 				return $item.length ? $item : false;
 			},
@@ -139,9 +140,20 @@ var PlacelineView = {
 			var spinner = '<i class="icon-spinner icon-spin icon-small"><i>';
 			var found = PlacelineView.helper.getCurrentPeriod$(this); 
 			if (found) found.html(spinner);
+			else {
+				// periods not created for new zoom yet
+				var zoom = this.model.get('currentZoom');
+				_.find(this.$('.zoom .link'), function(item){
+					if ($(item).text() == zoom) {
+						$(item).append(spinner);
+						return true;
+					}
+				});
+			}
 		},
 		
 		// render Loading spinner when page load is requested
+		// listenTo 'xhr-fetching'
 		renderFetched: function(){
 			this.renderState();
 			_.delay(function(that){

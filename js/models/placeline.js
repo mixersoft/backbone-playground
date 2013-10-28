@@ -82,8 +82,12 @@ var PlacelineModel = {
 		setFetched: function(that, i){
 			var model = that.toJSON();
 			if (i!==0) i = i || model.active;
-			// set by reference, "deep-copy" attr 
-			model.fetched[PlacelineModel.helper.getFetchedKey(i, model)] = true;
+			if (model.currentZoom == model.periods[i].place_type) {
+				// set by reference, "deep-copy" attr 
+				model.fetched[PlacelineModel.helper.getFetchedKey(i, model)] = true;
+			} else {
+				console.error('setFetched place_type mismatch. changing zoom????');
+			}
 			return model;
 		},
 		getFetchedKey: function(i, model){
@@ -129,7 +133,7 @@ var PlacelineModel = {
 			currentZoom: response.place_type,
 			direction: 'asc',
 			periods: [],
-			fetched: {},		// should fetch ALL periods
+			fetched:  this.get('fetched'),		// merge Fetched b/w XHR
 			filters: {
 				// zoom: response.place_type,  // same as currentZoom
 			},
@@ -188,6 +192,12 @@ var PlacelineModel = {
 		// _.sortBy(newPeriods, 'longitude');
 		return newPeriods;
 	},
+
+	mergeFetched: function(newFetched){
+		var existing = this.get('fetched');
+		_.extend(newFetched, existing);
+		return newFetched;
+	},
 	
 	initialize: function(attributes, options){
 		attributes = _.defaults( this.helper.pickQsDefaults(snappi.qs) , attributes)
@@ -212,7 +222,6 @@ var PlacelineModel = {
 				var zoom = model.get('currentZoom'), 
 					attrs = FlickrApi.getPlaces(zoom, {}, function(attrs){
 						if (options.success) options.success.apply(model, arguments)
-						model.trigger('sync', model);					
 					});	
 				break;
 			default:

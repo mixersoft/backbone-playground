@@ -18,10 +18,10 @@ var extend = function(classDef){
 var PlacelineView = {
 
 		events: {
-			'click .item.prev': 'gotoPrev',
-			'click .item.next': 'gotoNext',
-			'click .item.link': 'gotoPeriod',
-			'click .period': 'changePeriod',
+			'click .page .item.prev': 'gotoPrev',
+			'click .page .item.next': 'gotoNext',
+			'click .page .item.link': 'gotoPeriod',
+			'click .zoom .item.link': 'renderZoom',
 			'mouseenter .zoom .item:not(.page-label)': 'highlightOn',
 			'mouseleave .zoom .item:not(.page-label)': 'highlightOff',
 		},
@@ -55,9 +55,8 @@ var PlacelineView = {
 		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
 		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 		    this.listenTo(this.collection, 'change:period', function(){
-
+		    		// disabled for Placeline. no perpage
 		    });
-		    
 		},
 		
 		// triggered by Timeline."sync"
@@ -155,17 +154,29 @@ var PlacelineView = {
 		// render Loading spinner when page load is requested
 		// listenTo 'xhr-fetching'
 		renderFetched: function(){
+console.info("0 Timeline.renderFetched");				
 			this.renderState();
 			_.delay(function(that){
 				// console.warn("remove xhr-fetching");
+console.info("0 Timeline. delayed remove class xhr-fetching");					
 				that.$el.removeClass('xhr-fetching');		// use to debounce scroll
 			}, snappi.TIMINGS.xhr_ui_debounce, this);
 		},
 		
 		// render timeline, show fetched periods
 		renderState: function(){
-			var model = this.model.helper.setFetched(this.model); 
+console.info("0 Timeline.renderState");
+
+			var model = this.model.toJSON();
+			this.model.helper.setFetched(this.model); 
 			this.$el.html(this.template(model));
+
+			// update GalleryView .body .pages
+			var currentZoom = model.currentZoom,
+				$pages = $('.body .page');
+			$pages.removeClass('zoom-inactive zoom-active');
+			$pages.filter('.page:not([data-zoom="'+currentZoom+'"])').addClass('zoom-inactive');
+			$pages.filter('.page[data-zoom="'+currentZoom+'"]').addClass('zoom-active');
 		},
 		
 		/**
@@ -234,8 +245,47 @@ var PlacelineView = {
 			}
 			this.model.set('active', index);
 		},
+		// 'click .zoom .item.link'
+		renderZoom: function(e){
+			var that = this,
+				old = this.model.toJSON(),
+				currentZoom;
+			if (e) {
+				e.preventDefault();
+				currentZoom =  $(e.currentTarget).text();
+			} else currentZoom =  old.place_type;
 
-		changePeriod: function (e) {
+			this.model.set('currentZoom', currentZoom, {silent:true});
+
+			// get active .page for currentZoom
+			var active = false,
+				old_place_id = old.periods[old.active].place_id
+				updated = _.defaults({currentZoom:currentZoom}, old);
+
+			var found = _.find(old.periods, function(elem,i,l){
+				if (elem.place_type == currentZoom && active===false) {
+					var isFetched = that.model.helper.isFetched(i, updated)
+					if (isFetched) 
+						active = i;
+				}
+				if (active!==false 
+					&&  elem.place_type == currentZoom
+					&&  elem.place_id==old_place_id
+				) {
+					active = i;
+					return true;
+				}
+			});
+			if (!active ) {
+				console.error("we should have found an active period");
+			}
+			this.renderState();
+			_.defer(function(){	// scroll to
+				if (active) that.model.set('active', active);
+			});
+		},
+		// .perpage removed for Placeline
+		XXXchangePeriod: function (e) {
 			e.preventDefault();
 			var per = $(e.currentTarget).attr('title');
 			this.collection.rendered = {};		// reset

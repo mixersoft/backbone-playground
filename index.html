@@ -225,22 +225,6 @@
 			</script>
 			<script id="Placeline" class='underscore' type="text/html">
 				<div class='pagination pagination-centered pagination-small'>
-					<ul class='page'>
-						<li class="item page-label">Place</li>
-						<% var state = (active == 0) ? 'disabled' : 'link'; %> 
-						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
-						<% _.each (periods, function (e,i,l) { 
-								var isFetched = fetched[e.period+'-'+e.place_type];
-								var state = (active == i) ? 'active' : 'link';
-								state += isFetched ? ' loaded' : '';
-								var icon = isFetched ? 'fa-dot-circle-o' : 'fa-circle-o' ;
-							%>
-							<li class="item <%= state %>" data-period="<%= e.period %>" data-zoom="<%= e.place_type %>" title="<%= e.label %>"><i class="fa fa-2x <%= icon %>"></i></li>
-						<% }); %>
-						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
-						<li class="item next <%= state %>"><i class='fa fa-2x fa-arrow-circle-down'></i></li>
-					</ul>
-					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
 					<ul class='zoom'>
 						<li class="item page-label">Zoom</li>
 						<% _.each (['world','country', 'region', 'locality'], function (p,i) { %>
@@ -250,6 +234,23 @@
 								<li class='item link'><%= p %></li>
 							<% } %>
 						<% }); %>
+					</ul>
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<ul class='page'>
+						<li class="item page-label">Place</li>
+						<% var state = (active == 0) ? 'disabled' : 'link'; %> 
+						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
+						<% _.each (periods, function (e,i,l) { 
+								var isFetched = fetched[e.period+'-'+e.place_type];
+								var state = (active == i) ? 'active' : 'link';
+								state += isFetched ? ' loaded' : '';
+								var icon = isFetched ? 'fa-dot-circle-o' : 'fa-circle-o' ;
+								var zoomActive = e.place_type==currentZoom ? 'zoom-active' : 'zoom-inactive';
+							%>
+							<li class="item <%= state %> <%= zoomActive %>" data-period="<%= e.period %>" data-zoom="<%= e.place_type %>" title="<%= e.label %>"><i class="fa fa-2x <%= icon %>"></i></li>
+						<% }); %>
+						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
+						<li class="item next <%= state %>"><i class='fa fa-2x fa-arrow-circle-down'></i></li>
 					</ul>
 				</div>
 			</script>

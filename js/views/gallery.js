@@ -220,11 +220,14 @@ var GalleryView = {
 				fetchOptions: fetchOptions,
 				success: function(collection, response, options){
 					var check;
+console.info("0 Timeline.'sync:currentZoom' success");					
 				},
 				complete: function(){
 					that.collection.listenToOnce(that.collection, 'layout-complete', function(){
 						_.defer(function(){
-							thumb.get(0).scrollIntoView();			
+							// hide/filter GView based on currentZoom
+							// should be AFTER Timeline.sync
+							// thumb.get(0).scrollIntoView();			
 						})
 					})
 				}

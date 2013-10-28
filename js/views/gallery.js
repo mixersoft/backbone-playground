@@ -209,13 +209,15 @@ var GalleryView = {
 			pivot: thumb,
 			pivot_model: mPhoto,	// ???: this needed?
 		}
+		// bind 'sync:currentZoom'
+		var success = function(places){
+			// add request to Placeline.periods
+			var fetchOptions = helpers.getXhrPivotOptions(that);
 
-		var success = function(){
 			// fetch photos to reflect currentZoom
-			// delete pivot['pageDataZoom'];  // pivot.currentZoom updated by zoomOnPivot
 			that.collection.fetchZoom(pivot, {
 				placeline: that.timeline,
-				fetchOptions: helpers.getXhrPivotOptions(that),
+				fetchOptions: fetchOptions,
 				success: function(collection, response, options){
 					var check;
 				},

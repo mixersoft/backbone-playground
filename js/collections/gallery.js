@@ -222,19 +222,42 @@ var GalleryCollection =	{
 		var success = options.success;
 		$.ajax(options_placeInfo)
 			.success(function(resp){
-				var curPlace = resp.place,
+				var curPlaces = resp.place,
+					curPlace = curPlaces[newZoom],
 					options_Zoom = {
-						place_id: curPlace[newZoom].place_id
+						place_id: curPlace.place_id
 					};
 				_.defaults(options_Zoom, options.fetchOptions)
 				// set models.Placeline.active
 				if (options.placeline) {
-					_.find(options.placeline.get('periods'), function(e,i,l){
+					var periods = options.placeline.get('periods');
+					var found = _.find(options.placeline.get('periods'), function(e,i,l){
 						if (e.place_id==options_Zoom.place_id) {
+							found = i;
 							options.placeline.set('active',i,{silent:true});
 							return true;
 						}
 					});
+					if (!found) {
+						console.warn("no period found for zoom="+ newZoom +", place_id="+curPlace.place_id);
+						// ex: zoomOnPivot massachusetts, but not in place_db['region']
+						// HACK: add MISSING period to Placeline.periods
+						var addPeriod = {
+							longitude: curPlace.longitude,
+							place_id: curPlace.place_id, 
+							period: curPlace.place_id, 
+							place_type: newZoom,
+							place_type_id: mixins.FlickrPlaces['FlickrApi'].lookups.place_type_id[newZoom],
+							latitude: curPlace.latitude,
+							label: curPlace._content,
+							name: curPlace._content,
+						}
+						// TODO: trigger Placeline.trigger('insertPeriod', addPeriod)
+						var insertAt = _.sortedIndex(periods, addPeriod, 'longitude');
+						periods.splice(insertAt, 0, addPeriod);
+						options.placeline.set('active',insertAt,{silent:true});
+						options.placeline.trigger('sync', options.placeline);
+					}
 				}
 				// here is the actual flickr fetch
 				collection.fetch({

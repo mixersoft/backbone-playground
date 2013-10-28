@@ -141,7 +141,7 @@ var PlacelineModel = {
 			switch(attr.currentZoom) {
 				case 'world':
 				case 'country': 
-				// case 'region':
+				case 'region':
 					index = keys.indexOf(e.name);
 					try {
 						attr.periods[index].localities.push({
@@ -162,6 +162,7 @@ var PlacelineModel = {
 						attr.periods.push(o); 	
 					}
 					break;
+				// case 'region':	
 				default:
 					attr.periods[i]['label'] = e.name;
 					attr.periods[i]['period'] = e.place_id;
@@ -172,7 +173,20 @@ var PlacelineModel = {
 		_.each(attr.periods, function(e,i,l){
 			e.localities = _.sortBy(e.localities, 'locality_longitude');
 		})
+
+
+		// make Placeline.periods behave like history
+		// MERGE with EXISTING periods 
+		attr.periods = this.mergePeriods(attr.periods);
+
 		return attr;
+	},
+
+	mergePeriods: function(newPeriods){
+		var existing = this.get('periods');
+		newPeriods = newPeriods.concat(existing);
+		// _.sortBy(newPeriods, 'longitude');
+		return newPeriods;
 	},
 	
 	initialize: function(attributes, options){

@@ -101,11 +101,14 @@ zoomOnPivot : function( placeline, pivot) {
 		newZoom = helper.getZoom(pivot.currentZoom, pivot.dir),
 		filters = _.clone(placeline.get('filters'));
 	if (filters.zoom == newZoom) {
-		placeline.trigger('sync:currentZoom')
+		// pivot is same level as currentZoom
+		var arguments = "what should this be?";
+		placeline.trigger('sync:currentZoom', arguments)
 	} else {
 		filters.zoom = newZoom;
 		placeline.set('filters', filters, {silent:true});
 		placeline.set('currentZoom', newZoom);
+		// trigger('sync:currentZoom') when complete
 	}
 },
 
@@ -121,10 +124,9 @@ onPlacelineChangeCurrentZoom : function(placeline, changed) {
 	if (true) {
 		placeline.fetch({
 			zoom:changed,
-			success: function(){
+			success: function(placeline, resp, options){
 				// set this.model.active to correct value
-				placeline.trigger('sync:currentZoom')
-				// if (_.isFunction(cb)) cb(placeline);
+				placeline.trigger('sync:currentZoom', arguments)
 			}
 		});
 	} else {
@@ -268,7 +270,9 @@ getXhrFetchOptions: function(that){
 		options.place_id = period.place_id;
 		options.longitude = period.longitude;
 		options.localities = period.localities;
-	}	
+	} else {
+		console.warn('Placeline fetch() without matching period');
+	}
 	options = _.defaults(options, timeline.xhr_defaults);
 	return options;
 },

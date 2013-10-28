@@ -265,3 +265,13 @@ body.wait {
 .fade.fade-out {
     opacity: 0;
 }
+
+
+
+.pager .pagination .item[data-zoom="country"] {
+    color: #FF8C00;
+}
+
+.pager .pagination .item[data-zoom="region"] {
+    color: #B8860B;
+}

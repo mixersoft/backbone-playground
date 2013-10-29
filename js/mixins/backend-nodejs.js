@@ -35,8 +35,8 @@ var Nodejs = {
 				defaults = {
 					sort: 'score',
 					direction : 'desc',
-					userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
-					ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
+					userid: snappi.qs.owner || '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
+					ownerid: snappi.qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
 				},
 				request = _.defaults(qs, defaults);
 				request.page = collection.currentPage;		

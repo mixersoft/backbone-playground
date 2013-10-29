@@ -28,8 +28,8 @@ var TimelineModel = {
 	
 	xhr_defaults: {
 		direction: 'desc',
-		userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
-		ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
+		userid:  '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
+		ownerid: '51cad9fb-d130-4150-b859-1bd00afc6d44', // melissa-ben
 	}, 
 	
 	urlRoot: function() {

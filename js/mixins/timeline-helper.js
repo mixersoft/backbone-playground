@@ -192,7 +192,12 @@ getXhrFetchOptions: function(that){
 		options.from = period.from;
 		options.to = period.to;	
 	}	
-	options = _.defaults(options, timeline.xhr_defaults);
+	var aaa_options = _.pick(snappi.qs, ['role','owner', 'ownerid','userid','type']);
+	if (aaa_options.owner) {
+		options.userid = options.ownerid = aaa_options.owner;
+		delete aaa_options.owner;
+	}
+	options = _.defaults(options, aaa_options, timeline.xhr_defaults);
 	return options;
 },
 

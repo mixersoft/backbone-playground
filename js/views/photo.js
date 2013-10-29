@@ -17,8 +17,24 @@ views.PhotoView = Backbone.View.extend({
 		'click .rotate': 'onRotate',
 		'click .rating': 'onRatingClick',
 		'dblclick img': 'onShowPreview',
+		'click .fa-heart': 'saveModelAsJson',
 	},
-	
+	// for creating flickr/placeline bootstrap file
+	saveModelAsJson: function(e){
+		e.preventDefault();
+		$(e.target).closest('.thumb').addClass('save');
+		var models = snappi.collections.paginatedGallery.models,
+			ids = [], 
+			asJson=[];
+		_.each($('.gallery .thumb.save'), function(e){
+			var id = $(e).attr('id');
+			var model = _.findWhere(models, {id:id})
+			model = model.toJSON();
+			model.zoom = 'world';
+			asJson.push(model);
+		})
+		$("#json").html(JSON.stringify(asJson));
+	},
 	initialize: function(options){
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
@@ -89,7 +105,11 @@ views.PhotoView = Backbone.View.extend({
 			that.remove();
 			// trigger ONE pageLayout AFTER remove
 		}, snappi.TIMINGS.thumb_fade_transition, this)
-	}
+	},
+
+	
+
+
 });
 
 

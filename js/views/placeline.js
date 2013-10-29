@@ -8,33 +8,45 @@
  */
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	views.TimelineView = Backbone.View.extend(
+	views.PlacelineView = Backbone.View.extend(
 		// add mixins
 		classDef
 	);
 }
 
 
-var TimelineView = {
+var PlacelineView = {
 
 		events: {
-			'click .item.prev': 'gotoPrev',
-			'click .item.next': 'gotoNext',
-			'click .item.link': 'gotoPeriod',
-			'click .period': 'changePeriod',
+			'click .page .item.prev': 'gotoPrev',
+			'click .page .item.next': 'gotoNext',
+			'click .page .item.link': 'gotoPeriod',
+			'click .zoom .item.link': 'renderZoom',
+			'mouseenter .zoom .item:not(.page-label)': 'highlightOn',
+			'mouseleave .zoom .item:not(.page-label)': 'highlightOff',
+		},
+
+		highlightOn: function(e){
+			var zoom = $(e.currentTarget).text();
+			$('.gallery .body .thumb.'+zoom).addClass('highlight');
+		},
+
+		highlightOff: function(e){
+			var zoom = $(e.currentTarget).text();
+			$('.gallery .body .thumb.'+zoom).removeClass('highlight');
 		},
 		
 		el: '#pager',
 
 		// tagName: 'aside',
 		
-		template_source: "#markup #Timeline.underscore",
+		template_source: "#markup #Placeline.underscore",
 
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
 				var source = $(this.template_source).html();	
 				// compile once, add to Class
-				views.TimelineView.prototype.template = _.template(source);
+				views.PlacelineView.prototype.template = _.template(source);
 		    }
 		    this.listenTo(this.model, 'gotoPeriod', this.gotoPeriod);
 		    this.listenTo(this.model, 'sync', this.render);
@@ -42,7 +54,9 @@ var TimelineView = {
 		    this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
 		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
 		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
-		    
+		    this.listenTo(this.collection, 'change:period', function(){
+		    		// disabled for Placeline. no perpage
+		    });
 		},
 		
 		// triggered by Timeline."sync"
@@ -61,7 +75,7 @@ var TimelineView = {
 						currentZoom: model.currentZoom,
 						currentPeriod: model.periods[model.active].period
 					},
-					selector = _.template('.page .item.period-<%= currentPeriod %>[data-zoom="<%= currentZoom %>"]', data),
+					selector = _.template('.page .item[data-period="<%= currentPeriod %>"][data-zoom="<%= currentZoom %>"]', data),
 					$item = that.$(selector);
 				return $item.length ? $item : false;
 			},
@@ -123,23 +137,46 @@ var TimelineView = {
 		renderFetching: function(){
 			this.$el.addClass('xhr-fetching');		// use to debounce scroll
 			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
-			var found = TimelineView.helper.getCurrentPeriod$(this); 
+			var found = PlacelineView.helper.getCurrentPeriod$(this); 
 			if (found) found.html(spinner);
+			else {
+				// periods not created for new zoom yet
+				var zoom = this.model.get('currentZoom');
+				_.find(this.$('.zoom .link'), function(item){
+					if ($(item).text() == zoom) {
+						$(item).append(spinner);
+						return true;
+					}
+				});
+			}
 		},
 		
 		// render Loading spinner when page load is requested
+		// listenTo 'xhr-fetching'
 		renderFetched: function(){
+console.info("0 Timeline.renderFetched");				
 			this.renderState();
 			_.delay(function(that){
 				// console.warn("remove xhr-fetching");
+console.info("0 Timeline. delayed remove class xhr-fetching");					
 				that.$el.removeClass('xhr-fetching');		// use to debounce scroll
 			}, snappi.TIMINGS.xhr_ui_debounce, this);
 		},
 		
 		// render timeline, show fetched periods
 		renderState: function(){
-			var model = this.model.helper.setFetched(this.model); 
+console.info("0 Timeline.renderState");
+
+			var model = this.model.toJSON();
+			this.model.helper.setFetched(this.model); 
 			this.$el.html(this.template(model));
+
+			// update GalleryView .body .pages
+			var currentZoom = model.currentZoom,
+				$pages = $('.body .page');
+			$pages.removeClass('zoom-inactive zoom-active');
+			$pages.filter('.page:not([data-zoom="'+currentZoom+'"])').addClass('zoom-inactive');
+			$pages.filter('.page[data-zoom="'+currentZoom+'"]').addClass('zoom-active');
 		},
 		
 		/**
@@ -190,7 +227,7 @@ var TimelineView = {
 		gotoPeriod: function (e, where) {
 			e.preventDefault();
 			var index, 
-				label = $(e.target).text(),
+				label = $(e.currentTarget).attr('title'),
 				model_attr = this.model.toJSON(),
 				where = where || {label: label};
 				period = _.findWhere(model_attr.periods, where);
@@ -208,10 +245,49 @@ var TimelineView = {
 			}
 			this.model.set('active', index);
 		},
+		// 'click .zoom .item.link'
+		renderZoom: function(e){
+			var that = this,
+				old = this.model.toJSON(),
+				currentZoom;
+			if (e) {
+				e.preventDefault();
+				currentZoom =  $(e.currentTarget).text();
+			} else currentZoom =  old.place_type;
 
-		changePeriod: function (e) {
+			this.model.set('currentZoom', currentZoom, {silent:true});
+
+			// get active .page for currentZoom
+			var active = false,
+				old_place_id = old.periods[old.active].place_id
+				updated = _.defaults({currentZoom:currentZoom}, old);
+
+			var found = _.find(old.periods, function(elem,i,l){
+				if (elem.place_type == currentZoom && active===false) {
+					var isFetched = that.model.helper.isFetched(i, updated)
+					if (isFetched) 
+						active = i;
+				}
+				if (active!==false 
+					&&  elem.place_type == currentZoom
+					&&  elem.place_id==old_place_id
+				) {
+					active = i;
+					return true;
+				}
+			});
+			if (!active ) {
+				console.error("we should have found an active period");
+			}
+			this.renderState();
+			_.defer(function(){	// scroll to
+				if (active) that.model.set('active', active);
+			});
+		},
+		// .perpage removed for Placeline
+		XXXchangePeriod: function (e) {
 			e.preventDefault();
-			var per = $(e.target).text();
+			var per = $(e.currentTarget).attr('title');
 			this.collection.rendered = {};		// reset
 			this.collection.trigger('repaginate', per);
 			this.collection.howManyPer(per, { merge: true, remove: false });
@@ -225,7 +301,7 @@ var TimelineView = {
 	};
 	
 // put it all together at the bottom
-extend(TimelineView);		
+extend(PlacelineView);		
 	
 	
 })( snappi.views, snappi.mixins );

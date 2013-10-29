@@ -67,7 +67,8 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 		 * 		note: items may be NEW IMGs rendered offscreen, or
 		 * 			if null, then existing IMGs in container for relayout 
 		 * @param Object options, defaults for layout engine, including 'context' for multi-page layouts
-		 * @param more Function (optional), more layout runs before 'layout-complete'
+		 * @param more Function (optional), more layout runs before 'layout-complete', i.e. layout more '.body .page' elements
+		 *		Note: chunks are laid out within a single .body .page element		
 		 */	
 		run: function(container, items, collection, options, more){
 			var engine = mixins.LayoutEngine.Typeset;
@@ -100,15 +101,18 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             } 
             
             // chunk layout based on window size
-            var chunks=[], end, stop = items.length;
+            var chunks=[], last=0, end, stop = items.length;
             var CHUNK_SIZE = Math.ceil($('body').data('winH')*$('body').data('winW') / (options.targetHeight*options.targetHeight*1.3)); 
             for (var c=0; (c*CHUNK_SIZE)<stop; c++){
+            	if (chunks.length) CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
             	end = (c+1)*CHUNK_SIZE;
             	if ((stop-end) < CHUNK_SIZE/2) {
-            		chunks.push(items.slice(c*CHUNK_SIZE, stop));
+            		chunks.push(items.slice(last, stop));
             		break;
-            	} else chunks.push(items.slice(c*CHUNK_SIZE, Math.min(end, stop)));
-            	CHUNK_SIZE = Math.max(CHUNK_SIZE, 100);  // increase chunksize after 1st page
+            	} else {
+            		chunks.push(items.slice(last, Math.min(end, stop)));
+            		last = Math.min(end, stop)
+            	}
             }
            
             var lines;
@@ -132,21 +136,27 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             	}       
             }
             if (!chunks.length) _layoutComplete()
-            else _.each(chunks, function(chunk, i){
-            	_.defer(function(that){
-		            lines = engine._linebreak.call(this, container, chunk, collection, options);
-		            engine._layout.call(this, lines, options);
-					if (i==0){
-			            // add class to indicate layout engine after 1st chunk rendered
-		            	options.outerContainer.addClass(options.classes.boundingbox);
-		            }		            
-		            if (i < chunks.length) {
-		            	collection.trigger('layout-chunk', i, container, options._layout_y );
-		            	// container.css('height', options._layout_y + "px");
-		            }
-		            if (i==chunks.length-1) _layoutComplete();
-            	}, this);
-            }, this);
+            else { 
+            	// layout each chunk BEFORE calling layoutComplete
+            	var oneComplete = _.after(chunks.length, function(){
+            		_layoutComplete()
+            	})
+            	_.each(chunks, function(chunk, i){
+	            	_.defer(function(that){
+			            lines = engine._linebreak.call(this, container, chunk, collection, options);
+			            engine._layout.call(this, lines, options);
+						if (i==0){
+				            // add class to indicate layout engine after 1st chunk rendered
+			            	options.outerContainer.addClass(options.classes.boundingbox);
+			            }		            
+			            if (i < chunks.length) {
+			            	collection.trigger('layout-chunk', i, container, options._layout_y );
+			            	oneComplete();
+			            }
+			            // if (i==chunks.length-1) _layoutComplete();
+	            	}, this);
+	            }, this);
+            }
 		},
 		/**
 		 * @param jquery container, .gallery .body, GalleryView.$(.body .page)
@@ -307,7 +317,7 @@ if (_DEBUG) console.time("Typeset._layout");
     					// thumbViewEl.style.left = x + "px";
     					cssText = ''; // batch changes
     					cssText += '; left:'+ x + "px";
-						cssText += '; top:'+ options._layout_y + "px";
+						cssText += '; top:'+ options._layout_y + "px;";
 						thumbViewEl.style.cssText = cssText;
 
 						if (!options.supportsBackgroundStretch && image.tag.src.indexOf('/img/spacer.gif') > -1) {
@@ -328,15 +338,15 @@ if (_DEBUG) console.time("Typeset._layout");
 	    					cssText += '; background-size:'+ Math.round(image.width) + 'px ' + Math.round(image.height) + 'px;';
     						cssText += '; background-position:'+ -Math.floor(imageHorzCrop / 2) + "px " + -Math.floor(totalVertCrop / 2) + "px";
     						cssText += '; height:'+Math.round(image.height - totalVertCrop) + "px";
-    						cssText += '; width:'+Math.round(image.width - imageHorzCrop) + "px";
-    						image.tag.cssText  = cssText;
+    						cssText += '; width:'+Math.round(image.width - imageHorzCrop) + "px;";
+    						image.tag.style.cssText  = cssText;
 	    					
     					} else {
     						// border.style.height = Math.round(image.height - totalVertCrop) + "px";
     						// border.style.width = Math.round(image.width - imageHorzCrop) + "px";
     						cssText = ''; // batch changes
     						cssText += '; height:'+ Math.round(image.height - totalVertCrop) + "px";
-    						cssText += '; width:'+ Math.round(image.width - imageHorzCrop) + "px";
+    						cssText += '; width:'+ Math.round(image.width - imageHorzCrop) + "px;";
     						border.style.cssText = cssText;
     						
 	    					// image.tag.style.width = Math.round(image.width) + 'px';
@@ -348,14 +358,24 @@ if (_DEBUG) console.time("Typeset._layout");
 	    					cssText += '; left:'+ -Math.floor(imageHorzCrop / 2) + "px";
     						cssText += '; top:'+ -Math.floor(totalVertCrop / 2) + "px";
     						cssText += '; height:'+ Math.round(image.height) + 'px';
-    						cssText += '; width:'+ Math.round(image.width) + 'px';
-    						image.tag.cssText  = cssText;
+    						cssText += '; width:'+ Math.round(image.width) + 'px;';
+    						image.tag.style.cssText  = cssText;
     						
     						// adjust img src prefix to fit actual dim
 	    					if (!options.noImageSrc) {  // noImageSrc used to test 10K repsonse without JPGs
-								var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
-								if (image.tag.src.indexOf(thumbsize_prefix+'~')<0)
-									image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+	    						switch (snappi.PAGER_STYLE) {
+									case 'placeline':
+										// TODO: crop is incorrect
+										image.tag.src = image.tag.getAttribute('data-root-src');
+										break;
+									case 'timeline': 
+									case 'page':
+										var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
+										if (image.tag.src.indexOf(thumbsize_prefix+'~')<0)
+											image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+										break;
+								}
+								
 							}
     					}
     					

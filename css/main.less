@@ -173,6 +173,10 @@ body.wait {
   cursor: wait !important;
 }
 
+@zoom1-color: darkred;
+@zoom2-color: darkorange;
+@zoom3-color: darkgoldenrod;
+@zoom4-color darkgreen: 
 
 .gallery {
   background-color: @grayLighter;
@@ -241,13 +245,13 @@ body.wait {
   &.highlight {
     /* placeline CSS */
     &.world {
-      box-shadow: 0 0 4px 4px darkred;
+      box-shadow: 0 0 4px 4px @zoom1-color;
     }
     &.country {
-      box-shadow: 0 0 4px 4px darkorange;
+      box-shadow: 0 0 4px 4px @zoom2-color;
     }
     &.region {
-      box-shadow: 0 0 4px 4px darkgoldenrod;
+      box-shadow: 0 0 4px 4px @zoom3-color;
     }
   }
 }
@@ -263,6 +267,21 @@ body.wait {
     font-size: 0.8em;
     .item {
       background-color: #ffffff;
+      &.[data-zoom="world"] {
+        color: @zoom1-color;
+      }
+      &.[data-zoom="country"] {
+        color: @zoom2-color;
+      }
+      &.[data-zoom="region"] {
+        color: @zoom3-color;
+      }
+      &.[data-zoom="locality"] {
+        color: @zoom4-color;
+      }
+      &.zoom-inactive {
+        display:none;
+      }
     }
     .page-label {
       background-color: @grayLighter;
@@ -288,8 +307,7 @@ body.wait {
   }
 }
 
-// .display-options {
-// }
+
 
 .pager.vertical-right {
   background: fade(@black,20%);
@@ -299,6 +317,14 @@ body.wait {
 
 .gallery.pager-placeline .thumb .meta .bottom-row .inline-icons.left {
   display: none;
+}
+
+
+.zoom-active {
+    opacity: 1;
+}
+.zoom-inactive {
+    opacity: 0.5;
 }
 
 /*

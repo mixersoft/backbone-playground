@@ -6,8 +6,7 @@ var api = {
 };
 
 var lookups = {
-	// zoom : ['world','country', 'region', 'locality', 'neighbourhood'],
-	zoom : ['world', 'region', 'locality', 'neighbourhood'],
+	zoom : ['world','country', 'region', 'locality', 'neighbourhood'],
 	place_type_id : {
 		neighbourhood: 22,
 		'22': 'neighbourhood',

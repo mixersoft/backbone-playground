@@ -3,6 +3,12 @@
 var Placeline = {
 // called by GalleryView
 	'GalleryView' : {
+/**
+ *
+ * triggers 
+ * 		collection.'layout-chunk'
+ * 		collection.'layout-complete'
+ */		
 renderBody: function(container, options){
 	options = options || {};
 	var that = this,
@@ -81,7 +87,7 @@ thumbs = pageContainer.children();
 	});
 },
 onPlacelineSync : function(placeline, resp, options) {
-	console.log("GalleryView.placeline.'sync'");
+console.log("GalleryView.placeline.'sync'");
 	var settings = placeline.toJSON(),
 		active = settings.active || 0,
 		current = settings.periods[active];
@@ -102,7 +108,7 @@ zoomOnPivot : function( placeline, pivot) {
 		filters = _.clone(placeline.get('filters'));
 	if (filters.zoom == newZoom) {
 		// pivot is same level as currentZoom
-		var arguments = "what should this be?";
+		var arguments = "NOT possible if we hide zoom Levels in GView";
 		placeline.trigger('sync:currentZoom', arguments)
 	} else {
 		filters.zoom = newZoom;
@@ -126,8 +132,10 @@ onPlacelineChangeCurrentZoom : function(placeline, changed) {
 			zoom:changed,
 			success: function(placeline, resp, options){
 				// set this.model.active to correct value
+console.info("0 Placeline.'sync:currentZoom' success");					
 				placeline.trigger('sync:currentZoom', arguments)
-			}
+			},
+			silent: true,		// do NOT trigger request on change:active
 		});
 	} else {
 		// placeline.trigger('sync:currentZoom','did not trigger fetch');

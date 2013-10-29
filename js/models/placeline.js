@@ -146,6 +146,7 @@ var PlacelineModel = {
 				case 'world':
 				case 'country': 
 				case 'region':
+				case 'locality':
 					index = keys.indexOf(e.name);
 					try {
 						attr.periods[index].localities.push({

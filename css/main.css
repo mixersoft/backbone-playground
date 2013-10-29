@@ -267,6 +267,9 @@ body.wait {
 }
 
 
+.pager .pagination .item[data-zoom="world"] {
+    color: darkred;
+}
 
 .pager .pagination .item[data-zoom="country"] {
     color: #FF8C00;
@@ -274,4 +277,19 @@ body.wait {
 
 .pager .pagination .item[data-zoom="region"] {
     color: #B8860B;
+}
+
+.pager .pagination .item[data-zoom="locality"] {
+    color: darkgreen;
+}
+
+.zoom-active {
+    opacity: 1;
+}
+.zoom-inactive {
+    opacity: 0.5;
+}
+
+.gallery .header .pager .pagination .item.zoom-inactive {
+    display:none;
 }

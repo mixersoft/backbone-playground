@@ -54,7 +54,7 @@ var Flickr = {
 			},
 			queued = [];
 		switch (data.filters.zoom)	{
-			case "country": case "region":
+			case "country": case "region": case "locality":
 				var oneComplete = _.after(data.localities.length, allComplete)
 				var oneSuccess = function(photos){
 					allPhotos = _.union(allPhotos, photos);
@@ -97,9 +97,9 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 	setTagByZoom: function(options){
 		switch(options.filters.zoom){
 			case 'world': options.tags = 'landmarks'; break;
-			case 'country': options.tags = 'children'; break;
-			case 'region': options.tags = 'food'; break;
-			case 'locality': options.tags = 'null'; break;
+			case 'country': options.tags = 'architecture'; break;
+			case 'region': options.tags = 'home'; break;
+			case 'locality': options.tags = 'food'; break;
 		}
 	},
 	sync: function(method, model, options) {
@@ -108,6 +108,7 @@ console.info("FlickrApi.getPhotos, remaining="+queued.length);
 		switch (method) {
 			case "read":
 				if (options.data.filters['zoom'] == 'world') {
+console.warn("Placeline sync for zoom=='world' is hard-coded")					
 					var models = Flickr.bootstrap.world;
 					parsed = _.filter(models, function(m){
 						return parseInt(m.longitude)!=0;

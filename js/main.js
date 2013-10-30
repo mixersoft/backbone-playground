@@ -27,33 +27,33 @@
 			// use localhost config for img hosting
 			hostname: mixins.Href.hostname(),
 		});
-		var timelinePager; 
+		var pager, collection; 
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				timelinePager = new snappi.models.Timeline();
-				var collection = new snappi.collections.GalleryCollection(null,
+				pager = new snappi.models.Timeline();
+				collection = new snappi.collections.GalleryCollection(null,
 					{
-						sort: timelinePager.get('direction')
+						sort: pager.get('direction')
 					});
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection,
-					timeline: timelinePager, 		 
+					pager: pager, 		 
 				}); 
 				break;
 			case 'placeline': 
 				snappi.qs.backend = 'flickr';	// force
-				timelinePager = new snappi.models.Placeline(); 
-				var collection = new snappi.collections.GalleryCollection(null,
+				pager = new snappi.models.Placeline(); 
+				collection = new snappi.collections.GalleryCollection(null,
 					{
-						sort: timelinePager.get('direction'), // 'asc'
+						sort: pager.get('direction'), // 'asc'
 					});
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection,
-					timeline: timelinePager, 		 
+					pager: pager, 		 
 				});
 				break;
 			case 'page': 
-				var collection = new snappi.collections.GalleryCollection();
+				collection = new snappi.collections.GalleryCollection();
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection
 				});

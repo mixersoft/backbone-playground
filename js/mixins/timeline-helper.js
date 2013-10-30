@@ -30,9 +30,9 @@ renderBody: function(container, options){
 	} else if (!pageContainer) {
 		var $before = $current = null, 
 			body = this.$('.body'),
-			timeline = this.timeline.toJSON();
+			pager = this.pager.toJSON();
 			
-		$before = this.Pager['Timeline']['GalleryView'].createPeriodContainers$(this, timeline, body);
+		$before = this.Pager['Timeline']['GalleryView'].createPeriodContainers$(this, pager, body);
 		
 		pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this, 'create');
 		if (!$before) body.prepend(pageContainer);
@@ -70,9 +70,9 @@ renderBody: function(container, options){
 		that.$('.fade-out').removeClass('fade-out');
 	});
 },
-onTimelineSync : function(timeline, resp, options) {
-	console.log("GalleryView.timeline.'sync'");
-	var settings = timeline.toJSON(),
+onTimelineSync : function(pager, resp, options) {
+	console.log("GalleryView.pager.'sync'");
+	var settings = pager.toJSON(),
 		active = settings.active || 0,
 		current = settings.periods[active],
 		options = {
@@ -80,11 +80,11 @@ onTimelineSync : function(timeline, resp, options) {
 			to: current.to,
 			// filter: current.filter,
 		}
-		timeline.set('active', active);
+		pager.set('active', active);
 },
-onTimelineChangePeriod : function(timeline) {
-	console.log("GalleryView.timeline.'change:active', i="+timeline.changed.active);
-	if (timeline.helper.isFetched.call(timeline, timeline.changed.active)) {
+onTimelineChangePeriod : function(pager) {
+	console.log("GalleryView.pager.'change:active', i="+pager.changed.active);
+	if (pager.helper.isFetched.call(pager, pager.changed.active)) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
 		var that = this,
 			pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
@@ -104,7 +104,7 @@ onTimelineChangePeriod : function(timeline) {
 		},
 	});
 },
-onTimelineChangeFilter : function(timeline, changed) {
+onTimelineChangeFilter : function(pager, changed) {
 	this.collection.filterChanged(changed, this)
 },
 
@@ -120,20 +120,20 @@ templates: {
 getPeriodContainer$: function(that, create, index){
 	var helper = that.Pager['Timeline']['GalleryView'],
 		template = helper.templates.selector_PeriodContainer,
-		timeline = that.timeline.helper.getActive(that.timeline, index),
-		$item = that.$( template( timeline) );
+		pager = that.pager.helper.getActive(that.pager, index),
+		$item = that.$( template( pager) );
 	if (!$item.length && create){
 		template = helper.templates.periodContainer; 
-		$item = $( template( timeline) );
+		$item = $( template( pager) );
 	}
 	return $item.length ? $item : false;
 },
 getPeriodContainerByTS$: function(that, TS_UTC, create) {
 	var helper = that.Pager['Timeline']['GalleryView'],
-		timeline = that.timeline.toJSON(), 
+		pager = that.pager.toJSON(), 
 		index = false,
 		$item, template;
-	_.find(timeline.periods, function(e, i, l){
+	_.find(pager.periods, function(e, i, l){
 		if (e.from_TS_UTC <= TS_UTC && TS_UTC <= e.to_TS_UTC) {
 			index = i;
 			return true;
@@ -141,27 +141,27 @@ getPeriodContainerByTS$: function(that, TS_UTC, create) {
 	}, this);	
 	if (index === false && create) {
 		template = helper.templates.periodContainer; 
-		timeline = that.timeline.helper.getActive(timeline),
-		$item = $( template( timeline) );
+		pager = that.pager.helper.getActive(pager),
+		$item = $( template( pager) );
 	} else {
 		template = helper.templates.selector_PeriodContainer,
-		timeline = that.timeline.helper.getActive(timeline, index),
-		$item = that.$( template( timeline) );
+		pager = that.pager.helper.getActive(pager, index),
+		$item = that.$( template( pager) );
 	}
 	return $item.length ? $item : false;
 },
-createPeriodContainers$: function(that, timeline, $body) {
+createPeriodContainers$: function(that, pager, $body) {
 	// create missing pageContainers	
 	var $current, 
 		$before = false, 
 		fetched_key;
-	_.each(timeline.periods, function(e,i,l){
-		if (i >= timeline.active) {
+	_.each(pager.periods, function(e,i,l){
+		if (i >= pager.active) {
 			return false;  // found
 		}
 		$current = that.Pager['Timeline']['GalleryView'].getPeriodContainer$(that, false, i);
-		fetched_key = that.timeline.helper.getFetchedKey(i,timeline);
-		if ($current && timeline.fetched[fetched_key]) {
+		fetched_key = that.pager.helper.getFetchedKey(i,pager);
+		if ($current && pager.fetched[fetched_key]) {
 			// already loaded, should already be created
 		} else if (!$current) {	
 			// create, insert empty pageContainer
@@ -174,16 +174,16 @@ createPeriodContainers$: function(that, timeline, $body) {
 	return $before;
 },
 getXhrFetchOptions: function(that){
-	var timeline = that.timeline,
-		period = timeline.get('periods')[timeline.get('active')],
+	var pager = that.pager,
+		period = pager.get('periods')[pager.get('active')],
 		options = {
 			page: 1,		// should be able to paginate within a period
-			perpage: 20,	// for collection, but not timeline
+			perpage: 20,	// for collection, but not pager
 			sort: 'top-rated',
 			direction: 'desc',
-			// filters: timeline.get('filters'),
+			// filters: pager.get('filters'),
 		};
-		options.filters = _.clone(timeline.get('filters'));
+		options.filters = _.clone(pager.get('filters'));
 		if (options.filters.changed) {
 			options.filters = _.defaults(options.filters.changed, options.filters);
 			delete options.filters.changed;
@@ -197,7 +197,7 @@ getXhrFetchOptions: function(that){
 		options.userid = options.ownerid = aaa_options.owner;
 		delete aaa_options.owner;
 	}
-	options = _.defaults(options, aaa_options, timeline.xhr_defaults);
+	options = _.defaults(options, aaa_options, pager.xhr_defaults);
 	return options;
 },
 

@@ -16,7 +16,7 @@ var GalleryDisplayOptionsView = {
 
 	el: "required",
 
-	timeline: "required",	
+	pager: "required",	
 	collection: "required",
 	
 	template_source: "#markup #GalleryDisplayOptions.handlebars",
@@ -47,7 +47,7 @@ var GalleryDisplayOptionsView = {
 	},
 	
 	initialize: function(attributes, options){
-		this.timeline = attributes.timeline;
+		this.pager = attributes.pager;
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
 			views.GalleryDisplayOptionsView.prototype.template = Handlebars.compile(source);
@@ -104,8 +104,8 @@ var GalleryDisplayOptionsView = {
 					this.ui_settings['rating'][0].label = value;
 			break;
 		}
-		this.timeline.set('filters', changed, {validate:true});
-		// if (filters['changed']) this.timeline.set('filters', filters);
+		this.pager.set('filters', changed, {validate:true});
+		// if (filters['changed']) this.pager.set('filters', filters);
 	},
 	onFilterChanged: function(filter){
 		// console.log("GalleryDisplayOptions Filter changed");

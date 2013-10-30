@@ -66,7 +66,7 @@ var GalleryView = {
 	el: ".gallery",
 	
 	collection: null,	// Backbone.Paginator.requestPager
-	timeline: null, 	// models.Timeline
+	pager: null, 	// models.Timeline
 	
 	templates: {
 		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
@@ -78,7 +78,7 @@ var GalleryView = {
 		'click .display-options': 'toggleDisplayOptions', 
 		'click .page .empty-label': function(e){
 			var period = $(e.target).parent().data('period');
-			this.timeline.trigger('gotoPeriod', e, {period: period});
+			this.pager.trigger('gotoPeriod', e, {period: period});
 		},  
 		'click .zoom-in': 'onZoom',
 	},
@@ -104,7 +104,7 @@ var GalleryView = {
 		 */
 		
 		// ???: should this.model = models.Timeline? creating a custom attr here
-		this.timeline = attributes.timeline;
+		this.pager = attributes.pager;
 		
 		// this.render();
 		/*
@@ -119,20 +119,20 @@ var GalleryView = {
 		this.$el.addClass('pager-'+snappi.PAGER_STYLE);
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				this.listenTo(this.timeline, 'sync', this['Pager']['Timeline']['GalleryView'].onTimelineSync);
-				this.listenTo(this.timeline, 'change:active', this['Pager']['Timeline']['GalleryView'].onTimelineChangePeriod);
-				this.listenTo(this.timeline, 'change:filters', this['Pager']['Timeline']['GalleryView'].onTimelineChangeFilter);
+				this.listenTo(this.pager, 'sync', this['Pager']['Timeline']['GalleryView'].onTimelineSync);
+				this.listenTo(this.pager, 'change:active', this['Pager']['Timeline']['GalleryView'].onTimelineChangePeriod);
+				this.listenTo(this.pager, 'change:filters', this['Pager']['Timeline']['GalleryView'].onTimelineChangeFilter);
 
 				break;
 			case 'placeline': 
-				this.listenTo(this.timeline, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);
-				this.listenTo(this.timeline, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
-				this.listenTo(this.timeline, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
-				this.listenTo(this.timeline, 'change:currentZoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeCurrentZoom);
+				this.listenTo(this.pager, 'sync', this['Pager']['Placeline']['GalleryView'].onPlacelineSync);
+				this.listenTo(this.pager, 'change:active', this['Pager']['Placeline']['GalleryView'].onPlacelineChangePeriod);
+				this.listenTo(this.pager, 'change:filters', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeFilter);
+				this.listenTo(this.pager, 'change:currentZoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeCurrentZoom);
 
 				// NOTE: this only works when the zoom is changed from the Pager View
 				// but the action initiates from the GalleryView or PhotoView
-				// this.listenTo(this.timeline, 'change:zoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeZoom);
+				// this.listenTo(this.pager, 'change:zoom', this['Pager']['Placeline']['GalleryView'].onPlacelineChangeZoom);
 				
 				break;
 			case 'page': 
@@ -191,7 +191,7 @@ var GalleryView = {
 			thumb = null,
 			mPhoto = "should be models.Photo",
 			helpers = this['Pager']['Placeline']['GalleryView'],
-			currentZoom = this.timeline.get('currentZoom'); // TODO: get from data-zoom
+			currentZoom = this.pager.get('currentZoom'); // TODO: get from data-zoom
 
 		thumb = $(e.currentTarget).closest('.thumb');
 		var pageDataZoom = thumb.closest('.page').data('zoom');
@@ -216,7 +216,7 @@ var GalleryView = {
 
 			// fetch photos to reflect currentZoom
 			that.collection.fetchZoom(pivot, {
-				placeline: that.timeline,
+				placeline: that.pager,
 				fetchOptions: fetchOptions,
 				success: function(collection, response, options){
 					var check;
@@ -233,8 +233,8 @@ console.info("0 Timeline.'sync:currentZoom' success");
 				}
 			});
 		}
-		that.listenToOnce(that.timeline, 'sync:currentZoom', success)
-		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.timeline, pivot);
+		that.listenToOnce(that.pager, 'sync:currentZoom', success)
+		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.pager, pivot);
 
 	},
 	
@@ -247,22 +247,22 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			case 'timeline': 
 				new snappi.views.TimelineView({
 					el: this.$('.header .pager'),
-					model: this.timeline,
+					model: this.pager,
 					collection: this.collection,
 				});
 				var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this);
-				this.timeline.fetch({data: options}); 
+				this.pager.fetch({data: options}); 
 				
 				this.displayOptions = new views.GalleryDisplayOptionsView({
 					el: this.$('.header .display-options'),
 					collection : this.collection,
-					timeline: this.timeline,
+					pager: this.pager,
 				});
 				break;
 			case 'placeline': 
 				new snappi.views.PlacelineView({
 					el: this.$('.header .pager'),
-					model: this.timeline,
+					model: this.pager,
 					collection: this.collection,
 				});
 				var xhrOptions = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
@@ -271,10 +271,10 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					that.displayOptions = new views.GalleryDisplayOptionsView({
 						el: that.$('.header .display-options'),
 						collection : that.collection,
-						timeline: that.timeline,
+						pager: that.pager,
 					});
 				}
-				this.timeline.fetch({
+				this.pager.fetch({
 					data: xhrOptions,
 					success: cb,
 				}); 

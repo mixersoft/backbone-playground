@@ -57,14 +57,14 @@ var GalleryCollection =	{
 		if (snappi.qs.rating) {
 			this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
 		}
-		if (options && options.sort) this.timeline_ui.direction = options.sort;
+		if (options && options.sort) this.pager_ui.direction = options.sort;
 		// end
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);
 		// this.listenTo(this, 'filterChanged', this.filterChanged);
 		this.listenTo(this, 'change:direction', function(dir){
-			this.timeline_ui.direction = dir; 
+			this.pager_ui.direction = dir; 
 			return "how do we listing to a change in TimelineView???"
 		});
 	},
@@ -86,7 +86,7 @@ var GalleryCollection =	{
 		else 
 			return (!sortBy && this.sortBy_1) ? this.comparator(a,b, this.sortBy_1) : 0;
 		// check models.Timeline.get('direction)
-		if (this.timeline_ui.direction == 'desc') ret *= -1;
+		if (this.pager_ui.direction == 'desc') ret *= -1;
 		return ret;
 	},
 
@@ -295,7 +295,7 @@ var GalleryCollection =	{
 		// might have to filter collection.models, too
 		// isFetched() should compare filter  
 		var that = this;
-		// previous = this.timeline.previousAttributes(),
+		// previous = this.pager.previousAttributes(),
 		// CHECK if filter requires a fetch
 		// 		for all pages, set page stale=true;
 		var filtered, remove, id, 
@@ -413,7 +413,7 @@ var setup_DisplayOptions = {
 			{label: 0, active:'active' },
 		],
 	}, 
-	timeline_ui: {
+	pager_ui: {
 		direction: 'desc',
 	}
 }

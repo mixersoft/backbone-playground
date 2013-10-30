@@ -11,9 +11,9 @@ mixins.Handlebars = {
 	initialize: function(){
 		if (mixins.Handlebars.initialized) return;
 		var helpers = mixins.Handlebars.helpers;
-		for (var key in helpers) {
-			Handlebars.registerHelper(key, helpers[key]);
-		} 
+		_.each(helpers, function(value,key,l){
+			Handlebars.registerHelper(key, value);
+		});
 	},
 	helpers: {
 		// fontawsome rating stars, {rating: [0..5] }

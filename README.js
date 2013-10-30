@@ -18,6 +18,9 @@ var sample_Urls: {
 	'flickr/placeline':[
 		'http://github/backbone-playground/?pager=placeline&perpage=20&size=m',
 		],
+	'cake/pager':[
+		'http://github/backbone-playground/?backend=cake&perpage=20&sort=dateTaken',
+	]
 }
 
 
@@ -35,7 +38,7 @@ var querystring_params = {
 	'to': 'timestamp or SQL date',
 	'rating': ['null', 'integer'], // 'null' should unset filter.rating
 	'backend': {
-		'cake': null, // cakephp backend
+		'cake': {// cakephp backend
 			'owner': ['UUID','username'],  // User.id or User.username 
 			'type':{	
 				// for access to public photos, backend=cake 
@@ -46,7 +49,9 @@ var querystring_params = {
 				'wo:[woid]': '&userid=[Editor]',
 				'tw:[twid]': '&userid=[Editor]',
 			},
-		'node': null, 
+			'pager': 'page',	// required
+		}	
+		'node': { 
 			// REQUIRED: use http://localhost:3000/ to avoid CORS
 			'role': ['VISITOR', 'USER', 'EDITOR'], // default VISITOR
 			'owner': ['venice', 'mb', '2011', 'or valid userid'], // check &role for permissions
@@ -59,14 +64,19 @@ var querystring_params = {
 				'wo:[woid]': '&userid=[Editor]',
 				'tw:[twid]': '&userid=[Editor]',
 			},
+			'pager': ['page','timeline']
+		},
 		'file': {
 			'pager': 'page', // override, set in js/main.js
 			'owner': [2011,venice,mb], // see js/snappi-bootstrap.js for cached JSON, 
 		},
+		'flickr':{			// set by &pager=placeline
+			'pager':'placeline'
+		}
 	},
 	'pager':{
 		'timeline': ['node','cake'],
-		'placeline': ['flickr only'],
+		'placeline': ['flickr only'], 	// set &backend=flickr
 		'page': ['node', 'cake', 'file'],
 	}
 }

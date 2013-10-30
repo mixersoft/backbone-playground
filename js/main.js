@@ -20,7 +20,7 @@
 		snappi.qs = mixins.Href.parseQueryString();		// global parsed qs
 		snappi.TIMINGS = mixins.UiActions.TIMINGS;
 		snappi.PAGER_STYLE = snappi.qs.pager || 'timeline'; // timeline, placeline, page
-		if (snappi.qs.backend == 'file') snappi.PAGER_STYLE = 'page';
+		if (/file|cake/.test(snappi.qs.backend)) snappi.PAGER_STYLE = 'page';
 		
 		// config image server, to set explicitly, use &host=[hostname]
 		mixins.Href.imgServer({		

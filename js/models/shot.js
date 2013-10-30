@@ -96,9 +96,9 @@ var Shot = {
  *  protected methods
  */
 var _overloadClassAttrs = function(childClass, parentClass, attrs) {
-	for (var i in attrs) {
-		childClass.prototype[attrs[i]] = _.extend(parentClass.prototype[attrs[i]] || {}, childClass.prototype[attrs[i]]);
-	} 
+	_.each(attrs, function(e,i,l) {
+		childClass.prototype[e] = _.extend(parentClass.prototype[e] || {}, childClass.prototype[e]);
+	}); 
 }
 
 

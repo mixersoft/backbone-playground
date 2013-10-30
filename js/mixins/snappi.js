@@ -16,50 +16,49 @@
 				page = cc.CastingCall.Auditions.Page,
 				auditions = cc.CastingCall.Auditions.Audition;
 				
-			for (i in auditions) {
-				id = auditions[i].Photo.id;
+			_.each(auditions, function(row,i,l){	
+				id = row.Photo.id;
 				audition = {
-					shotId: auditions[i].Shot.id || null ,
-					shotCount: auditions[i].Shot.count ? parseInt(auditions[i].Shot.count) : null,
+					shotId: row.Shot.id || null ,
+					shotCount: row.Shot.count ? parseInt(row.Shot.count) : null,
 					
 					photoId: id,
-					score: auditions[i].Photo.Fix.Score ? Math.round(parseFloat(auditions[i].Photo.Fix.Score)*10)/10 : null,
-					rating: auditions[i].Photo.Fix.Rating ? parseInt(auditions[i].Photo.Fix.Rating) : null,
-					rotate: auditions[i].Photo.Fix.Rotate ? parseInt(auditions[i].Photo.Fix.Rotate) : 1,
-					caption: auditions[i].Photo.Caption,
-					batchId: parseInt(auditions[i].Photo.BatchId),
-					dateTaken: new Date(auditions[i].Photo.DateTaken.replace(' ', 'T')), 
-					ts: auditions[i].Photo.TS,
-					H: auditions[i].Photo.Img.Src.H,
-					W: auditions[i].Photo.Img.Src.W,
-					exifOrientation:  auditions[i].Photo.Img.Src.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
-					rootSrc: auditions[i].Photo.Img.Src.rootSrc,
+					score: row.Photo.Fix.Score ? Math.round(parseFloat(row.Photo.Fix.Score)*10)/10 : null,
+					rating: row.Photo.Fix.Rating ? parseInt(row.Photo.Fix.Rating) : null,
+					rotate: row.Photo.Fix.Rotate ? parseInt(row.Photo.Fix.Rotate) : 1,
+					caption: row.Photo.Caption,
+					batchId: parseInt(row.Photo.BatchId),
+					dateTaken: new Date(row.Photo.DateTaken.replace(' ', 'T')), 
+					ts: row.Photo.TS,
+					H: row.Photo.Img.Src.H,
+					W: row.Photo.Img.Src.W,
+					exifOrientation:  row.Photo.Img.Src.Orientation || 1,	// ExifOrientation tag, [1,3,6,8]
+					rootSrc: row.Photo.Img.Src.rootSrc,
 					// for collections page management
 					requestPage: page,
 				};
 				
 				// adjust for ExifOrientation
-				// TODO: add math to include audition.rotate
 				if (audition.exifOrientation < 4) {
-					audition.origW = auditions[i].Photo.W;
-					audition.origH = auditions[i].Photo.H;
+					audition.origW = row.Photo.W;
+					audition.origH = row.Photo.H;
 					// fix bad origW/H data
 					if (audition.H > audition.W && audition.origH < audition.origW)
 					{
-						audition.origW = auditions[i].Photo.H; 
-						audition.origH = auditions[i].Photo.W;
+						audition.origW = row.Photo.H; 
+						audition.origH = row.Photo.W;
 						console.warn("origW/H flipped for id="+id);
 					}
 				} else { // ExifOrientation = 6|8 means the bp~ image is rotated
-					audition.origH = auditions[i].Photo.W;
-					audition.origW = auditions[i].Photo.H;
-					audition.H = auditions[i].Photo.Img.Src.W;
-					audition.W = auditions[i].Photo.Img.Src.H
+					audition.origH = row.Photo.W;
+					audition.origW = row.Photo.H;
+					audition.H = row.Photo.Img.Src.W;
+					audition.W = row.Photo.Img.Src.H
 				}
 				
 				audition.orientationLabel =  (audition.H > audition.W) ? 'portrait' : '';
 				parsedAuditions[id] = audition;
-			}
+			});
 			// for debugging/introspection
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedAuditions); 
 			return parsedAuditions;	
@@ -81,9 +80,8 @@
 			var i, row, photo, exif, preview, src,
 				parsedPhotos = {},
 				assets = response.assets;
-				
-			for (i=0;i<assets.length;i++) {
-				row = assets[i];
+			
+			_.each(assets, function(row,i,l){
 				exif = JSON.parse(row.json_exif);
 				preview = exif.root || exif.preview; // exif.preview is legacy
 				src = JSON.parse(row.json_src);
@@ -130,8 +128,8 @@
 				
 				photo.orientationLabel =  (photo.H > photo.W) ? 'portrait' : '';
 				parsedPhotos[photo.id] = photo;
-			}
-			// for debugging/introspection
+			});
+
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedPhotos); 
 			return parsedPhotos;	
 		},
@@ -242,12 +240,12 @@
 			var param, 
 				named = {},
 				parts = url.split('/');
-			for (var i in parts) {
-				if (parts[i].indexOf(':')>0) {
-					param = parts[i].split(':');
+			_.each(parts, function(e,i,l){
+				if (e.indexOf(':')>0) {
+					param = e.split(':');
 					named[param[0]] = decodeURIComponent(param[1].replace(/\+/g, " ")) ;
-				} 
-			}	
+				}
+			});	
 		    return named;
 		},
 		

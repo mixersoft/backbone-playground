@@ -22,6 +22,9 @@ var TimelineView = {
 			'click .item.next': 'gotoNext',
 			'click .item.link': 'gotoPeriod',
 			'click .period': 'changePeriod',
+			'click .zoom .item.link': 'renderZoom',
+			'mouseenter .zoom .item:not(.page-label)': 'highlightOn',
+			'mouseleave .zoom .item:not(.page-label)': 'highlightOff',
 		},
 		
 		el: '#pager',
@@ -81,40 +84,74 @@ var TimelineView = {
 		        // find current visible page
 		        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
 		        if (!scrollDir) return;
-		        _.each($('.gallery .body .page'), function(item, i ,l){
-		        	if (scrollDir=='down') {
-			        	if (visiblePg && item.offsetTop > windowB)
-			        	{
-			        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
-			        		return false;
-			        	} 
-		        	} else { // page up
-			        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
-			        		if (item.offsetTop-OFFSET_H < windowT) visiblePg = item;
-			        		return false;
-			        	} 
+
+		         visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
+		        	var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
+		        	var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
+		        	var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
+		        	var isTopBelowFold = item.offsetTop > windowB;
+		        	if (scrollDir=='up'){ // page up
+			        	if (isBottomBelowFold) return true;
+			        	if (isTopBelowWindowT) return true;
 		        	}
-		        	visiblePg = item;
+		        	if (scrollDir=='down') {
+		        		if (isTopBelowWindowT) return true;
+			        	if (isBottomBelowFold) return true;
+		        	}
 		        });
+		        if (!visiblePg && scrollDir=='up') 
+		        	visiblePg = $('.gallery .body .page:first-child');
+				else if (!visiblePg && scrollDir=='down') 
+		        	visiblePg = $('.gallery .body .page:last-child');
+
+		        var pageId = $(visiblePg).data('period');
+		        var settings = this.model.toJSON();
+		        var pagerPeriod, pagerIndex;
+
+		        pagerPeriod = _.find(settings.periods, function(e){ 
+		        	var found = e.period === pageId; // && e.period_type === settings.currentZoom;
+		        	return found;
+		        });
+		        pagerIndex = _.indexOf(settings.periods, pagerPeriod);
+		        if (pagerIndex==-1) 
+		        	return;
+		        this.model.set('active', pagerIndex, {silent:true});
+        		this.renderState();	
+
+		//         _.each($('.gallery .body .page'), function(item, i ,l){
+		//         	if (scrollDir=='down') {
+		// 	        	if (visiblePg && item.offsetTop > windowB)
+		// 	        	{
+		// 	        		// if (item.offsetTop + item.offsetHeight < windowB) visiblePg = item;
+		// 	        		return false;
+		// 	        	} 
+		//         	} else { // page up
+		// 	        	if (visiblePg && (item.offsetTop + item.offsetHeight) > windowB) {
+		// 	        		if (item.offsetTop-OFFSET_H < windowT) visiblePg = item;
+		// 	        		return false;
+		// 	        	} 
+		//         	}
+		//         	visiblePg = item;
+		//         });
 		        
-		        var nextPage, scrollPage = $(visiblePg).data('period');
-		// console.log('scroll to page='+scrollPage);        
-	        	var settings = this.model.toJSON(),
-	        		nextPage,
-	        		nextFetchedPage;
-        		nextPage = scrollDir=='down' ? settings.active+1 : settings.active-1;
-        		nextPage = (nextPage < 0) ? 0 : (nextPage > settings.periods.length -1) ? settings.periods.length -1 : nextPage;
-        		nextFetchedPage = this.model.helper.nextFetched(scrollDir, settings.active, settings);
-        		// BUG: cannot detect e.ctrlKey on scroll event!!!
-	        	if (false && nextPage != nextFetchedPage) { // fetch next page, if necessary
-	        		if (!this.$el.hasClass('xhr-fetching')) 
-	        			this.model.set('active', nextPage);
-	        		else console.info("cancel fetch on scrollspy because still fetching")
-	        	} else if (nextFetchedPage) {
-	        		var doNotFetch = {silent:true}
-	        		this.model.set('active', nextFetchedPage, doNotFetch);
-	        		this.renderState();
-	        	}
+		//         var nextPage, scrollPage = $(visiblePg).data('period');
+		// // console.log('scroll to page='+scrollPage);        
+	 //        	var settings = this.model.toJSON(),
+	 //        		nextPage,
+	 //        		nextFetchedPage;
+  //       		nextPage = scrollDir=='down' ? settings.active+1 : settings.active-1;
+  //       		nextPage = (nextPage < 0) ? 0 : (nextPage > settings.periods.length -1) ? settings.periods.length -1 : nextPage;
+  //       		nextFetchedPage = this.model.helper.nextFetched(scrollDir, settings.active, settings);
+  //       		// BUG: cannot detect e.ctrlKey on scroll event!!!
+	 //        	if (false && nextPage != nextFetchedPage) { // fetch next page, if necessary
+	 //        		if (!this.$el.hasClass('xhr-fetching')) 
+	 //        			this.model.set('active', nextPage);
+	 //        		else console.info("cancel fetch on scrollspy because still fetching")
+	 //        	} else if (nextFetchedPage) {
+	 //        		var doNotFetch = {silent:true}
+	 //        		this.model.set('active', nextFetchedPage, doNotFetch);
+	 //        		this.renderState();
+	 //        	}
 		    },
 
 		},

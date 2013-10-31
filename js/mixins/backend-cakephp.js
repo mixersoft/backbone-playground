@@ -105,11 +105,10 @@ if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
-			photos = [];
 if (_DEBUG) console.time("GalleryCollection: create models");			
-		_.each(parsed, function(v, k, l) {
-			if (v.shotId) photos.push(new models.Shot(v));
-			else photos.push(new models.Photo(v));
+		var photos = _.map(parsed, function(v, k, l) {
+			if (v.shotId) return new models.Shot(v);
+			else return new models.Photo(v);
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		$('body').removeClass('wait');

@@ -55,12 +55,10 @@ renderBody: function(container, options){
 				if (pageContainer.find('.thumb').length) {
 console.error("WARNING: just testing fetchZoom. pls fix placeline model first!!!");	
 // insert NEW thumbs in sorted order
-var sort = $('<div></div>');
 pageContainer.append(thumbs);
-_.each(this.collection.models, function(model, i,l){
-	var id = model.get('id');
-	sort.append(pageContainer.find('#'+id).parent());
-});
+var id, sort = _.reduce(this.collection.models, function(out, model, i,l){
+	out.append(pageContainer.find('#'+model.get('id')).parent());
+}, $('<div></div>'));
 pageContainer.append(sort.children());
 thumbs = pageContainer.children();
 				} else 
@@ -226,23 +224,25 @@ createPeriodContainers$: function(that, pager, $body) {
 	var $current, 
 		$before = false, 
 		fetched_key;
+	// currentPeriod = pager.periods[pager.active];
 	_.each(pager.periods, function(e,i,l){
+		if (pager.currentZoom != e.place_type) return;
 		if (i >= pager.active) {
-			return false;  // found
+			// return;  // render containers up to current period
 		}
-		$current = that.Pager['Placeline']['GalleryView'].getPeriodContainer$(that, false, i);
+		$current = Placeline['GalleryView'].getPeriodContainer$(that, false, i);
 		fetched_key = that.pager.helper.getFetchedKey(i,pager);
 		if ($current && pager.fetched[fetched_key]) {
 			// already loaded, should already be created
 		} else if (!$current) {	
 			// create, insert empty pageContainer
-			$current =  that.Pager['Placeline']['GalleryView'].getPeriodContainer$(that, 'create', i);
+			$current =  Placeline['GalleryView'].getPeriodContainer$(that, 'create', i);
 			if ($before) $current.insertAfter($before);
 			else $body.prepend($current);
 		} 
 		$before = $current;
 	});
-	return $before;
+	return Placeline['GalleryView'].getPeriodContainer$(that, false, pager.active);
 },
 /**
  * change zoom, then call getXhrFetchOptions

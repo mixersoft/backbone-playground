@@ -139,41 +139,33 @@ var PlacelineModel = {
 			},
 		};
 		attr.filters['zoom'] = attr.currentZoom;
-		var o, index, keys = _.uniq(_.pluck(response.places, 'name'));
-		_.each(response.places, function(e,i,l){
-			
-			switch(attr.currentZoom) {
-				case 'world':
-				case 'country': 
-				case 'region':
-				case 'locality':
-					index = keys.indexOf(e.name);
-					try {
-						attr.periods[index].localities.push({
-							locality_place_id: e.locality_place_id,
-							locality_longitude: e.locality_longitude
-						});
-					} catch (ex) {
-						o = _.clone(e);
-						o['label'] = e.name;
-						o['period'] = e.place_id;
-						// o['place_type'] = e.place_type;
-						o.localities = [{
-							locality_place_id: e.locality_place_id,
-							locality_longitude: e.locality_longitude
-						}]
-						delete o.locality_longitude;
-						delete o.locality_place_id;
-						attr.periods.push(o); 	
-					}
-					break;
-				// case 'region':	
-				default:
-					attr.periods[i]['label'] = e.name;
-					attr.periods[i]['period'] = e.place_id;
-					break;
+		var o, index, 
+			keys = _.chain(response.places)
+				.pluck('name').unique()
+				.value();
+		attr.periods = _.reduce(response.places, function(out, e,i,l){
+			index = keys.indexOf(e.name);
+			try {
+				out[index].localities.push({
+					locality_place_id: e.locality_place_id,
+					locality_longitude: e.locality_longitude
+				});
+			} catch (ex) {
+				o = _.clone(e);
+				o['label'] = e.name;
+				o['period'] = e.place_id;
+				// o['place_type'] = e.place_type;
+				o.localities = [{
+					locality_place_id: e.locality_place_id,
+					locality_longitude: e.locality_longitude
+				}]
+				delete o.locality_longitude;
+				delete o.locality_place_id;
+				out.push(o); 	
 			}
-		});
+			return out;
+		}, attr.periods);
+		
 		// sort localities
 		_.each(attr.periods, function(e,i,l){
 			e.localities = _.sortBy(e.localities, 'locality_longitude');

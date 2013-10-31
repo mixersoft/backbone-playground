@@ -156,22 +156,23 @@ createPeriodContainers$: function(that, pager, $body) {
 		$before = false, 
 		fetched_key;
 	_.each(pager.periods, function(e,i,l){
+		// if (pager.currentZoom != e.period_type) return;
 		if (i >= pager.active) {
-			return false;  // found
+			// return false;  // found
 		}
-		$current = that.Pager['Timeline']['GalleryView'].getPeriodContainer$(that, false, i);
+		$current = Timeline['GalleryView'].getPeriodContainer$(that, false, i);
 		fetched_key = that.pager.helper.getFetchedKey(i,pager);
 		if ($current && pager.fetched[fetched_key]) {
 			// already loaded, should already be created
 		} else if (!$current) {	
 			// create, insert empty pageContainer
-			$current =  that.Pager['Timeline']['GalleryView'].getPeriodContainer$(that, 'create', i);
+			$current =  Timeline['GalleryView'].getPeriodContainer$(that, 'create', i);
 			if ($before) $current.insertAfter($before);
 			else $body.prepend($current);
 		} 
 		$before = $current;
 	});
-	return $before;
+	return Timeline['GalleryView'].getPeriodContainer$(that, false, pager.active);
 },
 getXhrFetchOptions: function(that){
 	var pager = that.pager,

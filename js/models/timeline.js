@@ -166,7 +166,7 @@ var TimelineModel = {
 		// see if you can stop propagation
 		var validated = {fetch: false},
 			before = this.get('filters');
-		_.each(attrs['filters'], function(value,key,l){
+		validated = _.reduce(attrs['filters'], function(value,key,l){
 			switch (key){
 				case "rating":
 					if (value > 5) value = 5;
@@ -178,8 +178,9 @@ var TimelineModel = {
 					else if ( validated['rating'] <  before['rating'] ) 
 						validated['fetch'] = true;  
 				break;
-			}	
-		});
+			}
+			return validated;	
+		}, validated);
 		// these assignment by reference are "silent"
 		_.extend(attrs['filters'],validated);
 		if (validated.fetch == true) {

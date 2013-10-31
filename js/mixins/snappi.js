@@ -12,11 +12,11 @@
 		},
 		parseShot_CC: function(cc){
 			var i, oSrc, score, id, audition, 
-				parsedAuditions = {},
+				parsedAuditions,
 				page = cc.CastingCall.Auditions.Page,
 				auditions = cc.CastingCall.Auditions.Audition;
 				
-			_.each(auditions, function(row,i,l){	
+			parsedAuditions = _.reduce(auditions, function(hash, row, i, l){	
 				id = row.Photo.id;
 				audition = {
 					shotId: row.Shot.id || null ,
@@ -57,8 +57,9 @@
 				}
 				
 				audition.orientationLabel =  (audition.H > audition.W) ? 'portrait' : '';
-				parsedAuditions[id] = audition;
-			});
+				hash[id] = audition;
+				return hash;
+			}, {});
 			// for debugging/introspection
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedAuditions); 
 			return parsedAuditions;	
@@ -76,12 +77,11 @@
 			return shot_extras;
 		},
 		parseShot_Assets: function(response){
-			
 			var i, row, photo, exif, preview, src,
-				parsedPhotos = {},
+				parsedPhotos,
 				assets = response.assets;
 			
-			_.each(assets, function(row,i,l){
+			parsedPhotos = _.reduce(assets, function(hash, row, i, l){
 				exif = JSON.parse(row.json_exif);
 				preview = exif.root || exif.preview; // exif.preview is legacy
 				src = JSON.parse(row.json_src);
@@ -127,8 +127,9 @@
 				}
 				
 				photo.orientationLabel =  (photo.H > photo.W) ? 'portrait' : '';
-				parsedPhotos[photo.id] = photo;
-			});
+				hash[photo.id] = photo;
+				return hash;
+			}, {});
 
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedPhotos); 
 			return parsedPhotos;	
@@ -238,14 +239,14 @@
 		getNamedParams : function(url){
 			url = url || window.location.pathname;
 			var param, 
-				named = {},
 				parts = url.split('/');
-			_.each(parts, function(e,i,l){
+			var named = _.reduce(parts, function(out, e,i,l){
 				if (e.indexOf(':')>0) {
 					param = e.split(':');
-					named[param[0]] = decodeURIComponent(param[1].replace(/\+/g, " ")) ;
+					out[param[0]] = decodeURIComponent(param[1].replace(/\+/g, " ")) ;
 				}
-			});	
+				return out;
+			}, {});	
 		    return named;
 		},
 		

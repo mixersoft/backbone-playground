@@ -41,12 +41,11 @@
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
+			var fecthed = _.keys(this.collection.fetchedServerPages);
 			_.each(this.$('.pagination .page .item'), function(item){
-				var page = $(item).text();
-				if (this.collection.fetchedServerPages[page]) {
+				if (_.contains(fetched, $(item).text())) 
 					$(item).addClass('loaded');
-				}
-			}, this);
+			});
 		},
 		
 
@@ -159,13 +158,12 @@
 		},
 		
 		renderLoading: function (page) {
-			// $('body').addClass('wait');
-			_.each(this.$('.item.link'), function(v){
+			_.find(this.$('.item.link'), function(v){
 				if (v.textContent==page) {
 					$(v).html('<i class="fa fa-2x fa-spinner fa-spin" data-page="'+page+'"><i>');
-					return false;
+					return true;
 				}
-			}, this);
+			});
 		},
 
 	});

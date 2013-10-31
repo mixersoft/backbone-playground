@@ -115,17 +115,16 @@ Backend.nodejs = {
 	parse: function(response){
 		var collection = this,
 			parsed = collection.parseShot_Assets(response), // from mixin
-			photos = [],
 			bestshotId = collection.shot_core.bestshot.get('photoId');
 			
-		_.each(parsed, function(v, k, l) {
-			// only Photos here, no Shots
-			if ( v.photoId !== bestshotId){
-				v.shotId = collection.shot_core.id; 
-				v.bestshotId = bestshotId; 
-				photos.push(new models.Photo(v));
-			}
-		}, collection);
+		var photos = _.chain(parsed)
+			.filter(function(v,k,l){ return v.photoId!==bestshotId })
+			.map(function(e,i,l){
+				e.shotId = collection.shot_core.id; 
+				e.bestshotId = bestshotId; 
+				return new models.Photo(e);	
+			}).value();
+
 		var shot_extras = collection.parseShotExtras_Assets(response.assets, bestshotId);
 		collection.shot_core = _.extend(collection.shot_core, shot_extras);
 		collection.shot_core.stale = false;
@@ -147,17 +146,19 @@ Backend.cakephp = {
 		var url = collection.templates['url_shot'](data);
 		return url;	},
 	parse: function(response) {
-		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
-			photos = []
+		var that = this,
+			parsed = this.parseShot_CC(response.response.castingCall), // from mixin
 			bestshotId = this.shot_core.bestshot.get('photoId');
-		_.each(parsed, function(v, k, l) {
-			// only Photos here, no Shots
-			if ( v.photoId != bestshotId){
-				v.shotId = this.shot_core.id; 
-				v.bestshotId = bestshotId; 
-				photos.push(new models.Photo(v));
-			}
-		}, this);
+
+		var photos = _.chain(parsed)
+			.filter(function(v,k,l){ return v.photoId!==bestshotId })
+			.map(function(e,i,l){
+				e.shotId = that.shot_core.id; 
+				e.bestshotId = bestshotId; 
+				return new models.Photo(e);	
+			}).value();
+
+
 		this.parseShotExtras_CC(response);
 		var shot_extras = response.response.castingCall.shot_extras[this.shot_core.id];
 		this.shot_core = _.extend(this.shot_core, shot_extras);

@@ -326,6 +326,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
 	 * @param Object newPages, {[pageIndex]:[count]} 
+	 TODO: this method not tested for Placeline or Timeline
 	 */
 	refreshPages: function(newPages) {
 		var collection = this.collection,
@@ -387,20 +388,23 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	 * 	options.shotId #[shotId].shot-wrap
 	 *  options.bestshot instanceof models.Shot 
 	 */
+// TODO: change to addHiddenshots_complete	 ???
 	addedHiddenshots : function(models, options) {
-		var $thumb, 
+		var that = this, 
+			$thumb, 
 			$shot = this.$('#'+options.shotId);
 		if (!$shot.length) throw "Trying to insert into missing shot, shotId="+options.shotId;
 		$shot.addClass('showing');
-		_.each(models, function(item, i){
-			if (item == options.bestshot) return;	// skip bestshot
-			$thumb = this.addOne(item, options);
-			// options.shotId set in this.addedHiddenshots()
-			// add Hiddenshot with .fade.fade-out class
-			//TODO: move this to ShotView?
-			$thumb.addClass('fade').addClass('fade-out');
-			$shot.append($thumb); 
-		}, this);
+		_.chain(models)
+			.filter(function(e,i,l){ return e !== options.bestshot })
+			.each(function(e,i,l){
+				$thumb = that.addOne(e, options);
+				// options.shotId set in that.addedHiddenshots()
+				// add Hiddenshot with .fade.fade-out class
+				//TODO: move this to ShotView?
+				$thumb.addClass('fade').addClass('fade-out');
+				$shot.append($thumb);
+			});
 		// get current page
 		var $page = _getPageFromModel(this, options.bestshot);
 		this.renderBody($page, {force: true, scroll: false});
@@ -429,35 +433,19 @@ console.info("0 Timeline.'sync:currentZoom' success");
 
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				//  using !!resp.assets to detect NEW models from sync
-				var added_models = false,
-					resp_models = _.pluck(resp.assets,'id');
-				_.each(collection.models, function(model,i,l){
-					if (resp_models.indexOf(model.get('photoId')) >=0 ) {
-						$thumb = this.addOne(model, options);
-						added_models = true;
+				var respModelIds = _.pluck(resp.assets,'id');
+				// continue
+			case 'placeline':
+				var respModelIds = respModelIds || _.pluck(resp,'id');
+				var addedOne = _.reduce(collection.models, function(out,model,i,l){
+					if (_.contains(respModelIds, model.get('photoId'))) {
+						this.addOne(model, options);
+						out = true;
 					}
-				}, this);
+					return out;
+				}, false, this);
 
-				if (added_models) {
-					$container = options.offscreen;
-					this.renderBody($container);
-				} else {
-					this.refreshLayout();
-				}
-				break;
-			case 'placeline': 
-				//  using !!resp.assets to detect NEW models from sync
-				var added_models = false,
-					resp_models = _.pluck(resp,'id');
-				_.each(collection.models, function(model,i,l){
-					if (resp_models.indexOf(model.get('photoId')) >=0 ) {
-						$thumb = this.addOne(model, options);
-						added_models = true;
-					}
-				}, this);
-
-				if (added_models) {
+				if (addedOne) {
 					$container = options.offscreen;
 					this.renderBody($container);
 				} else {
@@ -493,7 +481,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	 * 	- called by onTimelineChangeFilter(fetch=true)
 	 */
 	addBack : function(collection, photoIds, options) {
-		var sortedAdded=[], sortedIds=[],
+		var sortedAdded=[], sortedModelIds=[],
 			viewClass, thumbView, 
 			$thumb, $pageContainer,
 			model, after,
@@ -502,14 +490,14 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		// sort everything based on collection.sort()		
 		collection.sort();
 		_.each(collection.models, function(e,i,l){
-			var id = e.get('photoId')
-			sortedIds.push(id);
-			if (photoIds.indexOf(id)>-1) sortedAdded.push(id);
+			var id = e.get('photoId');
+			sortedModelIds.push(id);
+			if (_.contains(photoIds,id)) sortedAdded.push(id);
 		})
 		
 		_.each(sortedAdded, function(pid,i,l){
 			// create thumbView for added model
-			model = collection.models[sortedIds.indexOf(pid)];
+			model = collection.models[sortedModelIds.indexOf(pid)];
 			viewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
 			thumbView = new viewClass({model:model, collection: collection});
 			$thumb = thumbView.render().$el;
@@ -528,9 +516,9 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					break;
 			} 
 console.log("addBack() page="+$pageContainer.data('period'));							
-			added_index = sortedIds.indexOf(pid); 
+			added_index = sortedModelIds.indexOf(pid); 
 			after = _.find($pageContainer.find('.thumb'), function(thumb){
-				return (sortedIds.indexOf(thumb.id) > added_index)
+				return (sortedModelIds.indexOf(thumb.id) > added_index)
 			});
 			if (after)
 				$(after).parent().before($thumb);

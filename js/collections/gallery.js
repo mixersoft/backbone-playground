@@ -353,9 +353,8 @@ var GalleryCollection =	{
 			that.filteredModels = remove_models;
 			// why is this Triggered?
 			
-			var addBack_photoIds = [];
-			_.each(keep_models, function(v,k,l){
-				addBack_photoIds.push(v.get('photoId'));
+			var addBack_photoIds = _.map(keep_models, function(v,k,l){
+				return v.get('photoId');
 			});
 			that.add(keep_models, {merge: true, sort: true});
 			galleryView.trigger('addBack', that, addBack_photoIds);

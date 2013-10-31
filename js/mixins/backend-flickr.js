@@ -55,6 +55,10 @@ var Flickr = {
 			queued = [];
 		switch (data.filters.zoom)	{
 			case "country": case "region": case "locality":
+/*
+*	TODO: use asynch.js HERE, asynch.series()
+*/
+
 				var oneComplete = _.after(data.localities.length, allComplete)
 				var oneSuccess = function(photos){
 					allPhotos = _.union(allPhotos, photos);
@@ -149,12 +153,12 @@ console.warn("Placeline sync for zoom=='world' is hard-coded")
 				var req = FlickrApi.getUrl('photos', flickrOptions);
 				options.url = req.url;
 
-				var data_with_querystring_overrides = _.extend(_.clone(req.data),_.pick(snappi.qs, _.keys(req.data)));
+				var xhr_data = _.extend(_.clone(req.data),_.pick(snappi.qs, _.keys(req.data)));
 				// delete keys with value=='null'
-				_.each(data_with_querystring_overrides, function(v,k){
-					if (v==='null') delete data_with_querystring_overrides[k];
+				_.each(xhr_data, function(v,k){
+					if (v==='null') delete xhr_data[k];
 				})
-				options.data = data_with_querystring_overrides; // req.data;
+				options.data = xhr_data; // req.data;
 				options = _.defaults(options, req.xhrOptions);
 
 				var success = options.success,
@@ -176,10 +180,8 @@ console.info("Flickr parse complete");
 		}
 	},
 	parse: function(response){
-		var parsed = response,
-			photos = [];
 if (_DEBUG) console.time("GalleryCollection: create models");			
-		_.each(parsed, function(v, k, l) {
+		var photos = _.reduce(response, function(out, v, k, l) {
 			try {
 				v.photoId = v.id;
 				v.rootSrc = v.url;
@@ -189,11 +191,12 @@ if (_DEBUG) console.time("GalleryCollection: create models");
 				v.H *= scale;
 				v.W *= scale;
 				v.caption = v.title;
-				photos.push(new models.Photo(v));
+				out.push(new models.Photo(v));
 			} catch(ex){
 				console.warn("models.Photo parse error");
 			}
-		});
+			return out;
+		}, []);
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		return photos;
 	},

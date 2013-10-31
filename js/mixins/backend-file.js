@@ -49,17 +49,24 @@ var File = {
 			Backend['File'].parsed = parsed;
 		}
 		// slice response to match page/perpage 
-		var start = ((collection.currentPage || serverPaging.page) -1) * collection.perPage,
-			end = start + collection.perPage ,
+		var perpage = parseInt(collection.perPage || serverPaging.perpage),
+			start = ((collection.currentPage || serverPaging.page) -1) * perpage,
+			end = start + perpage;
+
+		var hash = Backend['File'].parsed,
+			keep = _.first(_.keys(hash), end),
 			photos = [],
-			i=-1;
-		_.each(Backend['File'].parsed, function(v, k, l) {
-			if (++i < start) return true;
-			if (i >= end) return false;
-			v.requestPage = Math.ceil(i/collection.perPage);
-			if (v.shotId) photos.push(new models.Shot(v));
-			else photos.push(new models.Photo(v));
-		});
+			attr, m;
+			_.each(keep, function(id,i,l){
+				if (i>=start) {
+					attr = hash[id];
+					attr.requestPage = Math.ceil( i / perpage );
+					if (attr.shotId) m = new models.Shot(attr);
+					else m = new models.Photo(attr);
+					photos.push(m);
+				}
+			});
+
 		return photos;
 	},
 }

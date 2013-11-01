@@ -107,8 +107,8 @@ zoomOnPivot : function( placeline, pivot) {
 		filters = _.clone(placeline.get('filters'));
 	if (filters.zoom == newZoom) {
 		// pivot is same level as currentZoom
-		var arguments = "NOT possible if we hide zoom Levels in GView";
-		placeline.trigger('sync:currentZoom', arguments)
+		var args = "NOT possible if we hide zoom Levels in GView";
+		placeline.trigger('sync:currentZoom', args)
 	} else {
 		filters.zoom = newZoom;
 		placeline.set('filters', filters, {silent:true});

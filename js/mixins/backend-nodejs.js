@@ -52,7 +52,7 @@ var Nodejs = {
 if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");		
 
 		var paging = response.request;
-			serverPaging = {
+		var serverPaging = {
 				page: parseInt(paging.page),
 				perpage: parseInt(paging.perpage),
 				pages: parseInt(paging.pages),

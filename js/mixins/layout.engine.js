@@ -1,5 +1,7 @@
 // /js/mixins/snappi.js
 (function ( mixins ) {
+	"use strict";
+
 	
 // dependencies got LayoutEngine.Typeset
 /**
@@ -137,6 +139,10 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             }
             if (!chunks.length) _layoutComplete()
             else { 
+
+/*
+*	use asynch.js HERE
+*/            	
             	// layout each chunk BEFORE calling layoutComplete
             	var oneComplete = _.after(chunks.length, function(){
             		_layoutComplete()
@@ -288,7 +294,7 @@ if (_DEBUG) console.time("Typeset._layout");
 					}
     				
     				//Now lay out the images
-    				x = 0;
+    				var x = 0;
     				
     				// ThumbnailView: .thumb > .crop-wrap > .crop > IMG
     				for (var i = 0; i < lineImages.length; i++) {

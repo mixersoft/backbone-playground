@@ -1,18 +1,20 @@
 (function ( mixins, models ) {
+	"use strict";
+
 /*
  * Backend - wrapper for different dev backends
- * 	'cakephp': original cakephp backend. DEFAULT
- * 		- a lot of bloat, but AAA properly implemented
- * 		- ex:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
- * 	'nodejs': nodejs, minimal REST API implemented in node.js, 
- * 		- use hostname=nodejs host, ?backend=node 
- * 		- GET eliminates a lot of bloat
- * 		- PUT/PATCH partially implemented using CakePHP backend
- * 		- WARNING: still USES BACKDOOR AUTHENTICATION, not appropriate for PRODUCTION release
- * 		- ex: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
- * 	'bootstrap': uses JS file with static JSON
- * 		- use ?bootstrap=[2011|mb|venice]
- * 		- see /js/snappi-bootstrap.js    
+ * 'cakephp': original cakephp backend. DEFAULT
+ *		- a lot of bloat, but AAA properly implemented
+ *		- ex:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
+ * 'nodejs': nodejs, minimal REST API implemented in node.js, 
+ *		- use hostname=nodejs host, ?backend=node 
+ *		- GET eliminates a lot of bloat
+ *		- PUT/PATCH partially implemented using CakePHP backend
+ *		- WARNING: still USES BACKDOOR AUTHENTICATION, not appropriate for PRODUCTION release
+ *		- ex: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
+ * 'bootstrap': uses JS file with static JSON
+ *		- use ?bootstrap=[2011|mb|venice]
+ *		- see /js/snappi-bootstrap.js    
  */
 var Nodejs = {
 	dataType: 'json',
@@ -43,7 +45,7 @@ var Nodejs = {
 				request.perpage = collection.perPage;
 				url = _.template('http://<%=baseurl%>/asset.json?', Nodejs)+$.param(request); 
 				break;
-		} 	
+		}
 		return url;
 	},
 	parse: function(response){
@@ -71,7 +73,7 @@ if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");
 		
 		// for requestPaging template
 		if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
-		this.fetchedServerPages[serverPaging.page]=true  
+		this.fetchedServerPages[serverPaging.page]=true;  
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_Assets(response); // from mixin
@@ -84,7 +86,7 @@ if (_DEBUG) console.timeEnd("GalleryCollection: create models");
 		$('body').removeClass('wait');
 		return photos;
 	},	
-}
+};
 
 var Backend = _.extend(mixins.BackendHelpers && mixins.BackendHelpers['Backend']  || {}, {
 	'Nodejs': Nodejs,

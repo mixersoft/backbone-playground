@@ -1,13 +1,14 @@
 // /js/mixins/snappi.js
 (function ( mixins ) {
-	
+	"use strict";
+
 	mixins.RestApi = {
 		parseShotExtras_CC : function(json, shot) {
-			var shot = shot || json.response.Shot,
-				shot_extras = json.response.castingCall.shot_extras[shot.id];
-				shot_extras.count = parseInt(shot_extras.count);
-				shot_extras.priority = parseInt(shot_extras.priority);
-				shot_extras.active = !!shot_extras.active;
+			shot = shot || json.response.Shot;
+			var shot_extras = json.response.castingCall.shot_extras[shot.id];
+			shot_extras.count = parseInt(shot_extras.count);
+			shot_extras.priority = parseInt(shot_extras.priority);
+			shot_extras.active = !!shot_extras.active;
 			return shot_extras;
 		},
 		parseShot_CC: function(cc){
@@ -21,7 +22,7 @@
 				audition = {
 					shotId: row.Shot.id || null ,
 					shotCount: row.Shot.count ? parseInt(row.Shot.count) : null,
-					
+
 					photoId: id,
 					score: row.Photo.Fix.Score ? Math.round(parseFloat(row.Photo.Fix.Score)*10)/10 : null,
 					rating: row.Photo.Fix.Rating ? parseInt(row.Photo.Fix.Rating) : null,
@@ -53,10 +54,10 @@
 					audition.origH = row.Photo.W;
 					audition.origW = row.Photo.H;
 					audition.H = row.Photo.Img.Src.W;
-					audition.W = row.Photo.Img.Src.H
+					audition.W = row.Photo.Img.Src.H;
 				}
 				
-				audition.orientationLabel =  (audition.H > audition.W) ? 'portrait' : '';
+				audition.orientationLabel = (audition.H > audition.W) ? 'portrait' : '';
 				hash[id] = audition;
 				return hash;
 			}, {});
@@ -134,7 +135,7 @@
 			if (_DEBUG && SNAPPI) SNAPPI.Auditions = _.extend(SNAPPI.Auditions || {}, parsedPhotos); 
 			return parsedPhotos;	
 		},
-	}
+	};
 	/*
 	 * helper functions for manipulating window.location.href
 	 */
@@ -150,23 +151,22 @@
 		},
 		parseQueryString : function(a) {
 			a = a || (window.location.search.substr(1).split('&'));
-		    if (a == "") return {};
-		    var b = {};
-		    for (var i = 0; i < a.length; ++i)
-		    {
-		        var p=a[i].split('=');
-		        if (p.length != 2) continue;
-		        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-		    }
-		    return b;
+			if (a === "") return {};
+			var b = {};
+			for (var i = 0; i < a.length; ++i){
+				var p=a[i].split('=');
+				if (p.length != 2) continue;
+				b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+			}
+			return b;
 		},
 		/**
 		 * 
 		 * @param Object cfg 
-		 * 		cfg.hostname, ex. snaphappi.com
-		 * 		cfg.subdomains (array)
-		 * 		cfg.baseurl
-		 * 		cfg.template, underscore template
+		 *	cfg.hostname, ex. snaphappi.com
+		 *	cfg.subdomains (array)
+		 *	cfg.baseurl
+		 *	cfg.template, underscore template
 		 */
 		imgServer: function(cfg){
 			// get
@@ -219,7 +219,7 @@
 		 * @param {Object} data, {width:, height:}, IMG tag, or {w:, h:}
 		 * @param String prefix thumbnail size prefix, [bp|bm|bs|tn|ll|lm|sq]
 		 * @param Int i, index used to hash staging server subdomain
-		 * 		see imgServerCfg.subdomains
+		 *	see imgServerCfg.subdomains
 		 */
 		getImgSrc: function(data, prefix, i ){
 			var parts = data.rootSrc.split('/',2),
@@ -247,58 +247,58 @@
 				}
 				return out;
 			}, {});	
-		    return named;
+			return named;
 		},
 		
 		// deprecate, use getImgSrc with template
 		getImgSrcBySize : function(src, size){
-		    size = size || 'tn';
-		    var parts = SNAPPI._parseSrcString(src);
-		    if (size && !parts.dirname.match(/.thumbs\/$/)) 
-		        parts.dirname += '.thumbs/';
-		    return parts.dirname + (size ? size + '~' : '') + parts.filename + (parts.crop ? '~' + parts.crop : '');
+			size = size || 'tn';
+			var parts = SNAPPI._parseSrcString(src);
+			if (size && !parts.dirname.match(/.thumbs\/$/)) 
+				parts.dirname += '.thumbs/';
+			return parts.dirname + (size ? size + '~' : '') + parts.filename + (parts.crop ? '~' + parts.crop : '');
 		},
 		// deprecate, use getImgSrc with template
 		_parseSrcString : function(src){
-		    var i = src.lastIndexOf('/');
-		    var name = {
-		        dirname: '',
-		        size: '',
-		        filename: '',
-		        crop: ''
-		    };
-		    name.dirname = src.substring(0, i + 1);
-		    var parts = src.substring(i + 1).split('~');
-		        switch (parts.length) {
-		            case 3:
-		                name.size = parts[0];
-		                name.filename = parts[1];
-		                name.crop = parts[2];
-		                break;
-		            case 2:
-		                if (parts[0].length == 2) {
-		                    name.size = parts[0];
-		                    name.filename = parts[1];
-		                }
-		                else {
-		                    name.filename = parts[0];
-		                    name.crop = parts[1];
-		                }
-		                break;
-		            case 1:
-		                name.filename = parts[0];
-		                break;
-		            default:
-		                name.filename = src.substring(i + 1);
-		                break;
-		        }
-		        return name;
+			var i = src.lastIndexOf('/');
+			var name = {
+				dirname: '',
+				size: '',
+				filename: '',
+				crop: ''
+			};
+			name.dirname = src.substring(0, i + 1);
+			var parts = src.substring(i + 1).split('~');
+			switch (parts.length) {
+				case 3:
+					name.size = parts[0];
+					name.filename = parts[1];
+					name.crop = parts[2];
+					break;
+				case 2:
+					if (parts[0].length == 2) {
+						name.size = parts[0];
+						name.filename = parts[1];
+					}
+					else {
+						name.filename = parts[0];
+						name.crop = parts[1];
+					}
+					break;
+				case 1:
+					name.filename = parts[0];
+					break;
+				default:
+					name.filename = src.substring(i + 1);
+					break;
+			}
+			return name;
 		},
-	}
+	};
 	
 	mixins.Handlebars = {
 		
-	}
+	};
 	
 	
 })( snappi.mixins);

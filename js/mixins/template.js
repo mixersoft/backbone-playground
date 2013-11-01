@@ -1,10 +1,6 @@
 // /js/mixins/snappi.js
 (function ( mixins ) {
-	
-	/*
-	 * private vars
-	 */
-	var _lastScrollTop = 0;
+	"use strict";
         
 mixins.Handlebars = {
 	initialized: false,
@@ -18,18 +14,19 @@ mixins.Handlebars = {
 	helpers: {
 		// fontawsome rating stars, {rating: [0..5] }
 		ratingStars: function(rating, options) {
-			var rating = rating || 0, out = "";
+			rating = rating || 0;
+			var out = "";
 			for(var i=1; i<=5; i++) {
-				out = out + "<i class='fa fa-star"+(i>rating ? "-o" : "")+"'></i>";
+				out += "<i class='fa fa-star"+(i>rating ? "-o" : "")+"'></i>";
 			}
-		  	return out;
+			return out;
 		},
 		// bootstrap button group with label [{lebel: activve}]
 		buttonGroupButtons: function ( buttons, label, options){
 			var out = '<button class="btn btn-small disabled">'+label+'</button>';
 			_.each(buttons, function(e,i,l){
 				out += options.fn(e);
-			})
+			});
 			return out;
 		},
 		// unused

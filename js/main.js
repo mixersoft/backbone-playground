@@ -1,8 +1,9 @@
 //Top-level namespaces for our code
 
 (function() {
+	"use strict";
 
-	_DEBUG = window.location.search.indexOf('debug') > -1;
+	window._DEBUG = window.location.search.indexOf('debug') > -1;
 	window.SNAPPI = window.SNAPPI || {};
 	
 	/*
@@ -37,7 +38,7 @@
 					});
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection,
-					pager: pager, 		 
+					pager: pager,
 				}); 
 				break;
 			case 'placeline': 
@@ -49,7 +50,7 @@
 					});
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection,
-					pager: pager, 		 
+					pager: pager,
 				});
 				break;
 			case 'page': 

@@ -1,4 +1,5 @@
 (function ( mixins ) {
+	"use strict";
 
 var Timeline = {
 	// called by GalleryView
@@ -28,7 +29,7 @@ renderBody: function(container, options){
 			// page already rendered, no new elements to add, 
 			// but refreshLayout() ?? 
 	} else if (!pageContainer) {
-		var $before = $current = null, 
+		var $before = null, 
 			body = this.$('.body'),
 			pager = this.pager.toJSON();
 			
@@ -74,28 +75,27 @@ onTimelineSync : function(pager, resp, options) {
 	console.log("GalleryView.pager.'sync'");
 	var settings = pager.toJSON(),
 		active = settings.active || 0,
-		current = settings.periods[active],
-		options = {
-			from: current.from,
-			to: current.to,
-			// filter: current.filter,
-		}
+		current = settings.periods[active];
+		// options = {
+		//	from: current.from,
+		//	to: current.to,
+		//	// filter: current.filter,
+		// }
 		pager.set('active', active);
 },
 onTimelineChangePeriod : function(pager) {
+	var that = this;
 	console.log("GalleryView.pager.'change:active', i="+pager.changed.active);
 	if (pager.helper.isFetched.call(pager, pager.changed.active)) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
-		var that = this,
-			pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
-		$('.pager').addClass('xhr-fetching')	
+		var pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
+		$('.pager').addClass('xhr-fetching');	
 		this.scrollIntoView(pageContainer, function(){
 			that.collection.trigger('xhr-ui-ready');
 		});
 		return;
-	};
-	var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this),
-		that = this;
+	}
+	var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this);
 	that.collection.fetch({
 		remove: false,
 		data: options,
@@ -104,8 +104,9 @@ onTimelineChangePeriod : function(pager) {
 		},
 	});
 },
+
 onTimelineChangeFilter : function(pager, changed) {
-	this.collection.filterChanged(changed, this)
+	this.collection.filterChanged(changed, this);
 },
 
 templates: {
@@ -113,6 +114,7 @@ templates: {
 	periodContainer: _.template('<div class="page" data-zoom="<%=currentZoom%>" data-period="<%=currentPeriod.period%>"  data-label="<%=currentPeriod.label%>"><div class="empty-label"><%=currentPeriod.label%></div></div>'),
 	periodContainerLabel:_.template('<div class="empty-label"><%=label%></div>'),
 },
+
 /**
  * @param create boolean (optional), if truthy then create if not found
  * @param index int (optional), default active, unless period index provided 
@@ -141,11 +143,11 @@ getPeriodContainerByTS$: function(that, TS_UTC, create) {
 	}, this);	
 	if (index === false && create) {
 		template = helper.templates.periodContainer; 
-		pager = that.pager.helper.getActive(pager),
+		pager = that.pager.helper.getActive(pager);
 		$item = $( template( pager) );
 	} else {
-		template = helper.templates.selector_PeriodContainer,
-		pager = that.pager.helper.getActive(pager, index),
+		template = helper.templates.selector_PeriodContainer;
+		pager = that.pager.helper.getActive(pager, index);
 		$item = that.$( template( pager) );
 	}
 	return $item.length ? $item : false;
@@ -205,12 +207,13 @@ getXhrFetchOptions: function(that){
 	}// end GalleryView	
 
 	
-}
+};
 
 var Pager = _.extend(mixins.PagerHelpers && mixins.PagerHelpers['Pager']  || {}, {
 	'Timeline': Timeline,
 });
+
 mixins.PagerHelpers = mixins.PagerHelpers || {Pager:{}};
 mixins.PagerHelpers['Pager'] = Pager;
-var check;
-})( snappi.mixins)
+
+})( snappi.mixins );

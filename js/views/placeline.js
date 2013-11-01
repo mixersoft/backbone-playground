@@ -1,5 +1,5 @@
 (function (views, mixins) {
-
+	"use strict";
 
 /*
  * View: Timeline
@@ -12,8 +12,7 @@ var extend = function(classDef){
 		// add mixins
 		classDef
 	);
-}
-
+};
 
 var PlacelineView = {
 
@@ -47,16 +46,16 @@ var PlacelineView = {
 				var source = $(this.template_source).html();	
 				// compile once, add to Class
 				views.PlacelineView.prototype.template = _.template(source);
-		    }
-		    this.listenTo(this.model, 'gotoPeriod', this.gotoPeriod);
-		    this.listenTo(this.model, 'sync', this.render);
-		    this.listenTo(this.collection, 'sync', this.renderState);
-		    this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
-		    // this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
-		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
-		    this.listenTo(this.collection, 'change:period', function(){
-		    		// disabled for Placeline. no perpage
-		    });
+			}
+			this.listenTo(this.model, 'gotoPeriod', this.gotoPeriod);
+			this.listenTo(this.model, 'sync', this.render);
+			this.listenTo(this.collection, 'sync', this.renderState);
+			this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
+			// this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
+			this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
+			this.listenTo(this.collection, 'change:period', function(){
+					// disabled for Placeline. no perpage
+			});
 		},
 		
 		// triggered by Timeline."sync"
@@ -80,55 +79,55 @@ var PlacelineView = {
 				return $item.length ? $item : false;
 			},
 			scrollSpy : function(e) {
-		    	self = this;
-		    	if (self.$el.hasClass('xhr-fetching')) {
-		    		return;
-		    	}
-		    	
-		    	var OFFSET_H = 40,
-		    		target = self.$el,
-		    		collection = this.collection,
-		        	selfB = target.offset().top+target.height(),
-		        	windowT = $(window).scrollTop(),
-		        	windowB = windowT + $(window).height();
-		        	
-		        // find current visible page
-		        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
-		        if (!scrollDir) return;
+				self = this;
+				if (self.$el.hasClass('xhr-fetching')) {
+					return;
+				}
+				
+				var OFFSET_H = 40,
+					target = self.$el,
+					collection = this.collection,
+					selfB = target.offset().top+target.height(),
+					windowT = $(window).scrollTop(),
+					windowB = windowT + $(window).height();
+					
+				// find current visible page
+				var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
+				if (!scrollDir) return;
 
-		        visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
-		        	var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
-		        	var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
-		        	var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
-		        	var isTopBelowFold = item.offsetTop > windowB;
-		        	if (scrollDir=='up'){ // page up
-			        	if (isBottomBelowFold) return true;
-			        	if (isTopBelowWindowT) return true;
-		        	}
-		        	if (scrollDir=='down') {
-		        		if (isTopBelowWindowT) return true;
-			        	if (isBottomBelowFold) return true;
-		        	}
-		        });
-		        if (!visiblePg && scrollDir=='up') 
-		        	visiblePg = $('.gallery .body .page:first-child');
+				visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
+					var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
+					var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
+					var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
+					var isTopBelowFold = item.offsetTop > windowB;
+					if (scrollDir=='up'){ // page up
+						if (isBottomBelowFold) return true;
+						if (isTopBelowWindowT) return true;
+					}
+					if (scrollDir=='down') {
+						if (isTopBelowWindowT) return true;
+						if (isBottomBelowFold) return true;
+					}
+				});
+				if (!visiblePg && scrollDir=='up') 
+					visiblePg = $('.gallery .body .page:first-child');
 				else if (!visiblePg && scrollDir=='down') 
-		        	visiblePg = $('.gallery .body .page:last-child');
+					visiblePg = $('.gallery .body .page:last-child');
 
-		        var pageId = $(visiblePg).data('period');
-		        var settings = this.model.toJSON();
-		        var pagerPeriod, pagerIndex;
+				var pageId = $(visiblePg).data('period');
+				var settings = this.model.toJSON();
+				var pagerPeriod, pagerIndex;
 
-		        pagerPeriod = _.find(settings.periods, function(e){ 
-		        	return e.place_id === pageId && e.place_type === settings.currentZoom;
-		        });
-		        pagerIndex = _.indexOf(settings.periods, pagerPeriod);
-		        if (pagerIndex==-1) 
-		        	return;
-		        this.model.set('active', pagerIndex, {silent:true});
-        		this.renderState();	
+				pagerPeriod = _.find(settings.periods, function(e){ 
+					return e.place_id === pageId && e.place_type === settings.currentZoom;
+				});
+				pagerIndex = _.indexOf(settings.periods, pagerPeriod);
+				if (pagerIndex==-1) 
+					return;
+				this.model.set('active', pagerIndex, {silent:true});
+				this.renderState();	
 
-		    },
+			},
 		},
 		
 		// render Loading spinner when page load is requested
@@ -178,14 +177,14 @@ console.info("0 Timeline.renderState");
 		},
 		
 		/**
-	     * Called on the scroll event of the container element.  Used only in the non-paginated mode.
-	     * When the scroll threshold is reached a new page of thumbs is requested.
-	     * @param event e - the scroll event object
-	     */
-	    onContainerScroll : _.throttle(function(e){
-	    	this.helper.scrollSpy.call(this, e);
-	    }, 200, {leading: false}),
-	    		
+		 * Called on the scroll event of the container element.  Used only in the non-paginated mode.
+		 * When the scroll threshold is reached a new page of thumbs is requested.
+		 * @param event e - the scroll event object
+		 */
+		onContainerScroll : _.throttle(function(e){
+			this.helper.scrollSpy.call(this, e);
+		}, 200, {leading: false}),
+				
 		
 		gotoFirst: function (e) {
 			e.preventDefault();
@@ -199,7 +198,7 @@ console.info("0 Timeline.renderState");
 				index = model_attr.active-1,
 				fetched_key = model_attr.currentZoom+'-'+model_attr.periods[index].period;
 			if (model_attr.fetched[fetched_key]) {
-				console.warn("TODO: check if filter has changed, active="+index)
+				console.warn("TODO: check if filter has changed, active="+index);
 				// just scroll
 			} else 
 				this.model.set('active', index);		},
@@ -211,7 +210,7 @@ console.info("0 Timeline.renderState");
 				index = model_attr.active+1,
 				fetched_key = model_attr.currentZoom+'-'+model_attr.periods[index].period;
 			if (model_attr.fetched[fetched_key]) {
-				console.warn("TODO: check if filter has changed, active="+index)
+				console.warn("TODO: check if filter has changed, active="+index);
 				// just scroll
 			} else 
 				this.model.set('active', index);
@@ -224,11 +223,14 @@ console.info("0 Timeline.renderState");
 		// 
 		gotoPeriod: function (e, where) {
 			e.preventDefault();
+			
 			var index, 
 				label = $(e.currentTarget).attr('title'),
-				model_attr = this.model.toJSON(),
-				where = where || {label: label};
-				period = _.findWhere(model_attr.periods, where);
+				model_attr = this.model.toJSON();
+
+			where = where || {label: label};	
+			var period = _.findWhere(model_attr.periods, where);
+				
 			// _.each(model_attr.periods, function(e,i,l){
 				// if (label.indexOf(e.label)===0) {
 					// index = i;
@@ -239,7 +241,7 @@ console.info("0 Timeline.renderState");
 			
 			index = model_attr.periods.indexOf(period);
 			if (model_attr.active == index) {
-				console.warn("TODO: check if filter has changed, active="+index)
+				console.warn("TODO: check if filter has changed, active="+index);
 			}
 			this.model.set('active', index);
 		},
@@ -257,18 +259,18 @@ console.info("0 Timeline.renderState");
 
 			// get active .page for currentZoom
 			var active = false,
-				old_place_id = old.periods[old.active].place_id
+				old_place_id = old.periods[old.active].place_id,
 				updated = _.defaults({currentZoom:currentZoom}, old);
 
 			var found = _.find(old.periods, function(elem,i,l){
 				if (elem.place_type == currentZoom && active===false) {
-					var isFetched = that.model.helper.isFetched(i, updated)
+					var isFetched = that.model.helper.isFetched(i, updated);
 					if (isFetched) 
 						active = i;
 				}
-				if (active!==false 
-					&&  elem.place_type == currentZoom
-					&&  elem.place_id==old_place_id
+				if (active!==false &&  
+					elem.place_type == currentZoom	&&  
+					elem.place_id==old_place_id
 				) {
 					active = i;
 					return true;

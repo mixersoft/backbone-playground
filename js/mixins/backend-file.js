@@ -1,12 +1,12 @@
 (function ( mixins, models ) {
+	"use strict";
 
 var File = {
 	datatype: null,		// for $.ajax request dataType
 	url: function(){ // hijack xhr, just add new models
 		this.listenToOnce(this, 'request', function(collection, xhr, queryOptions){
-			var collection = this, 
-				models = collection.parse();
-			collection.fetchedServerPages[collection.currentPage]=true  
+			var models = collection.parse();
+			collection.fetchedServerPages[collection.currentPage]=true;  
 			_.each(models, function(item){
 				collection.models.push(item);
 			});
@@ -16,17 +16,18 @@ var File = {
 	},
 	parsed: null,	// just parse once
 	parse: function(json){
-		var collection = this;
+		var collection = this,
+			paging, serverPaging;
 		if (!Backend['File'].parsed) {
-			var paging = json.response.castingCall.CastingCall.Auditions,
-				serverPaging = {
-					page: collection.currentPage || snappi.qs.page || paging.Page,
-					perpage: snappi.qs.perpage || paging.Perpage,
-					pages: paging.Pages,
-					total: paging.Total,
-					count: snappi.qs.perpage || paging.Audition.length,
-					targetHeight: 160,
-				};
+			paging = json.response.castingCall.CastingCall.Auditions;
+			serverPaging = {
+				page: collection.currentPage || snappi.qs.page || paging.Page,
+				perpage: snappi.qs.perpage || paging.Perpage,
+				pages: paging.Pages,
+				total: paging.Total,
+				count: snappi.qs.perpage || paging.Audition.length,
+				targetHeight: 160,
+			};
 				
 			// config image server for this request
 			snappi.mixins.Href.imgServer({
@@ -69,7 +70,7 @@ var File = {
 
 		return photos;
 	},
-}
+};
 
 var Backend = _.extend(mixins.BackendHelpers && mixins.BackendHelpers['Backend']  || {}, {
 	'File': File,

@@ -1,4 +1,5 @@
 (function ( mixins ) {
+	"use strict";
 
 var Page = {
 	// called by GalleryView
@@ -27,8 +28,8 @@ renderBody: function(container, options){
 	if (pageContainer.length && container && container.children().length) {
 			// page already rendered, no new elements to add, 
 			// but refreshLayout() ?? 
-	} else if (pageContainer.length==0) {
-		pageContainer = $(this.templates.pageTemplate(collection))
+	} else if (pageContainer.length===0) {
+		pageContainer = $(this.templates.pageTemplate(collection));
 		var p, 
 			currentPage = collection.currentPage,
 			body = this.$('.body'),
@@ -38,9 +39,9 @@ renderBody: function(container, options){
 				pageContainer.insertAfter(pages.eq(i));
 				currentPage = 'inserted';
 				break;	
-			};
+			}
 		}	
-		if (currentPage != 'inserted') body.prepend(pageContainer);
+		if (currentPage !== 'inserted') body.prepend(pageContainer);
 		stale = true;
 		
 	} 
@@ -82,7 +83,7 @@ console.log('GalleryView.renderBody() first chunk ready to view');
 	
 },
 	},
-}
+};
 
 var Pager = _.extend(mixins.PagerHelpers && mixins.PagerHelpers['Pager']  || {}, {
 	'Page': Page,

@@ -3,23 +3,28 @@
 // called by GalleryView
 
 (function ( views, mixins ) {
-
+	'use strict';
 // define Class hierarchy at the top, but use at the bottom
-var extend = function(classDef){
+var extend = function(classDef) {
 	views.GalleryDisplayOptionsView = Backbone.View.extend(
-		_.extend({}, mixins.UiActions, classDef)
+		_.extend(
+			{}, 
+			mixins.UiActions, 
+			classDef
+		)
 	);
-}
+};
 
 // define classDef as Object for IDE introspection
 var GalleryDisplayOptionsView = {
 
-	el: "required",
+	el: 'required',
 
-	pager: "required",	
-	collection: "required",
-	
-	template_source: "#markup #GalleryDisplayOptions.handlebars",
+	pager: 'required',
+
+	collection: 'required',
+
+	template_source: '#markup #GalleryDisplayOptions.handlebars',
 	
 	ui_defaults: {	// default settings, override in this.collection.gallery_display_options_ui
 		'style': [
@@ -51,7 +56,7 @@ var GalleryDisplayOptionsView = {
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
 			views.GalleryDisplayOptionsView.prototype.template = Handlebars.compile(source);
-	    }
+		}
 		
 		// initialize with querystring/GalleryCollection override
 		this.ui_settings = _.extend(this.ui_defaults, this.collection.gallery_display_options_ui);
@@ -62,7 +67,7 @@ var GalleryDisplayOptionsView = {
 			});
 		}
 		
-	    this.render();
+		this.render();
 		this.listenTo(this.collection, 'refreshLayout', this.render);
 	},
 	
@@ -75,7 +80,7 @@ var GalleryDisplayOptionsView = {
 	onSetThumbSize: function(e){
 		e.preventDefault();
 		// update collection.gallery_display_options_ui
-		var label = $(e.target).text()
+		var label = $(e.target).text();
 		var displayOptions = this.collection.gallery_display_options_ui;
 		_.map(displayOptions.size, function(o){
 			o.active = (o.label == label) ? 'active' : '';
@@ -114,7 +119,7 @@ var GalleryDisplayOptionsView = {
 		// also check PagerView.sortByAscending()
 	},
 	
-}
+};
 
 // put it all together at the bottom
 extend(GalleryDisplayOptionsView);	

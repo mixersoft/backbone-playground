@@ -1,7 +1,7 @@
 // /js/collections/gallery.js
 
 (function (collections, models, mixins, paginator) {
-
+	"use strict";
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
 	var options = _.extend( {}, 
@@ -16,7 +16,7 @@ var extend = function(classDef){
 	collections.GalleryCollection = paginator.requestPager.extend(
 		options
 	);
-}
+};
 
 /*
  * Collection: GalleryCollection
@@ -65,7 +65,7 @@ var GalleryCollection =	{
 		// this.listenTo(this, 'filterChanged', this.filterChanged);
 		this.listenTo(this, 'change:direction', function(dir){
 			this.pager_ui.direction = dir; 
-			return "how do we listing to a change in TimelineView???"
+			return "how do we listing to a change in TimelineView???";
 		});
 	},
 	
@@ -95,7 +95,7 @@ var GalleryCollection =	{
 		var index;
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				index = "timeline should know"
+				index = "timeline should know";
 				break;
 			case 'placeline':
 				index = "placeline should know";
@@ -114,9 +114,11 @@ var GalleryCollection =	{
 	 * 
 	 * when page boundaries change, it's not clear that 
 	 * are inserted into this.models in the correct sort order
+	 * NOTE: only tested for pager=page, backend=cake
 	 *  
 	 */
 	repaginate: function(perpage){
+		if (snappi.PAGER_STYLE !== 'page') return;
 		perpage = perpage || this.perPage;
 		// reset cached pages index because we don't know which serverPages 
 		// are completely loaded anymore
@@ -131,7 +133,8 @@ var GalleryCollection =	{
 		var p, activePaging;
 		_.each(this.models, function(model){
 			// estimate clientPage based on serverPage math
-			if (p = model.get('clientPage')) {
+			p = model.get('clientPage');
+			if (p) {
 				activePerpage = this.perPage;
 			} else {
 				p = model.get('requestPage');
@@ -160,9 +163,9 @@ var GalleryCollection =	{
 	},
 	/**
 	 * get Hiddenshots and add to Collection, fired by ThumbnailView via click event
- 	 * @param {Object} options = {model: [models.Shot]}
- 	 * 
- 	 * url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
+	* @param {Object} options = {model: [models.Shot]}
+	* 
+	* url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
 	 */
 	fetchHiddenShots: function(options) {
 		var model = options.model;
@@ -182,7 +185,7 @@ var GalleryCollection =	{
 			});
 			// us GalleryView.addedHiddenshots to add .showing class
 			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
-		}
+		};
 		var hiddenshotCollection = model.get('hiddenshot');
 		var hiddenshot_options = {
 			success: success,
@@ -196,7 +199,7 @@ var GalleryCollection =	{
 
 	/**
 	 * get Zoom and add to Collection, fired by ThumbnailView via click event
- 	 * @param {Object} pivot = {
+	 * @param {Object} pivot = {
 			place_id: mPhoto.place_id,
 			lat: mPhoto.latitude,
 			lon: mPhoto.longitude,
@@ -206,7 +209,7 @@ var GalleryCollection =	{
 			pivot: thumb,
 			pivot_model: mPhoto,	// ???: this needed?
 		}
- 	 * 
+	 * 
 	 */
 	fetchZoom: function(pivot, options) {
 		var collection = this;
@@ -227,7 +230,7 @@ var GalleryCollection =	{
 					options_Zoom = {
 						place_id: curPlace.place_id
 					};
-				_.defaults(options_Zoom, options.fetchOptions)
+				_.defaults(options_Zoom, options.fetchOptions);
 				// set models.Placeline.active
 				if (options.placeline) {
 					var periods = options.placeline.get('periods');
@@ -251,7 +254,7 @@ var GalleryCollection =	{
 							latitude: curPlace.latitude,
 							label: curPlace._content,
 							name: curPlace._content,
-						}
+						};
 						// TODO: trigger Placeline.trigger('insertPeriod', addPeriod)
 						var insertAt = _.sortedIndex(periods, addPeriod, 'longitude');
 						periods.splice(insertAt, 0, addPeriod);
@@ -297,13 +300,13 @@ var GalleryCollection =	{
 		var that = this;
 		// previous = this.pager.previousAttributes(),
 		// CHECK if filter requires a fetch
-		// 		for all pages, set page stale=true;
+		//		for all pages, set page stale=true;
 		var filtered, remove, id, 
 			options = {}, 
 			keep_models = [],
 			remove_models = [];
 
-		if (changed.fetch==false) {
+		if (changed.fetch===false) {
 			_.filter(that.models,function(model,i,l){
 				// handle filtered.changed.rating='off'
 				
@@ -312,7 +315,7 @@ var GalleryCollection =	{
 					if (that.filterFn[key]) 
 						return that.filterFn[key](model, changed);
 					else return false;
-				})
+				});
 				
 				if (remove) {
 					model.trigger('hide');
@@ -324,13 +327,13 @@ var GalleryCollection =	{
 			// do in GalleryCollection
 			options = {silent:true};
 			that.remove(remove_models, options);
-			var filtered = _.union(that.filteredModels||[], remove_models);
+			filtered = _.union(that.filteredModels||[], remove_models);
 			that.filteredModels = filtered;
 			
 			// render page
 			_.delay(function(){
 				that.trigger('refreshLayout');	
-			}, snappi.TIMINGS.thumb_fade_transition+100)
+			}, snappi.TIMINGS.thumb_fade_transition+100);
 		} else {
 			// Timeline.validate_ChangeFilter() already marked all pages a stale
 			
@@ -343,7 +346,7 @@ var GalleryCollection =	{
 					if (that.filterFn[key]) 
 						return that.filterFn[key](model, changed);
 					else return false;
-				})
+				});
 				
 				if (remove) {
 					remove_models.push(model);
@@ -372,7 +375,7 @@ var GalleryCollection =	{
 var pagerHelper;
 switch (snappi.PAGER_STYLE) {
 	case 'timeline': 
-		pagerHelper = galleryView.Pager['Timeline']
+		pagerHelper = galleryView.Pager['Timeline'];
 		break;
 	case 'placeline':
 	case 'page':
@@ -415,7 +418,7 @@ var setup_DisplayOptions = {
 	pager_ui: {
 		direction: 'desc',
 	}
-}
+};
 
 var setup_Paginator = {
 	// properties for use with Backbone.Paginator	
@@ -466,7 +469,7 @@ var setup_Paginator = {
 	server_api: {	
 		// custom parameters appended to querystring via queryAttributes
 	},
-}
+};
 
 
 // put it all together at the bottom

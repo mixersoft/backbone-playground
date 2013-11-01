@@ -1,20 +1,22 @@
 // /js/views/gallery.js
 
 (function ( views, mixins ) {
-	
+	"use strict";
+
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	var options = _.extend({}, 
+	var options = _.extend(
+		{}, 
 		mixins.UiActions,
 		mixins.Href,
-		mixins.PagerHelpers, 	// for Timeline|Placeline|Page helpers
+		mixins.PagerHelpers,	// for Timeline|Placeline|Page helpers
 		LayoutEngines, 
 		classDef
 	);
 	views.GalleryView = Backbone.View.extend(
 		options
 	);
-}	
+};
 
 /*
  * View: Gallery (same as App?)
@@ -36,12 +38,12 @@ var LayoutEngines = {
 				targetHeight: displayOptionSize.size,
 				_layout_y: 0,					// start at page top
 				// more: function(){},			// pipeline before layout complete 
-			}	
+			};	
 			/*
 			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
 			 */
-			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']==true;
-			
+			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']===true;
+
 			// _.defer(function(that){
 				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
 					container, 
@@ -53,20 +55,20 @@ var LayoutEngines = {
 				// if (layout) {
 					// // append, if necessary
 			        // if (!$.contains(container.get(0), layout.items.get(0))) {
-			        	// container.append(layout.items);
+			        // container.append(layout.items);
 			        // }
 				// } ;
 			// },that);
 			return;
 		},  // end layout.Typeset
 	},
-}
+};
 
 var GalleryView = {
 	el: ".gallery",
 	
 	collection: null,	// Backbone.Paginator.requestPager
-	pager: null, 	// models.Timeline
+	pager: null,		// models.Timeline
 	
 	templates: {
 		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
@@ -89,17 +91,17 @@ var GalleryView = {
 		 * - GalleryView.render()
 		 * - TimelineView.render()
 		 * --> Timeline.fetch() 
-		 * 		> trigger Timeline."sync"
+		 *		> trigger Timeline."sync"
 		 * - GalleryCollection.onTimelineSync()
-		 * 		> trigger Timeline."change:active"
+		 *		> trigger Timeline."change:active"
 		 * - GalleryCollection.onTimelineChangePeriod()
 		 * - GalleryCollection.fetch() 
-		 * 		> trigger collection.sync
+		 *		> trigger collection.sync
 		 * - GalleryView.addPage() handles GalleryCollection."sync"
 		 * - TimelineView.renderState() handles GalleryCollection."sync"
 		 * 
 		 * click .pager .item.link
-		 * 		> trigger Timeline."change:active"
+		 *		> trigger Timeline."change:active"
 		 *  
 		 */
 		
@@ -175,21 +177,21 @@ var GalleryView = {
 
 	/**
 	 * Zoom action
-	 * 		- starts from PhotoView .click
+	 *		- starts from PhotoView .click
 	 *		- somehow trigger change in Pager, models.Placeline??
-	 * 			- why does the Pager need to know? for pageUp/Dn actions
+	 *		- why does the Pager need to know? for pageUp/Dn actions
 	 *		- 
-	 	trigger changeZoom event on placeline, 
-	 	see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
-	 	placelineView/Model knows currentZoom/next zoom
-	 	placeline checks e.currentTarget to know where to insert new page
+	 * trigger changeZoom event on placeline, 
+	 * see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
+	 * placelineView/Model knows currentZoom/next zoom
+	 * placeline checks e.currentTarget to know where to insert new page
 	*/
 	onZoom: function(e){
 		e.preventDefault();
 		
 		var that = this, 
 			thumb = null,
-			mPhoto = "should be models.Photo",
+			mPhoto = 'should be models.Photo',
 			helpers = this['Pager']['Placeline']['GalleryView'],
 			currentZoom = this.pager.get('currentZoom'); // TODO: get from data-zoom
 
@@ -208,7 +210,8 @@ var GalleryView = {
 			dir: 'zoom-in',
 			pivot: thumb,
 			pivot_model: mPhoto,	// ???: this needed?
-		}
+		};
+
 		// bind 'sync:currentZoom'
 		var success = function(places){
 			// add request to Placeline.periods
@@ -228,12 +231,12 @@ console.info("0 Timeline.'sync:currentZoom' success");
 							// hide/filter GView based on currentZoom
 							// should be AFTER Timeline.sync
 							// thumb.get(0).scrollIntoView();			
-						})
-					})
-				}
+						});
+					});
+				},
 			});
-		}
-		that.listenToOnce(that.pager, 'sync:currentZoom', success)
+		};
+		that.listenToOnce(that.pager, 'sync:currentZoom', success);
 		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.pager, pivot);
 
 	},
@@ -273,7 +276,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 						collection : that.collection,
 						pager: that.pager,
 					});
-				}
+				};
 				this.pager.fetch({
 					data: xhrOptions,
 					success: cb,
@@ -282,7 +285,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			case 'page': 
 				this.pager = new views.PagerView({
 					el: this.$('.header .pager'),
-	 				collection : this.collection,
+					collection : this.collection,
 				});
 				break;
 		} 
@@ -326,7 +329,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
 	 * @param Object newPages, {[pageIndex]:[count]} 
-	 TODO: this method not tested for Placeline or Timeline
+	 * TODO: this method not tested for Placeline or Timeline
 	 */
 	refreshPages: function(newPages) {
 		var collection = this.collection,
@@ -358,7 +361,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			if (typeof clientPageCounter[p] != 'undefined') clientPageCounter[p]++;
 			else clientPageCounter[p] = 0; 
 			
-			if (clientPageCounter[p]==0) pageContainer.prepend($thumb);
+			if (clientPageCounter[p]===0) pageContainer.prepend($thumb);
 			else $before.after($thumb);
 			$before = $thumb;
 			
@@ -366,7 +369,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		
 		// remove empty pages
 		_.each(body.find('.page'), function(item){
-			if ($(item).find('.thumb').length==0) 
+			if ($(item).find('.thumb').length===0) 
 				$(item).remove();
 		}, this);
 		
@@ -385,10 +388,10 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	/**
 	 * add Hiddenshots AFTER XHR fetch(), 
 	 * @param Object options, 
-	 * 	options.shotId #[shotId].shot-wrap
+	 *  options.shotId #[shotId].shot-wrap
 	 *  options.bestshot instanceof models.Shot 
 	 */
-// TODO: change to addHiddenshots_complete	 ???
+	// TODO: change to addHiddenshots_complete ???
 	addedHiddenshots : function(models, options) {
 		var that = this, 
 			$thumb, 
@@ -420,11 +423,11 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		// check if pageContainer already exists
 		
 		if (offscreen) {
-			options = {
+			var options = {
 				offscreen : $('<div class="body"></div>'),	// build page in orphaned el
 				offscreenTop : _.template(
 					'top:<%=top%>px;',
-					{ 	// set CSS transition start point offscreen
+					{ // set CSS transition start point offscreen
 						top: Math.max(this.$el.height(),$('body').data('winH')) 
 					}
 				),
@@ -436,7 +439,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 				var respModelIds = _.pluck(resp.assets,'id');
 				// continue
 			case 'placeline':
-				var respModelIds = respModelIds || _.pluck(resp,'id');
+				respModelIds = respModelIds ||  _.pluck(resp,'id');
 				var addedOne = _.reduce(collection.models, function(out,model,i,l){
 					if (_.contains(respModelIds, model.get('photoId'))) {
 						this.addOne(model, options);
@@ -471,18 +474,18 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					}
 				}, this);
 		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-				$container = offscreen ? options.offscreen : this.$('.body'); 	
+				$container = offscreen ? options.offscreen : this.$('.body'); 
 				this.renderBody($container);
 				break;
 		}
 	},
 	/**
 	 * addBack a removed model, must be added to the correct page
-	 * 	- called by onTimelineChangeFilter(fetch=true)
+	 * - called by onTimelineChangeFilter(fetch=true)
 	 */
 	addBack : function(collection, photoIds, options) {
 		var sortedAdded=[], sortedModelIds=[],
-			viewClass, thumbView, 
+			ViewClass, thumbView, 
 			$thumb, $pageContainer,
 			model, after,
 			TS, added_index;
@@ -493,13 +496,13 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			var id = e.get('photoId');
 			sortedModelIds.push(id);
 			if (_.contains(photoIds,id)) sortedAdded.push(id);
-		})
+		});
 		
 		_.each(sortedAdded, function(pid,i,l){
 			// create thumbView for added model
 			model = collection.models[sortedModelIds.indexOf(pid)];
-			viewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
-			thumbView = new viewClass({model:model, collection: collection});
+			ViewClass = (model instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
+			thumbView = new ViewClass({model:model, collection: collection});
 			$thumb = thumbView.render().$el;
 			
 			// find where to insert $thumb
@@ -544,8 +547,8 @@ console.log("addBack() page="+$pageContainer.data('period'));
 		// add a back reference?
 		var $parent, $shotEl;
 		if ($thumb.length==0) {
-			var viewClass = (item instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
-			thumb = new viewClass({model:item, collection: this.collection});
+			var ViewClass = (item instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
+			thumb = new ViewClass({model:item, collection: this.collection});
 			if (options.offscreen ){
 				$parent = options.offscreen; 
 			} else $parent = this.$('.body');
@@ -553,11 +556,11 @@ console.log("addBack() page="+$pageContainer.data('period'));
 			$thumb = thumb.render(options).$el;
 			// either 1) models.Shot && bestshot, or 
 			// 2a) models.Photo, or 2b) models.Photo && hiddenshot 
-			if (viewClass == views.ShotView) {
+			if (ViewClass == views.ShotView) {
 				// bestshot, as determined by GalleryCollection.parse()
 				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
 				$parent.append($thumb.addClass('shot-wrap'));
-			} else if (viewClass == views.PhotoView) {
+			} else if (ViewClass == views.PhotoView) {
 				// item instanceof models.Photo
 				if (!options.shotId) $parent.append($thumb);
 				// hiddenshot if !!options.shotId

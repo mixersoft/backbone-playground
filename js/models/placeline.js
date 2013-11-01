@@ -1,6 +1,6 @@
 // /js/models/placeline.js
 (function ( models, mixins ) {
-	
+	"use strict";	
 
 /*
  * Model: Placeline
@@ -17,7 +17,7 @@ var extend = function(classDef){
 	models.Placeline = Backbone.Model.extend(
 		options
 	);
-}
+};
 
 var PlacelineModel = {
 	defaults: {
@@ -37,7 +37,7 @@ var PlacelineModel = {
 	
 	urlRoot: function() { 
 		// HIJACKED!!! see this.sync()
-		console.error("Placeline.urlRoot(), method=read is handled by sync(), others???")
+		console.error("Placeline.urlRoot(), method=read is handled by sync(), others???");
 		return false;
 	},	
 	
@@ -93,7 +93,7 @@ var PlacelineModel = {
 		getFetchedKey: function(i, model){
 			model = model || this.toJSON();
 			i = i || model.active;
-			period = model.periods[i];
+			var period = model.periods[i];
 			return period.period+'-'+model.currentZoom;
 		},
 		isFetched: function(i, model){
@@ -103,13 +103,14 @@ var PlacelineModel = {
 		},
 		nextFetched: function(dir, i, model) {
 			model = model || this.toJSON();
-			i = i || model.active,
-			keys = _.keys(model.fetched);
-			while (i>0 && i < model.periods.length-1){
-				if (dir=="up") i--;
+			i = i || model.active;
+			var inRange;
+			do {
+				if (dir==="up") i--;
 				else i++;
+				inRange = -1 < i  && i < model.periods.length;
 				if (PlacelineModel.helper.isFetched(i, model)) return i;
-			}
+			} while (inRange);
 			return false;
 		},
 		/**
@@ -129,7 +130,7 @@ var PlacelineModel = {
 		console.log("Placeline.parse");
 		
 		var attr = {
-			active: 0, 			// do we need active here?
+			active: 0,	// do we need active here?
 			currentZoom: response.place_type,
 			direction: 'asc',
 			periods: [],
@@ -158,10 +159,10 @@ var PlacelineModel = {
 				o.localities = [{
 					locality_place_id: e.locality_place_id,
 					locality_longitude: e.locality_longitude
-				}]
+				}];
 				delete o.locality_longitude;
 				delete o.locality_place_id;
-				out.push(o); 	
+				out.push(o); 
 			}
 			return out;
 		}, attr.periods);
@@ -169,7 +170,7 @@ var PlacelineModel = {
 		// sort localities
 		_.each(attr.periods, function(e,i,l){
 			e.localities = _.sortBy(e.localities, 'locality_longitude');
-		})
+		});
 
 
 		// make Placeline.periods behave like history
@@ -193,7 +194,7 @@ var PlacelineModel = {
 	},
 	
 	initialize: function(attributes, options){
-		attributes = _.defaults( this.helper.pickQsDefaults(snappi.qs) , attributes)
+		attributes = _.defaults( this.helper.pickQsDefaults(snappi.qs) , attributes);
 		if (attributes['zoom']) {
 			attributes['currentZoom'] = attributes['zoom'];
 			delete attributes['zoom'];
@@ -214,7 +215,7 @@ var PlacelineModel = {
 				var FlickrApi = model.FlickrApi; 
 				var zoom = model.get('currentZoom'), 
 					attrs = FlickrApi.getPlaces(zoom, {}, function(attrs){
-						if (options.success) options.success.apply(model, arguments)
+						if (options.success) options.success.apply(model, arguments);
 					});	
 				break;
 			default:
@@ -222,7 +223,7 @@ var PlacelineModel = {
 				options.data.perpage = 99;
 				// hijack method='read'
 				
-			    Backbone.sync(method, model, options);
+				Backbone.sync(method, model, options);
 
 			break;
 		}
@@ -237,8 +238,8 @@ var PlacelineModel = {
 	// public methods
 	/**
 	 * validate Placeline.filters changes before filterChange event
-	 * 		should be the FIRST listener for Placeline."change:filter"  
- 	* @param {Object} attrs, attrs.filters changed by reference
+	 * should be the FIRST listener for Placeline."change:filter"  
+	 * @param {Object} attrs, attrs.filters changed by reference
 	 */
 	validate_ChangeFilter: function(attrs){
 		// see if you can stop propagation
@@ -260,12 +261,12 @@ var PlacelineModel = {
 		});
 		// these assignment by reference are "silent"
 		_.extend(attrs['filters'],validated);
-		if (validated.fetch == true) {
+		if (validated.fetch === true) {
 			this.helper.resetFetched(this, before, validated);
 		}
 	} 
 	
-}
+};
 
 // put it all together at the bottom
 extend(PlacelineModel);	

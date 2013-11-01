@@ -1,4 +1,5 @@
 (function ( mixins ) {
+	"use strict";
 
 var Placeline = {
 // called by GalleryView
@@ -6,8 +7,8 @@ var Placeline = {
 /**
  *
  * triggers 
- * 		collection.'layout-chunk'
- * 		collection.'layout-complete'
+ *		collection.'layout-chunk'
+ *		collection.'layout-complete'
  */		
 renderBody: function(container, options){
 	options = options || {};
@@ -33,7 +34,7 @@ renderBody: function(container, options){
 			// page already rendered, no new elements to add, 
 			// but refreshLayout() ?? 
 	} else if (!pageContainer) {
-		var $before = $current = null, 
+		var $before = null,
 			body = this.$('.body'),
 			placeline = this.pager.toJSON();
 			
@@ -93,8 +94,8 @@ console.log("GalleryView.placeline.'sync'");
 },
 /**
  * change zoom in Placeline model around pivot
- * 		i.e. zoom = country, region, etc.
- * 	NOTE: the Placeline model determines the next zoom level based on pivot
+ *		i.e. zoom = country, region, etc.
+ *	NOTE: the Placeline model determines the next zoom level based on pivot
  *		external objects must wait until this is known by listenTo 'sync:currentZoom'
  * @param placeline models.Placeline
  * @param pivot Object
@@ -131,7 +132,7 @@ onPlacelineChangeCurrentZoom : function(placeline, changed) {
 			success: function(placeline, resp, options){
 				// set this.model.active to correct value
 console.info("0 Placeline.'sync:currentZoom' success");					
-				placeline.trigger('sync:currentZoom', arguments)
+				placeline.trigger('sync:currentZoom', arguments);
 			},
 			silent: true,		// do NOT trigger request on change:active
 		});
@@ -142,19 +143,20 @@ console.info("0 Placeline.'sync:currentZoom' success");
 
 /**
  * change "period" in Placeline model, i.e. next place
- * 		analogous to next page, next time period
+ *		analogous to next page, next time period
  * @param placeline models.Placeline
  */
 onPlacelineChangePeriod : function(placeline) {
 	var that = this, //  instanceof GalleryView
-		index = placeline.changed && placeline.changed.active || placeline.get('active');
+		index = placeline.changed && placeline.changed.active || placeline.get('active'),
 		isFetched = placeline.helper.isFetched.call(placeline, index),
 		$pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, false, index);
+
 console.log("GalleryView.placeline.'change:active', i="+index);
 
 	if (isFetched && $pageContainer && $pageContainer.find('.thumb').length) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
-		$('.pager').addClass('xhr-fetching')	
+		$('.pager').addClass('xhr-fetching');
 		this.scrollIntoView($pageContainer, function(){
 			that.collection.trigger('xhr-ui-ready');
 		});
@@ -210,11 +212,11 @@ getPeriodContainerByTS$: function(that, TS_UTC, create) {
 	}, this);	
 	if (index === false && create) {
 		template = helper.templates.periodContainer; 
-		pager = that.pager.helper.getActive(pager),
+		pager = that.pager.helper.getActive(pager);
 		$item = $( template( pager) );
 	} else {
-		template = helper.templates.selector_PeriodContainer,
-		pager = that.pager.helper.getActive(pager, index),
+		template = helper.templates.selector_PeriodContainer;
+		pager = that.pager.helper.getActive(pager, index);
 		$item = that.$( template( pager) );
 	}
 	return $item.length ? $item : false;
@@ -289,7 +291,7 @@ getXhrFetchOptions: function(that){
 	}, // end GalleryView
 	GalleryModel: {
 	}
-}
+};
 
 var Pager = _.extend(mixins.PagerHelpers && mixins.PagerHelpers['Pager']  || {}, {
 	'Placeline': Placeline,

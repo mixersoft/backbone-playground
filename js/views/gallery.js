@@ -74,7 +74,7 @@ var GalleryView = {
 		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
 		periodTemplate: _.template('<% var period=periods[active].period %> <div class="page" data-zoom="<%=currentZoom%>" data-period="<%=period%>"></div>'),
 	},
-	
+
 	events: {
 		'keypress .body': 'onKeyPressNav',
 		'click .display-options': 'toggleDisplayOptions', 
@@ -85,6 +85,16 @@ var GalleryView = {
 		'click .zoom-in': 'onZoom',
 	},
 	
+	ux_showWaiting: function() {
+		// GV.onZoom(): noop
+		// Shot.onHiddenshotToggle(true): 
+		//    move to GV.onHiddeshotToggle(): forward to PhotoView
+		// TimelineV.gotoPeriod: noop
+	},
+	ux_clearWaiting: function(){
+		// noop 
+	},
+
 	initialize: function(attributes, options){
 		/**
 		 * app lifecycle for timeline
@@ -108,7 +118,6 @@ var GalleryView = {
 		// ???: should this.model = models.Timeline? creating a custom attr here
 		this.pager = attributes.pager;
 		
-		// this.render();
 		/*
 		 * NOTE: get containerWidth BEFORE rendering Views, to avoid an unnecssary layout/paint
 		 */
@@ -165,14 +174,67 @@ var GalleryView = {
 		}
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-			case 'placeline': 
+			case 'placeline':
+				this.render();
+				// trigger initial sync
+// rename: getXhrFetchOptions() > getRestApiOptions() - options for api call
+				_.defer(function(that){
+var options = that.Pager['Timeline']['GalleryView'].getRestApiOptions(that);
+console.info("1. GV.pager.fetch()");
+var fetching = that.pager.fetch({data: options})
+	.done(function(){
+console.info("1. GV.pager.fetch().done()");			
+	});
+
+				}, this);				
 				break;
 			case 'page':
 				collection.pager({ remove: false }); 
+				this.render();
 				break;
 		} 
 
-		this.render();
+		
+
+/* using deferred
+
+init = new $.Deferred()
+
+onclick
+when Timeline.renderLoading
+when syncTimeline 
+	done Timeline.render() - still show spinner?
+	pipe syncCollection = Collection sync xhr
+		done render()
+			when LayoutChunk0
+			when LayoutChunk1
+				done LayoutComplete
+	done Timeline.renderFetched				
+
+
+
+init.done( getTimeline )
+	.pipe( Collection.sync() )
+		. 
+Timeline.sync()
+	.then( Collection.sync )
+	.then()
+
+init.when( syncTimeline, syncCollection )
+
+
+
+*/
+		
+
+		
+
+
+
+
+
+
+
 	},
 
 	/**
@@ -186,6 +248,7 @@ var GalleryView = {
 	 * placelineView/Model knows currentZoom/next zoom
 	 * placeline checks e.currentTarget to know where to insert new page
 	*/
+	// TODO: move to Placeline['GalleryView']
 	onZoom: function(e){
 		e.preventDefault();
 		
@@ -240,9 +303,9 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.pager, pivot);
 
 	},
+
 	
 	render: function(){
-		
 		/*
 		 * create delegated views
 		 */
@@ -253,9 +316,6 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					model: this.pager,
 					collection: this.collection,
 				});
-				var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this);
-				this.pager.fetch({data: options}); 
-				
 				this.displayOptions = new views.GalleryDisplayOptionsView({
 					el: this.$('.header .display-options'),
 					collection : this.collection,
@@ -268,19 +328,11 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					model: this.pager,
 					collection: this.collection,
 				});
-				var xhrOptions = this.Pager['Placeline']['GalleryView'].getXhrFetchOptions(this);
-				var that = this,
-					cb = function(){
-					that.displayOptions = new views.GalleryDisplayOptionsView({
-						el: that.$('.header .display-options'),
-						collection : that.collection,
-						pager: that.pager,
-					});
-				};
-				this.pager.fetch({
-					data: xhrOptions,
-					success: cb,
-				}); 
+				this.displayOptions = new views.GalleryDisplayOptionsView({
+					el: this.$('.header .display-options'),
+					collection : this.collection,
+					pager: this.pager,
+				});
 				break;
 			case 'page': 
 				this.pager = new views.PagerView({
@@ -417,6 +469,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		/*
 		 *  Coll.fetch() > Coll."sync" > success(), View.addPage() > complete() 
 		 */
+console.info("1. GV.'render' > GV.addPage()");		 
 		var collection = this.collection,
 			$pageContainer, $thumb, $container, 
 			offscreen = true;

@@ -144,12 +144,14 @@ var TimelineModel = {
 	},
 	
 	sync: function(method, model, options) {
-		// timeline fetch paging does not follow asset paging
+		// overrides: timeline fetch paging does not follow asset paging
 		options.data.page = 1;
 		options.data.perpage = 99;
-	    Backbone.sync(method, model, options);
+
+	    var jqXhr = Backbone.sync(method, model, options);
+	    return jqXhr;
 	},
-	
+
 	validate: function(attrs) {
 		if (attrs['filters']) {
 			this.validate_ChangeFilter(attrs);

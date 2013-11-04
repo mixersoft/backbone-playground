@@ -119,7 +119,10 @@ console.warn("Placeline sync for zoom=='world' is hard-coded")
 						return parseInt(m.accuracy)>=8;
 					})
 					if (_.isFunction(options.success)) options.success(parsed);
-					break;
+					var deferred = new $.Deferred();
+					this.trigger('request', this, deferred, options);
+					deferred.resolve();
+					return deferred;
 				}
 				if (false) {
 					// options.dataType = 'json';
@@ -175,7 +178,7 @@ console.info("Flickr parse complete");
 				options.data = _.omit(options.data, omitKeys);
 
 
-			    Backbone.sync.call(this, method, model, options);
+			    return Backbone.sync.call(this, method, model, options);
 			break;
 		}
 	},

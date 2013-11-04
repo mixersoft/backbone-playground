@@ -72,7 +72,7 @@ renderBody: function(container, options){
 	});
 },
 onTimelineSync : function(pager, resp, options) {
-	console.log("GalleryView.pager.'sync'");
+console.log("1. GalleryView.pager.'sync'");
 	var settings = pager.toJSON(),
 		active = settings.active || 0,
 		current = settings.periods[active];
@@ -81,11 +81,11 @@ onTimelineSync : function(pager, resp, options) {
 		//	to: current.to,
 		//	// filter: current.filter,
 		// }
-		pager.set('active', active);
+		pager.set('active', active, {xhr: options.xhr});
 },
-onTimelineChangePeriod : function(pager) {
+onTimelineChangePeriod : function(pager, changed, options) {
 	var that = this;
-	console.log("GalleryView.pager.'change:active', i="+pager.changed.active);
+console.log("1. GalleryView.pager.onTimelineChangePeriod() handles 'change:active', i="+pager.changed.active);
 	if (pager.helper.isFetched.call(pager, pager.changed.active)) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
 		var pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
@@ -95,14 +95,31 @@ onTimelineChangePeriod : function(pager) {
 		});
 		return;
 	}
-	var options = this.Pager['Timeline']['GalleryView'].getRestApiOptions(this);
-	that.collection.fetch({
+
+
+	var fetchOptions = this.Pager['Timeline']['GalleryView'].getRestApiOptions(this);
+console.info("1. GV.collection.fetch()");	
+	var jqXhr = that.collection.fetch({
 		remove: false,
-		data: options,
+		data: fetchOptions,
 		complete: function() {
 			that.collection.trigger('xhr-fetched');
 		},
 	});
+	// no need to deferred.pipe() because options.xhr.status=='resolved'
+	var serialXhr = options.xhr;
+	if (serialXhr) { // options.xhr set by onTimelineSync
+		console.log("1. GalleryView.pager.onTimelineChangePeriod(), xhr.promise.state="+serialXhr.state());
+		serialXhr.then(function(){
+console.info("1. GV $.when: all done after Pager.sync+GC.fetch");			
+		})
+	} else {	// TimelineSync already sync'd
+		pager.trigger('request', pager, jqXhr, options);		// Pager.ux_showWaiting()
+		jqXhr.then(function(){
+console.info("1. GV $.when: all done after GV.fetch");
+		})
+	}
+	return jqXhr;
 },
 
 onTimelineChangeFilter : function(pager, changed) {

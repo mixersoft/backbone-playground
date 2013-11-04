@@ -211,6 +211,7 @@ var GalleryCollection =	{
 		}
 	 * 
 	 */
+	// TODO: move to backend_flickr
 	fetchZoom: function(pivot, options) {
 		var collection = this;
 
@@ -223,14 +224,31 @@ var GalleryCollection =	{
 		options_placeInfo.data = req_getPlaceInfo.data;
 		options_placeInfo.cache = true;
 		var success = options.success;
-		$.ajax(options_placeInfo)
+
+		var collectionOptions = {};
+		var syncingCollectionFn = function(){
+			return collection.fetch({
+				remove: false,
+				data: collectionOptions,
+				success: function(collection, response, options){
+					var check;
+					// insert around options.pivot
+					if (_.isFunction(success)) success.apply(collection, arguments);
+				},
+				complete: function(){
+					collection.trigger('xhr-fetched');
+					if (_.isFunction(options.complete)) options.complete.apply(collection, arguments);
+				},
+			})
+		};
+		var syncingPlaceline = $.ajax(options_placeInfo)
 			.success(function(resp){
 				var curPlaces = resp.place,
 					curPlace = curPlaces[newZoom],
 					options_Zoom = {
 						place_id: curPlace.place_id
 					};
-				_.defaults(options_Zoom, options.fetchOptions);
+				collectionOptions = _.defaults(options_Zoom, options.fetchOptions);
 				// set models.Placeline.active
 				if (options.placeline) {
 					var periods = options.placeline.get('periods');
@@ -262,24 +280,20 @@ var GalleryCollection =	{
 						options.placeline.trigger('sync', options.placeline);
 					}
 				}
-				// here is the actual flickr fetch
-				collection.fetch({
-					remove: false,
-					data: options_Zoom,
-					success: function(collection, response, options){
-						var check;
-						// insert around options.pivot
-						if (_.isFunction(success)) success.apply(collection, arguments);
-					},
-					complete: function(){
-						collection.trigger('xhr-fetched');
-						if (_.isFunction(options.complete)) options.complete.apply(collection, arguments);
-					},
-				});
 			})
 			.fail(function(){
-				var check;
-			});
+				console.error('Error: placeline sync failed');
+			})
+			.then(function(){
+				return syncingCollectionFn();
+			})
+			.done(function(){
+				console.info("1. Placeline Zoom all done");
+			})
+
+			
+
+
 		return;
 	},
 

@@ -213,20 +213,26 @@ var PlacelineModel = {
 		switch (method) {
 			case "read":
 				var FlickrApi = model.FlickrApi; 
-				var zoom = model.get('currentZoom'), 
-					attrs = FlickrApi.getPlaces(zoom, {}, function(attrs){
-						if (options.success) options.success.apply(model, arguments);
-					});	
-				break;
+				var deferred = new $.Deferred();
+				this.trigger('request', this, deferred, options);
+				_.defer(function(){
+					var zoom = model.get('currentZoom'), 
+						attrs = FlickrApi.getPlaces(zoom, {}, function(attrs){
+							if (options.success) options.success.apply(model, arguments);
+							deferred.resolve();
+						});	
+				});
+				options.xhr = deferred;
+				return deferred;
 			default:
 				options.data.page = 1;
 				options.data.perpage = 99;
 				// hijack method='read'
 				
-				Backbone.sync(method, model, options);
-
-			break;
+				var jqXhr = Backbone.sync(method, model, options);
+				return jqXhr;
 		}
+
 	},
 	
 	validate: function(attrs) {

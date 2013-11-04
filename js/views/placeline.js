@@ -41,6 +41,35 @@ var PlacelineView = {
 		
 		template_source: "#markup #Placeline.underscore",
 
+		ux_blockUi: function(){
+			return this.$el.addClass('xhr-fetching');
+		},
+		ux_showWaiting: function() {
+			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
+			var found = PlacelineView.helper.getCurrentPeriod$(this); 
+			if (found) 
+				return found.html(spinner);
+			// period not found, attach to zoom
+			var zoom = this.model.get('currentZoom');
+			var found = _.find(this.$('.zoom .link'), function(item){
+				if ($(item).text() === zoom) 
+					return true;
+			});
+			if (found) 
+				return $(found).append(spinner);
+				
+			if (!found) // zoom not found, attach to pager
+				return this.$el.html(spinner);
+
+		},
+		ux_clearWaiting: function(){
+			return true;	// noop
+			// should be cleared by Pager.render()
+		},
+		ux_unblockUi: function(){
+			return this.$el.removeClass('xhr-fetching');
+		},
+
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
 				var source = $(this.template_source).html();	
@@ -50,12 +79,14 @@ var PlacelineView = {
 			this.listenTo(this.model, 'gotoPeriod', this.gotoPeriod);
 			this.listenTo(this.model, 'sync', this.render);
 			this.listenTo(this.collection, 'sync', this.renderState);
-			this.listenTo(this.collection, 'xhr-fetching', this.renderFetching);
-			// this.listenTo(this.collection, 'xhr-fetched', this.renderFetched);
-			this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 			this.listenTo(this.collection, 'change:period', function(){
 					// disabled for Placeline. no perpage
 			});
+
+			// XHR listeners
+			this.listenTo(this.model, 'request',  this.helper.uxBeforeXhr);	
+			this.listenTo(this.collection, 'request',  this.helper.uxBeforeXhr);
+			this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 		},
 		
 		// triggered by Timeline."sync"
@@ -68,15 +99,35 @@ var PlacelineView = {
 		},
 		
 		helper: {
+			uxBeforeXhr: function(model, xhr, options){
+console.info("1. Timeline.'request'");
+		    	// this.ux_blockUi();
+		    	this.ux_showWaiting();
+		    	xhr.always(function(){
+		    		// if a Collection.sync is triggered, then defer cleanup
+		    		// when will we know if a Collection.sync is triggered?
+console.info("1. Timeline.'request' jqXhr.always()");
+					// when 'all-done' this.ux_clearWaiting();
+		    	});
+		    	xhr.done(function(){
+console.info("1. Timeline.'request' jqXhr.done()");
+		    	
+		    	});
+		    },
+
 			getCurrentPeriod$: function(that){
-				var model = that.model.toJSON(),
-					data = {
-						currentZoom: model.currentZoom,
-						currentPeriod: model.periods[model.active].period
-					},
-					selector = _.template('.page .item[data-period="<%= currentPeriod %>"][data-zoom="<%= currentZoom %>"]', data),
-					$item = that.$(selector);
-				return $item.length ? $item : false;
+				try {
+					var model = that.model.toJSON(),
+						data = {
+							currentZoom: model.currentZoom,
+							currentPeriod: model.periods[model.active].period
+						},
+						selector = _.template('.page .item[data-period="<%= currentPeriod %>"][data-zoom="<%= currentZoom %>"]', data),
+						$item = that.$(selector);
+					return $item.length ? $item : false;
+				} catch (ex){
+					return false;
+				}	
 			},
 			scrollSpy : function(e) {
 				self = this;
@@ -128,24 +179,6 @@ var PlacelineView = {
 				this.renderState();	
 
 			},
-		},
-		
-		// render Loading spinner when page load is requested
-		renderFetching: function(){
-			this.$el.addClass('xhr-fetching');		// use to debounce scroll
-			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
-			var found = PlacelineView.helper.getCurrentPeriod$(this); 
-			if (found) found.html(spinner);
-			else {
-				// periods not created for new zoom yet
-				var zoom = this.model.get('currentZoom');
-				_.find(this.$('.zoom .link'), function(item){
-					if ($(item).text() == zoom) {
-						$(item).append(spinner);
-						return true;
-					}
-				});
-			}
 		},
 		
 		// render Loading spinner when page load is requested

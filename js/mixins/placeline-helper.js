@@ -144,15 +144,15 @@ console.info("0 Placeline.'sync:currentZoom' success");
 /**
  * change "period" in Placeline model, i.e. next place
  *		analogous to next page, next time period
- * @param placeline models.Placeline
+ * @param pager models.Placeline
  */
-onPlacelineChangePeriod : function(placeline) {
+onPlacelineChangePeriod : function(pager, changed, options) {
 	var that = this, //  instanceof GalleryView
-		index = placeline.changed && placeline.changed.active || placeline.get('active'),
-		isFetched = placeline.helper.isFetched.call(placeline, index),
+		index = pager.changed && pager.changed.active || pager.get('active'),
+		isFetched = pager.helper.isFetched.call(pager, index),
 		$pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, false, index);
 
-console.log("GalleryView.placeline.'change:active', i="+index);
+console.log("GalleryView.pager.'change:active', i="+index);
 
 	if (isFetched && $pageContainer && $pageContainer.find('.thumb').length) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
@@ -162,21 +162,32 @@ console.log("GalleryView.placeline.'change:active', i="+index);
 		});
 		return;
 	};
-	var options = Placeline['GalleryView'].getRestApiOptions(this);
-	_.defer(function(){
-		// for bootstrap: finish init before fetch
-		that.collection.fetch({
-			remove: false,
-			data: options,
-			success: function(collection, response, options){
-				var check;
-			},
-			complete: function(){
-				that.collection.trigger('xhr-fetched');
-			},
-		});
+
+
+	var fetchOptions = Placeline['GalleryView'].getRestApiOptions(this);
+console.info("1. GV.collection.fetch()");	
+	// for bootstrap: finish init before fetch
+	var jqXhr = that.collection.fetch({
+		remove: false,
+		data: fetchOptions,
+		complete: function(){
+			that.collection.trigger('xhr-fetched');
+		},
 	});
-	return;
+	// no need to deferred.pipe() because options.xhr.status=='resolved'
+	var serialXhr = options.xhr;
+	if (serialXhr) { // options.xhr set by onTimelineSync
+		console.log("1. GalleryView.pager.onTimelineChangePeriod(), xhr.promise.state="+serialXhr.state());
+		$.when(jqXhr, serialXhr).then(function(){
+console.info("1. GV $.when: all done from placeline_helper after Pager.sync+GC.fetch");			
+		})
+	} else {	// Placeline already sync'd
+		pager.trigger('request', pager, jqXhr, options);		// Pager.ux_showWaiting()
+		jqXhr.then(function(){
+console.info("1. GV $.when: all done from placeline_helper after GV.fetch");
+		})
+	}
+	return jqXhr;
 },
 
 

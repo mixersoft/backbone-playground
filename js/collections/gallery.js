@@ -381,7 +381,7 @@ switch (snappi.PAGER_STYLE) {
 	case 'page':
 	break;
 }			
-			options = pagerHelper['GalleryView'].getXhrFetchOptions(galleryView);
+			options = pagerHelper['GalleryView'].getRestApiOptions(galleryView);
 console.log(options.filters);
 			// fetch() > Coll."sync" > success(), View.addPage() > complete()
 			that.fetch({

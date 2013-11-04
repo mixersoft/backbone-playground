@@ -23,7 +23,7 @@ var Nodejs = {
 		var url; 
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline':
-				// override from GalleryView.onTimelineChangePeriod, getXhrFetchOptions()
+				// override from GalleryView.onTimelineChangePeriod, getRestApiOptions()
 				url = _.template('http://<%=baseurl%>/asset.json?', Nodejs); 
 				break;
 			case 'placeline':

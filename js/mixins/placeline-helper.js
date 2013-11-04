@@ -162,7 +162,7 @@ console.log("GalleryView.placeline.'change:active', i="+index);
 		});
 		return;
 	};
-	var options = Placeline['GalleryView'].getXhrFetchOptions(this);
+	var options = Placeline['GalleryView'].getRestApiOptions(this);
 	_.defer(function(){
 		// for bootstrap: finish init before fetch
 		that.collection.fetch({
@@ -247,11 +247,11 @@ createPeriodContainers$: function(that, pager, $body) {
 	return Placeline['GalleryView'].getPeriodContainer$(that, false, pager.active);
 },
 /**
- * change zoom, then call getXhrFetchOptions
+ * change zoom, then call getRestApiOptions
  * @param that GalleryView
  */
 getXhrPivotOptions: function(that, pivot){
-	var options = this.getXhrFetchOptions(that);
+	var options = this.getRestApiOptions(that);
 
 	return options;
 },
@@ -260,7 +260,7 @@ getXhrPivotOptions: function(that, pivot){
  *		NOT the same as click on pivot
  * @param that GalleryView
  */
-getXhrFetchOptions: function(that){
+getRestApiOptions: function(that){
 	var pager = that.pager,
 		period = pager.get('periods')[pager.get('active')],
 		options = {

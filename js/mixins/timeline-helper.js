@@ -95,7 +95,7 @@ onTimelineChangePeriod : function(pager) {
 		});
 		return;
 	}
-	var options = this.Pager['Timeline']['GalleryView'].getXhrFetchOptions(this);
+	var options = this.Pager['Timeline']['GalleryView'].getRestApiOptions(this);
 	that.collection.fetch({
 		remove: false,
 		data: options,
@@ -176,7 +176,7 @@ createPeriodContainers$: function(that, pager, $body) {
 	});
 	return Timeline['GalleryView'].getPeriodContainer$(that, false, pager.active);
 },
-getXhrFetchOptions: function(that){
+getRestApiOptions: function(that){
 	var pager = that.pager,
 		period = pager.get('periods')[pager.get('active')],
 		options = {

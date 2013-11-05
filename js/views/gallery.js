@@ -165,13 +165,6 @@ var GalleryView = {
 		this.listenTo(collection, 'layout-complete', function(){
 		});
 		
-		// initial XHR fetch or bootstrap
-		if (snappi.qs.backend && snappi.qs.backend=='file') {
-			var user = snappi.qs.owner || 'venice';	// valid = [venice|mb|2011]
-			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
-			var shots = collection.parse(json);
-			collection.pager({ remove: false });
-		}
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
 			case 'placeline':
@@ -189,8 +182,11 @@ console.info("1. GV.pager.fetch().done()");
 				}, this);				
 				break;
 			case 'page':
-				collection.pager({ remove: false }); 
 				this.render();
+				collection.pager({ remove: false })
+					.done(function(){
+console.info("1. GV.pager.fetch().done()");			
+					}); 
 				break;
 		} 
 

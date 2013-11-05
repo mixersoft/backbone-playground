@@ -41,7 +41,7 @@
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
-			var fecthed = _.keys(this.collection.fetchedServerPages);
+			var fetched = _.keys(this.collection.fetchedServerPages);
 			_.each(this.$('.pagination .page .item'), function(item){
 				if (_.contains(fetched, $(item).text())) 
 					$(item).addClass('loaded');

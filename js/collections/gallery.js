@@ -45,7 +45,9 @@ var GalleryCollection =	{
 				this.sortBy_1 = 'dateTaken';
 				break;
 			case 'file':  
-				this.backend = this.Backend['File']; break;
+				this.backend = this.Backend['File']; 
+				this.sync = this.Backend['File'].sync;
+				break;
 			case 'cake': case 'cakephp': 
 			default:
 				this.backend = this.Backend['Cakephp']; break;		

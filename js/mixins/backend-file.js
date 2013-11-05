@@ -3,31 +3,38 @@
 
 var File = {
 	datatype: null,		// for $.ajax request dataType
-	url: function(){ // hijack xhr, just add new models
-		this.listenToOnce(this, 'request', function(collection, xhr, queryOptions){
-			var models = collection.parse();
-			collection.fetchedServerPages[collection.currentPage]=true;  
-			_.each(models, function(item){
-				collection.models.push(item);
-			});
-			collection.trigger('sync', collection.models);
-		});
+	url: function(){ // bypass sync entirely
 		return false;
 	},
+	sync: function(method, model, options) {
+		var collection = this;
+		var deferred = new $.Deferred();
+		_.defer(function(){
+			var paginatedModels = collection.parse();
+			options.parse = false;	// don't parse again in options.success()
+			collection.fetchedServerPages[collection.currentPage]=true;  
+			if (_.isFunction(options.success)) options.success(paginatedModels);
+			deferred.resolve();
+		});
+		return deferred;
+	},
 	parsed: null,	// just parse once
-	parse: function(json){
+	parse: function(){
 		var collection = this,
 			paging, serverPaging;
-		if (!Backend['File'].parsed) {
+		if (!Backend['File'].parsed) { // parse everything the first time
+			var user = snappi.qs.owner || 'venice';	// valid = [venice|mb|2011]
+			var json = JSON.parse(SNAPPI.CFG.JSON[user].raw);
 			paging = json.response.castingCall.CastingCall.Auditions;
 			serverPaging = {
 				page: collection.currentPage || snappi.qs.page || paging.Page,
 				perpage: snappi.qs.perpage || paging.Perpage,
-				pages: paging.Pages,
+				pages: null,
 				total: paging.Total,
 				count: snappi.qs.perpage || paging.Audition.length,
 				targetHeight: 160,
 			};
+			serverPaging.pages = Math.ceil( serverPaging.perpage);
 				
 			// config image server for this request
 			snappi.mixins.Href.imgServer({
@@ -35,19 +42,18 @@ var File = {
 			});
 				
 			// for clientPaging	
-			this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
 			this.paginator_ui.serverPaging = serverPaging;
-			
-			
-			// for requestPaging template
-			if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
+			if (!this.fetchedServerPages) this.fetchedServerPages = {};
+			this.firstPage = 1; 
 			this.currentPage = serverPaging.page;
 			this.totalRecords = serverPaging.total;
-			this.totalPages = serverPaging.pages;
+			this.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage);
+			this.lastPage = this.totalPages; 
+			this.pagesInRange = this.paginator_ui.pagesInRange;	// ???:not being set
 			
 			
 			var parsed = this.parseShot_CC(json.response.castingCall); // from mixin
-			Backend['File'].parsed = parsed;
+			File.parsed = parsed;
 		}
 		// slice response to match page/perpage 
 		var perpage = parseInt(collection.perPage || serverPaging.perpage),
@@ -58,16 +64,13 @@ var File = {
 			keep = _.first(_.keys(hash), end),
 			photos = [],
 			attr, m;
-			_.each(keep, function(id,i,l){
-				if (i>=start) {
-					attr = hash[id];
-					attr.requestPage = Math.ceil( i / perpage );
-					if (attr.shotId) m = new models.Shot(attr);
-					else m = new models.Photo(attr);
-					photos.push(m);
-				}
-			});
-
+		for (var i=start;i<keep.length;i++){	// use i to calc requestPage
+			attr = hash[keep[i]];
+			attr.requestPage = Math.ceil( i / perpage );
+			if (attr.shotId) m = new models.Shot(attr);
+			else m = new models.Photo(attr);
+			photos.push(m);
+		};
 		return photos;
 	},
 };

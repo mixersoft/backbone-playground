@@ -1,4 +1,4 @@
-(function (views) {
+(function (views, mixins) {
 
 	views.PagerView = Backbone.View.extend({
 
@@ -20,6 +20,27 @@
 		
 		template_source: "#markup #PagerBootstrap.underscore",
 
+		ux_blockUi: function(){
+			return this.$el.addClass('xhr-fetching');
+		},
+		ux_showWaiting: function() {
+			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
+			var found = this.helper.getCurrentPeriod$(this); 
+			if (found) 
+				return found.html(spinner);
+				
+			if (!found) // page el not found, attach to pager
+				return this.$el.html(spinner);
+
+		},
+		ux_clearWaiting: function(){
+			return true;	// noop
+			// should be cleared by Pager.render()
+		},
+		ux_unblockUi: function(){
+			return this.$el.removeClass('xhr-fetching');
+		},
+
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
 				var source = $(this.template_source).html();	
@@ -32,11 +53,21 @@
 
 		    // this.listenTo(collection, 'reset', this.render);
 		    this.listenTo(collection, 'sync', this.render);
-		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
+		    this.listenTo(collection, 'change:page', this.renderState);
 		    this.listenTo(collection, 'xhr-fetching', this.renderLoading);
+
+		    // Timeline XHR request, triggered by Backbone.sync()
+		    this.listenTo(this.collection, 'request',  this.helper.uxBeforeXhr);	
+		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 		},
 		render: function (collection, resp, options) {
-			// note: the 'model' comes from requestPager.collection.info()
+			this.renderState();
+			// only on sync, not page nave
+			$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+		},
+
+		// render pager, show fetched periods
+		renderState: function(){
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
@@ -46,7 +77,75 @@
 				if (_.contains(fetched, $(item).text())) 
 					$(item).addClass('loaded');
 			});
+
+			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
+			if (page.length) 
+				mixins.UiActions.scrollIntoView(page);
 		},
+
+		helper: {
+			uxBeforeXhr: function(model, xhr, options){
+		    	this.ux_showWaiting();
+		    },
+
+			getCurrentPeriod$: function(that){
+				try {
+					var selector = '.page .item[data-page="'+that.currentPage+'"]',
+						$item = that.$(selector);
+					return $item.length ? $item : false;
+				} catch (ex){
+					return false;
+				}
+			},
+			scrollSpy : function(e) {
+		    	self = this;
+		    	if (self.$el.hasClass('xhr-fetching')) {
+		    		return;
+		    	}
+		    	
+		    	var OFFSET_H = 40,
+		    		target = self.$el,
+		    		collection = this.collection,
+		        	selfB = target.offset().top+target.height(),
+		        	windowT = $(window).scrollTop(),
+		        	windowB = windowT + $(window).height();
+		        	
+		        // find current visible page
+		        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
+		        if (!scrollDir) return;
+
+		         visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
+		        	var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
+		        	var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
+		        	var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
+		        	var isTopBelowFold = item.offsetTop > windowB;
+		        	if (scrollDir=='up'){ // page up
+			        	if (isBottomBelowFold) return true;
+			        	if (isTopBelowWindowT) return true;
+		        	}
+		        	if (scrollDir=='down') {
+		        		if (isTopBelowWindowT) return true;
+			        	if (isBottomBelowFold) return true;
+		        	}
+		        });
+		        if (!visiblePg && scrollDir=='up') 
+		        	visiblePg = $('.gallery .body .page:first-child');
+				else if (!visiblePg && scrollDir=='down') 
+		        	visiblePg = $('.gallery .body .page:last-child');
+
+		        collection.currentPage = $(visiblePg).data('page');
+        		this.render();	
+		    },
+		},	// end helper
+
+		/**
+	     * Called on the scroll event of the container element.  Used only in the non-paginated mode.
+	     * When the scroll threshold is reached a new page of thumbs is requested.
+	     * @param event e - the scroll event object
+	     */
+	    onContainerScroll : _.throttle(function(e){
+	    	this.helper.scrollSpy.call(this, e);
+	    }, 200, {leading: false}),
 		
 
 		gotoFirst: function (e) {
@@ -73,6 +172,7 @@
 
 		gotoPage: function (e) {
 			e.preventDefault();
+			var that = this;
 			var page = $(e.target).text();
 			this.collection.goTo(page,{ merge: true, remove: false });
 		},
@@ -152,19 +252,5 @@
 			this.preserveFilterValue(filter);
 		},
 		
-		renderCurrentPage: function(visiblePage, dir){ 
-			this.collection.currentPage = visiblePage;
-			this.render();
-		},
-		
-		renderLoading: function (page) {
-			_.find(this.$('.item.link'), function(v){
-				if (v.textContent==page) {
-					$(v).html('<i class="fa fa-2x fa-spinner fa-spin" data-page="'+page+'"><i>');
-					return true;
-				}
-			});
-		},
-
 	});
-})( snappi.views );
+})( snappi.views, snappi.mixins );

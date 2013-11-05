@@ -19,8 +19,8 @@ renderBody: function(container, options){
 			container = pageContainer;
 			// page already rendered, no new elements to add, refreshLayout()
 		} else {
-			// TODO: need to sort in collection first!!!!!!!!!
-			pageContainer.append(container.children());
+			pageContainer.html('');
+			// pageContainer.append(container.children());
 			stale = true;
 			// page already rendered, AND new elements to add, 
 		}

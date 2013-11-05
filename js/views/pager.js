@@ -172,6 +172,12 @@
 
 		gotoPage: function (e) {
 			e.preventDefault();
+			if (e.ctrlKey) {
+				// remove
+				var page = $(e.currentTarget).text();
+				this.collection.trigger('release-page', page);
+				return;	
+			}
 			var that = this;
 			var page = $(e.target).text();
 			this.collection.goTo(page,{ merge: true, remove: false });

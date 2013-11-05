@@ -164,7 +164,16 @@ var GalleryView = {
 		});
 		this.listenTo(collection, 'layout-complete', function(){
 		});
-		
+		this.listenTo(collection, 'release-page', function(p){
+			var $page = this.$('.body .page[data-page="'+p+'"]');
+			var models = _.each( $page.find('.thumb'), function(e,i,l){
+				var modelId = $(e).hasClass('bestshot') ? e.parentNode.id : e.id;
+				var model = _.findWhere(this.models, {id: modelId});
+				if (model) model.trigger('hide');
+			}, this.collection);
+			$page.html('<div class="empty-label">Released Page '+p+'</div>').height(28);
+			this.collection.fetchedServerPages[p] = false;
+		});
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
 			case 'placeline':

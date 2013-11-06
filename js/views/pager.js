@@ -22,6 +22,7 @@
 		template_source: "#markup #PagerBootstrap.underscore",
 
 		ux_blockUi: function(){
+console.log("pager ux_blockUi");
 			return this.$el.addClass('xhr-fetching');
 		},
 		ux_showWaiting: function() {
@@ -62,13 +63,15 @@
 		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
 		},
 		render: function (collection, resp, options) {
-			this.renderState();
-			// only on sync, not page nave
-			$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+			this.listenToOnce(collection, 'layout-chunk', function(){
+				this.renderState();
+				// only on sync, not page nave
+				$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+			})
 		},
 
 		// render pager, show fetched periods
-		renderState: function(){
+		renderState: function(options){
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
@@ -78,20 +81,23 @@
 				if (_.contains(fetched, $(item).text())) 
 					$(item).addClass('loaded');
 			});
-
+			if (options && !!options.silent) 
+				return;
 			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
 			if (page.length) 
 				mixins.UiActions.scrollIntoView(page);
+			return;
 		},
 
 		helper: {
 			uxBeforeXhr: function(model, xhr, options){
+console.log("pager 'request' uxBeforeXhr()");				
 		    	this.ux_showWaiting();
 		    },
 
 			getCurrentPeriod$: function(that){
 				try {
-					var selector = '.page .item[data-page="'+that.currentPage+'"]',
+					var selector = '.page .item[data-page="'+that.collection.currentPage+'"]',
 						$item = that.$(selector);
 					return $item.length ? $item : false;
 				} catch (ex){
@@ -135,7 +141,7 @@
 		        	visiblePg = $('.gallery .body .page:last-child');
 
 		        collection.currentPage = $(visiblePg).data('page');
-        		this.render();	
+        		this.renderState({silent: true});	
 		    },
 		},	// end helper
 
@@ -146,7 +152,7 @@
 	     */
 	    onContainerScroll : _.throttle(function(e){
 	    	this.helper.scrollSpy.call(this, e);
-	    }, 200, {leading: false}),
+	    }, 500, {leading: true}),
 		
 
 		gotoFirst: function (e) {

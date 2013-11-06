@@ -13,13 +13,13 @@ views.PhotoView = Backbone.View.extend({
 	
 	template_source: "#markup #PhotoTemplate.handlebars",
 	
-	events: {
+	events: {	// delegate to GalleryView
 		// 'click .rotate': 'onRotate',
 		// 'click .rating': 'onRatingClick',
 		// 'dblclick img': 'onShowPreview',
 		// 'click .fa-heart': 'saveModelAsJson',
 	},
-	
+
 	// for creating flickr/placeline bootstrap file
 	saveModelAsJson: function(e){
 		e.preventDefault();

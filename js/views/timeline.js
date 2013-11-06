@@ -258,12 +258,6 @@ console.info("1. Timeline.'request' jqXhr.done()");
 				model_attr = this.model.toJSON(),
 				where = where || {label: label};
 				period = _.findWhere(model_attr.periods, where);
-			// _.each(model_attr.periods, function(e,i,l){
-				// if (label.indexOf(e.label)===0) {
-					// index = i;
-					// return false;
-				// }
-			// });	
 			if (!period) return false;
 			
 			index = model_attr.periods.indexOf(period);

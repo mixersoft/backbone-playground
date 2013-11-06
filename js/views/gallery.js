@@ -42,7 +42,7 @@ var LayoutEngines = {
 			/*
 			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
 			 */
-			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']===true;
+			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']!=false;
 
 			// _.defer(function(that){
 				var layout = mixins.LayoutEngine.Typeset.run.call(that, 

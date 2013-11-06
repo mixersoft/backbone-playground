@@ -7,7 +7,8 @@
 			'click .item.prev': 'gotoPrev',
 			'click .item.next': 'gotoNext',
 			'click a.last': 'gotoLast',
-			'click .item.link': 'gotoPage',
+			'click .page .item.link': 'gotoPage',
+			'click .page .item.active': 'gotoPage',
 			'click .howmany': 'changeCount',
 			'click a.sortAsc': 'sortByAscending',
 			'click a.sortDsc': 'sortByDescending',
@@ -172,15 +173,22 @@
 
 		gotoPage: function (e) {
 			e.preventDefault();
+			if (e.ctrlKey) 
+				return this.releasePage(e);
+
+			var $target = $(e.target);
+			if ($target.hasClass('active') && $target.has('.thumb').length ) return;
+			this.collection.goTo( $target.text() ,{ merge: true, remove: false });
+		},
+
+		releasePage: function(e) {
+			e.preventDefault();
 			if (e.ctrlKey) {
 				// remove
 				var page = $(e.currentTarget).text();
 				this.collection.trigger('release-page', page);
 				return;	
 			}
-			var that = this;
-			var page = $(e.target).text();
-			this.collection.goTo(page,{ merge: true, remove: false });
 		},
 
 		changeCount: function (e) {

@@ -13,11 +13,8 @@ views.ShotView = views.PhotoView.extend({
 	
 	template_source: "#markup #ShotTemplate.handlebars",
 	
-	events: {
-		'click .rotate': 'onRotate',
-		'click .rating': 'onRatingClick',
-		'click .show-hidden-shot': 'onHiddenshotToggle',
-		'dblclick img': 'onShowPreview',
+	events: {	// delegate to GalleryView
+		// 'click .show-hidden-shot': 'onHiddenshotToggle',
 	},
 	
 	initialize: function(options){
@@ -44,19 +41,14 @@ views.ShotView = views.PhotoView.extend({
 		this.$('.thumb').addClass('bestshot ' + m.orientationLabel);
 		return this;
 	},
-	
-	
-	onHiddenshotToggle: function(e){
+	// use delegated handler, called from GalleryView
+	XXXonHiddenshotToggle: function(e){
 		e.preventDefault();
 		var that = this, 
 			action = this.$el.hasClass('showing') ? 'hide' : 'show';
 		switch (action) {
 			case 'show':
 // console.info("show hiddenshot for id="+this.model.get('id'));
-				// triggers GallColl."fetchHiddenShots" 
-				// 		> Shot."fetchedHiddenshots"
-				//		> GallView."addedHiddenshots" 
-				//			> GallView.addOne(), GallView.renderBody()
 				this.collection.trigger('fetchHiddenShots', {
 					model: this.model,
 				});
@@ -75,22 +67,45 @@ views.ShotView = views.PhotoView.extend({
 				break;
 		}
 	},
-	// deprecate, ???: are model listenTos delegated?
-	onFetchedHiddenshots: function(collection, response, options){
-		// this.$el.addClass('showing')
-		console.info("???: are View.listenTo(model) bindings delegated?");
-	},
-	
 });
 
 /*
  * Protected attributes
  */
-// var _shotHash = {};
-// var _shotCounter = 1;
-// views.ShotView.prototype.hashShotId = function(shotId){
-	// if (!_shotHash[shotId])	_shotHash[shotId]=_shotCounter++;
-	// return _shotHash[shotId];
-// }
+
+/*
+* Static methods
+*/
+// called by parent View, views.GalleryView
+views.ShotView.delegated_toggleHiddenshot = function(e, collection){
+	e.preventDefault();
+	collection = collection || this.collection;
+	var $shot = $(e.currentTarget).closest('.shot-wrap');
+	// var modelId =  $shot.attr('id');		// shotId
+	var model = _.findWhere(collection.models, {id: $shot.attr('id')});
+	var action = $shot.hasClass('showing') ? 'hide' : 'show';
+	switch (action) {
+		case 'show':
+			// triggers GallColl."fetchHiddenShots" 
+			// 		> Shot."fetchedHiddenshots"
+			//		> GallView."addedHiddenshots" 
+			//			> GallView.addOne(), GallView.renderBody()
+			collection.trigger('fetchHiddenShots', {
+				model: model,
+			});
+			break;
+		case 'hide':
+			_.each(model.get('hiddenshot').models, function(model,k,l){
+				if (!(model instanceof snappi.models.Shot)) {
+					model.trigger('hide');	// PhotoView.onHide() calls remove()
+				}
+			});
+			$shot.removeClass('showing');
+			_.delay(function(){
+				collection.trigger('pageLayoutChanged', null, {child: $shot});	
+			}, snappi.TIMINGS.thumb_fade_transition)
+			break;
+	}
+};
 
 })( snappi.views );

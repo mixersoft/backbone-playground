@@ -14,11 +14,12 @@ views.PhotoView = Backbone.View.extend({
 	template_source: "#markup #PhotoTemplate.handlebars",
 	
 	events: {
-		'click .rotate': 'onRotate',
-		'click .rating': 'onRatingClick',
-		'dblclick img': 'onShowPreview',
-		'click .fa-heart': 'saveModelAsJson',
+		// 'click .rotate': 'onRotate',
+		// 'click .rating': 'onRatingClick',
+		// 'dblclick img': 'onShowPreview',
+		// 'click .fa-heart': 'saveModelAsJson',
 	},
+	
 	// for creating flickr/placeline bootstrap file
 	saveModelAsJson: function(e){
 		e.preventDefault();
@@ -73,7 +74,8 @@ views.PhotoView = Backbone.View.extend({
 	onRotate: function(e){
 		e.preventDefault();
 	},
-	onRatingClick: function(e){
+	// use delegated event instead, called from GalleryView
+	XXXonRatingClick: function(e){
 		e.preventDefault();
 		var target = e.target,
 			value = $(target.parentNode).children().index(target)+1;
@@ -102,6 +104,7 @@ views.PhotoView = Backbone.View.extend({
 		var that = this;
 		this.$el.addClass('fade-out');
 		_.delay(function(that){
+			that.undelegateEvents();
 			that.remove();
 			// trigger ONE pageLayout AFTER remove
 		}, snappi.TIMINGS.thumb_fade_transition, this)
@@ -111,6 +114,20 @@ views.PhotoView = Backbone.View.extend({
 
 
 });
+
+views.PhotoView.delegated_ratingClick = function(e, collection){
+	e.preventDefault();
+	collection = collection || this.collection;
+	var $thumb = $(e.currentTarget).closest('.thumb');
+	var modelId;
+	if ($thumb.parent().hasClass('shot-wrap')) modelId = $thumb.parent().attr('id');
+	else modelId = $thumb.attr('id');
+	var model = _.findWhere(collection.models, {id: modelId});
+
+	var star = e.target;
+	var value = $(star.parentNode).children().index(star)+1;
+	model.rating(value);
+};
 
 
 })( snappi.views );

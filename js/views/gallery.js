@@ -52,11 +52,6 @@ var LayoutEngines = {
 					layoutOptions,
 					more
 				);
-				// if (layout) {
-					// // append, if necessary
-			        // if (!$.contains(container.get(0), layout.items.get(0))) {
-			        // container.append(layout.items);
-			        // }
 				// } ;
 			// },that);
 			return;
@@ -83,6 +78,9 @@ var GalleryView = {
 			this.pager.trigger('gotoPeriod', e, {period: period});
 		},  
 		'click .zoom-in': 'onZoom',
+		// delegated Photo/ShotView events
+		'click .body .thumb .show-hidden-shot': 'shotToggleHiddenshot', 
+		'click .body .thumb .rating': 'photoRatingClick', 
 	},
 	
 	ux_showWaiting: function() {
@@ -199,47 +197,13 @@ console.info("1. GV.pager.fetch().done()");
 				break;
 		} 
 
-		
-
-/* using deferred
-
-init = new $.Deferred()
-
-onclick
-when Timeline.renderLoading
-when syncTimeline 
-	done Timeline.render() - still show spinner?
-	pipe syncCollection = Collection sync xhr
-		done render()
-			when LayoutChunk0
-			when LayoutChunk1
-				done LayoutComplete
-	done Timeline.renderFetched				
-
-
-
-init.done( getTimeline )
-	.pipe( Collection.sync() )
-		. 
-Timeline.sync()
-	.then( Collection.sync )
-	.then()
-
-init.when( syncTimeline, syncCollection )
-
-
-
-*/
-		
-
-		
-
-
-
-
-
-
-
+	},
+	// delegated event handlers, calls static method in target View
+	shotToggleHiddenshot: function(e){
+		return views.ShotView.delegated_toggleHiddenshot(e, this.collection);
+	}, 
+	photoRatingClick: function(e){
+		return views.PhotoView.delegated_ratingClick(e, this.collection);
 	},
 
 	/**

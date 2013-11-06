@@ -419,6 +419,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			$shot = this.$('#'+options.shotId);
 		if (!$shot.length) throw "Trying to insert into missing shot, shotId="+options.shotId;
 		$shot.addClass('showing');
+		var bestshotPosition = $shot.find('.bestshot').css(['top','left']);
 		_.chain(models)
 			.filter(function(e,i,l){ return e !== options.bestshot })
 			.each(function(e,i,l){
@@ -426,7 +427,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 				// options.shotId set in that.addedHiddenshots()
 				// add Hiddenshot with .fade.fade-out class
 				//TODO: move this to ShotView?
-				$thumb.addClass('fade').addClass('fade-out');
+				$thumb.addClass('fade').addClass('fade-out').css(bestshotPosition);
 				$shot.append($thumb);
 			});
 		// get current page

@@ -40,7 +40,7 @@ mixins.UiActions = {
 			// console.log(e.hash);
 			var delta = target.offset().top-NAVBAR_OFFSET_H - $(window).scrollTop();
 			if (delta < 0 || delta > 50) {
-				$('body').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
+				$('html,body').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
 					300, 
 					function(){
 						_lastScrollTop = window.pageYOffset;
@@ -72,7 +72,7 @@ mixins.UiActions = {
 			if (delta < 0 || delta > 50) {
 				console.info("target="+target.data('period'));
 				console.info("animate scrollTop="+(windowT+delta)+", windowT="+windowT+", delta="+delta );
-				$('body').animate({scrollTop: windowT+delta}, 
+				$('html,body').animate({scrollTop: windowT+delta}, 
 					300, 
 					function(){
 						_lastScrollTop = window.pageYOffset;

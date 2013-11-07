@@ -61,6 +61,8 @@ var File = {
 			
 			var parsed = this.parseShot_CC(json.response.castingCall); // from mixin
 			File.parsed = parsed;
+		} else {
+			serverPaging = collection.paginator_ui.serverPaging;
 		}
 		// slice response to match page/perpage 
 		var perpage = parseInt(collection.perPage || serverPaging.perpage),

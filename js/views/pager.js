@@ -76,11 +76,10 @@ console.log("pager ux_blockUi");
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
-			var fetched = _.keys(this.collection.fetchedServerPages);
 			_.each(this.$('.pagination .page .item'), function(item){
-				if (_.contains(fetched, $(item).text())) 
+				if (this.collection.fetchedServerPages[$(item).text()]) 
 					$(item).addClass('loaded');
-			});
+			}, this);
 			if (options && !!options.silent) 
 				return;
 			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
@@ -183,7 +182,13 @@ console.log("pager 'request' uxBeforeXhr()");
 				return this.releasePage(e);
 
 			var $target = $(e.target);
-			if ($target.hasClass('active') && $target.has('.thumb').length ) return;
+		// console.warn("goto page="+$target.text());
+
+			if ($target.hasClass('active') && 
+				this.collection.fetchedServerPages[$target.text()]
+			) {
+				this.collection.trigger('xhr-ui-ready');
+			}
 			this.collection.goTo( $target.text() ,{ merge: true, remove: false });
 		},
 
@@ -191,9 +196,9 @@ console.log("pager 'request' uxBeforeXhr()");
 			e.preventDefault();
 			if (e.ctrlKey) {
 				// remove
-				var page = $(e.currentTarget).text();
+				var page = $(e.target).text();
 				this.collection.trigger('release-page', page);
-				return;	
+				this.collection.trigger('xhr-ui-ready');
 			}
 		},
 
@@ -273,4 +278,67 @@ console.log("pager 'request' uxBeforeXhr()");
 		},
 		
 	});
+	
+
+	/*
+	* static method
+	* for testing memory/GC with multiple page load/release cycles
+	* usage:  from console, _LOOP(10);
+	*/
+	views.PagerView.loop = function(n, fetched) {
+		fetched = fetched || 0;
+		var remaining = _.isUndefined(n) ? 1 : n;
+		var done = remaining<=0;		
+		if (done) 
+			return;
+		var action = 'load'; 
+		var page = 0;
+		var clickEvent = jQuery.Event("click");
+		var collection = snappi.app.collection;
+		var TIMEOUT = 10*60*1000;	// 10 minutes
+
+		var nextAction = function(err, cb){
+			page++;
+			if (page > collection.totalPages) {
+				if (action==='release') 
+					return cb();
+				if (action==='load') {
+					fetched += $(".gallery .body .thumb").length;
+					action = 'release';
+					page = 0;
+					_.defer(nextAction, null, cb);
+				}
+			}
+			clickEvent.ctrlKey = action == 'release';
+			var $next = $('.pager .page .item[data-page="'+page+'"]');
+			if ($next.length) {
+				snappi.app.listenToOnce(collection, 'xhr-ui-ready', function(){
+
+					_.defer(nextAction, null, cb);
+				});
+				clickEvent.target = $next.get(0);
+				return snappi.app.pager.gotoPage(clickEvent);
+			}
+			return nextAction(err, cb);
+		};
+
+		nextAction(null, function(){
+			remaining--;
+			if (remaining === 0){
+				console.info("_LOOP complete, fetched="+fetched+", loops remaining="+remaining);
+				$('html,body').animate({scrollTop:0});
+			}
+			else views.PagerView.loop(remaining, fetched);
+		});
+
+		_.delay(function(){
+				console.info('LOOP timeout');
+				remaining = 0;
+			}, 
+			TIMEOUT
+		);
+	}
+	window._LOOP = views.PagerView.loop;
+
+
 })( snappi.views, snappi.mixins );

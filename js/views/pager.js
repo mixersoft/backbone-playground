@@ -36,6 +36,7 @@ console.log("pager ux_blockUi");
 
 		},
 		ux_clearWaiting: function(){
+			this.trigger('ui-ready');
 			return true;	// noop
 			// should be cleared by Pager.render()
 		},
@@ -60,7 +61,10 @@ console.log("pager ux_blockUi");
 
 		    // Timeline XHR request, triggered by Backbone.sync()
 		    this.listenTo(this.collection, 'request',  this.helper.uxBeforeXhr);	
-		    this.listenTo(this.collection, 'xhr-ui-ready', this.renderFetched);
+		    this.listenTo(this.collection, 'xhr-ui-ready', function(){
+		    	if (this.$('.fa-spinner').length) this.renderState();
+		    	this.ux_clearWaiting(this.collection.currentPage);
+		    });
 		},
 		render: function (collection, resp, options) {
 			this.listenToOnce(collection, 'layout-chunk', function(){
@@ -80,6 +84,7 @@ console.log("pager ux_blockUi");
 				if (this.collection.fetchedServerPages[$(item).text()]) 
 					$(item).addClass('loaded');
 			}, this);
+			this.ux_clearWaiting();
 			if (options && !!options.silent) 
 				return;
 			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
@@ -187,7 +192,8 @@ console.log("pager ux_blockUi");
 			if ($target.hasClass('active') && 
 				this.collection.fetchedServerPages[$target.text()]
 			) {
-				this.collection.trigger('xhr-ui-ready');
+				this.trigger('ui-ready');
+				return;
 			}
 			this.collection.goTo( $target.text() ,{ merge: true, remove: false });
 		},
@@ -285,67 +291,92 @@ console.log("pager ux_blockUi");
 	* for testing memory/GC with multiple page load/release cycles
 	* usage:  from console, _LOOP(10);
 	*/
-	views.PagerView.loop = function(_remaining, _fetched) {
-		_fetched = _fetched || 0;
+	views.PagerView.loop = function(_remaining, state) {
+		state = state || {
+			action: 'load',
+			fetched: 0,
+			page: 0,
+		}
 		if (_.isUndefined(_remaining)) _remaining = 1
-
 		if (_remaining<=0) return 'done';
 
-		var action = 'load'; 
-		var page = 0;
 		var clickEvent = jQuery.Event("click");
+		var that = snappi.app.pager;	// instance of this View
 		var collection = snappi.app.collection;
 		var TIMEOUT = 10*60*1000;	// 10 minutes
 
-		var nextAction = function(err, cb){
-			var deferred = new Deferred();
-			page++;
-			if (page > collection.totalPages) {
-				if (action==='release') 
-					return cb();
-				if (action==='load') {
-					_fetched += $(".gallery .body .thumb").length;
-					action = 'release';
-					page = 0;
-					return _.defer(nextAction, null, cb);
+		var nextAction = function(state){
+			var deferred = new $.Deferred();
+			if (state.page > collection.totalPages) {
+				if (state.action==='load') {
+					state.fetched += $(".gallery .body .thumb").length;
 				}
+				return deferred.reject(state);	// loop complete
 			}
-			clickEvent.ctrlKey = action == 'release';
-			var $next = $('.pager .page .item[data-page="'+page+'"]');
-console.log(action+"  page="+page);
+			clickEvent.ctrlKey = state.action == 'release';
+			var $next = $('.pager .page .item[data-page="'+state.page+'"]');
+			if ($next.length==0) that.renderState();
+			$next = $('.pager .page .item[data-page="'+state.page+'"]');
+// console.log("1. "+state.action+"  page="+state.page);			
 			if ($next.length) {
-				snappi.app.listenToOnce(collection, 'xhr-ui-ready', function(){
-
-					return _.defer(nextAction, null, cb);
-
-				});
 				clickEvent.target = $next.get(0);
-				return _.delay(
+				that.listenToOnce(that, 'ui-ready', function(){
+console.log("3. Resolved: "+state.action+"  page="+state.page);						
+					deferred.resolve(state); // _.defer(nextAction, null, cb);
+				});
+				 _.delay(
 					function(clickEvent){
-						snappi.app.pager.gotoPage.call(snappi.app.pager, clickEvent);
+// console.log("2. Click: "+state.action+"  page="+state.page);						
+						that.gotoPage.call(that, clickEvent);
 					},
-					500, clickEvent
+					0, clickEvent
 				);
+				return deferred.promise();	// wait until 'xhr-ui-ready' to resolve()
 			}
-			return _.defer(nextAction, null, cb);
+			throw "Error: shouldn't be here";
 		};
 
-		nextAction(null, function(){
-			_remaining--;
-			console.log("_LOOP complete, fetched="+_fetched+", loops remaining="+_remaining);
-			if (_remaining <= 0){
-				$('html,body').animate({scrollTop:0});
-				return
+		var nextLoop = function(state){
+			if (state.action === 'load'){
+				state.action = 'release';
+				state.page = 0;
+				$('html,body').scrollTop(0);
+				repeat(state);	
+				return;
+			} else {
+				_remaining--;
+				console.log("_LOOP complete, fetched="+state.fetched+", loops remaining="+_remaining);
+				$('html,body').scrollTop(0);
+				if (_remaining > 0){
+					state.action = 'load';
+					state.page = 0;
+					views.PagerView.loop(_remaining, state);
+				}
 			}
-			else _.delay(views.PagerView.loop, 2000, _remaining, _fetched);
-		});
+		};
 
+		var repeat = function(state){
+			state.page++;
+			var promise = nextAction(state);
+			var delay = state.action==='load' ? 2000 : 500;
+			_.delay(function(p){
+				promise.fail(
+					nextLoop
+				)
+				.done( 
+					repeat
+				);
+			}, delay, promise)
+		}
 		_.delay(function(){
 				console.log('LOOP timeout');
 				_remaining = 0;
 			}, 
 			TIMEOUT
 		);
+
+		// start the cycle
+		repeat(state);
 	}
 	window._LOOP = views.PagerView.loop;
 

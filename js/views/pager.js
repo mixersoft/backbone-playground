@@ -90,7 +90,7 @@ console.log("pager ux_blockUi");
 
 		helper: {
 			uxBeforeXhr: function(model, xhr, options){
-console.log("pager 'request' uxBeforeXhr()");				
+// console.log("pager 'request' uxBeforeXhr()");				
 		    	this.ux_showWaiting();
 		    },
 
@@ -285,12 +285,12 @@ console.log("pager 'request' uxBeforeXhr()");
 	* for testing memory/GC with multiple page load/release cycles
 	* usage:  from console, _LOOP(10);
 	*/
-	views.PagerView.loop = function(n, fetched) {
-		fetched = fetched || 0;
-		var remaining = _.isUndefined(n) ? 1 : n;
-		var done = remaining<=0;		
-		if (done) 
-			return;
+	views.PagerView.loop = function(_remaining, _fetched) {
+		_fetched = _fetched || 0;
+		if (_.isUndefined(_remaining)) _remaining = 1
+
+		if (_remaining<=0) return 'done';
+
 		var action = 'load'; 
 		var page = 0;
 		var clickEvent = jQuery.Event("click");
@@ -298,42 +298,51 @@ console.log("pager 'request' uxBeforeXhr()");
 		var TIMEOUT = 10*60*1000;	// 10 minutes
 
 		var nextAction = function(err, cb){
+			var deferred = new Deferred();
 			page++;
 			if (page > collection.totalPages) {
 				if (action==='release') 
 					return cb();
 				if (action==='load') {
-					fetched += $(".gallery .body .thumb").length;
+					_fetched += $(".gallery .body .thumb").length;
 					action = 'release';
 					page = 0;
-					_.defer(nextAction, null, cb);
+					return _.defer(nextAction, null, cb);
 				}
 			}
 			clickEvent.ctrlKey = action == 'release';
 			var $next = $('.pager .page .item[data-page="'+page+'"]');
+console.log(action+"  page="+page);
 			if ($next.length) {
 				snappi.app.listenToOnce(collection, 'xhr-ui-ready', function(){
 
-					_.defer(nextAction, null, cb);
+					return _.defer(nextAction, null, cb);
+
 				});
 				clickEvent.target = $next.get(0);
-				return snappi.app.pager.gotoPage(clickEvent);
+				return _.delay(
+					function(clickEvent){
+						snappi.app.pager.gotoPage.call(snappi.app.pager, clickEvent);
+					},
+					500, clickEvent
+				);
 			}
-			return nextAction(err, cb);
+			return _.defer(nextAction, null, cb);
 		};
 
 		nextAction(null, function(){
-			remaining--;
-			if (remaining === 0){
-				console.info("_LOOP complete, fetched="+fetched+", loops remaining="+remaining);
+			_remaining--;
+			console.log("_LOOP complete, fetched="+_fetched+", loops remaining="+_remaining);
+			if (_remaining <= 0){
 				$('html,body').animate({scrollTop:0});
+				return
 			}
-			else views.PagerView.loop(remaining, fetched);
+			else _.delay(views.PagerView.loop, 2000, _remaining, _fetched);
 		});
 
 		_.delay(function(){
-				console.info('LOOP timeout');
-				remaining = 0;
+				console.log('LOOP timeout');
+				_remaining = 0;
 			}, 
 			TIMEOUT
 		);

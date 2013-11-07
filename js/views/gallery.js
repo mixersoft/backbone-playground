@@ -308,6 +308,11 @@ console.info("0 Timeline.'sync:currentZoom' success");
 					el: this.$('.header .pager'),
 					collection : this.collection,
 				});
+				this.displayOptions = new views.GalleryDisplayOptionsView({
+					el: this.$('.header .display-options'),
+					collection : this.collection,
+					pager: this.pager,
+				});
 				break;
 		} 
 	},
@@ -404,7 +409,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	add : function(models, options) {
 		// Coll.fetch() > success() > Coll.set() > trigger."add" > View.add() > trigger."sync"
 		// sync called AFTER add, thumbViews added in sync
-		console.log("GalleryView add ThumbView for new models, count="+models.length);
+		// console.log("GalleryView add ThumbView for new models, count="+this.collection.models.length);
 	},
 	/**
 	 * add Hiddenshots AFTER XHR fetch(), 

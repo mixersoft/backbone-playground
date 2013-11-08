@@ -130,5 +130,9 @@ views.PhotoView.delegated_ratingClick = function(e, collection){
 	model.rating(value);
 };
 
+views.PhotoView.delegated_setFocus = function(e, $gallery){
+	if ($gallery) $gallery.find('.thumb.focus').removeClass('focus');
+	$(e.currentTarget).addClass('focus');
+}
 
 })( snappi.views );

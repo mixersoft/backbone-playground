@@ -41,32 +41,6 @@ views.ShotView = views.PhotoView.extend({
 		this.$('.thumb').addClass('bestshot ' + m.orientationLabel);
 		return this;
 	},
-	// use delegated handler, called from GalleryView
-	XXXonHiddenshotToggle: function(e){
-		e.preventDefault();
-		var that = this, 
-			action = this.$el.hasClass('showing') ? 'hide' : 'show';
-		switch (action) {
-			case 'show':
-// console.info("show hiddenshot for id="+this.model.get('id'));
-				this.collection.trigger('fetchHiddenShots', {
-					model: this.model,
-				});
-				break;
-			case 'hide':
-				// immediate, no XHR request, triggers PhotoView."hide"
-				_.each(this.model.get('hiddenshot').models, function(model,k,l){
-					if (!(model instanceof snappi.models.Shot)) {
-						model.trigger('hide');	// PhotoView.onHide() calls remove()
-					}
-				}, this);
-				this.$el.removeClass('showing');
-				_.delay(function(){
-					that.collection.trigger('pageLayoutChanged', null, {child: that.$el});	
-				}, snappi.TIMINGS.thumb_fade_transition)
-				break;
-		}
-	},
 });
 
 /*
@@ -103,6 +77,7 @@ views.ShotView.delegated_toggleHiddenshot = function(e, collection){
 			});
 			$shot.removeClass('showing');
 			_.delay(function(){
+				$shot.find('.thumb.bestshot').trigger('click');
 				collection.trigger('pageLayoutChanged', null, {child: $shot});	
 			}, snappi.TIMINGS.thumb_fade_transition)
 			break;

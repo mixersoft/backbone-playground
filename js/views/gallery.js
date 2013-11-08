@@ -18,46 +18,6 @@ var extend = function(classDef){
 	);
 };
 
-/*
- * View: Gallery (same as App?)
- * properties:
- * methods:
- */
-
-var LayoutEngines = {
-	layout: {
-		Typeset: function(container, items, options, more){
-			var that = this,
-				layoutState,
-				displayOptions = that.collection.gallery_display_options_ui,
-				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
-				
-			var layoutOptions = {
-				outerContainer: that.$el,
-				thumbsContainer: container || that.$('.body'),		// or .body .page[data-page=N]
-				targetHeight: displayOptionSize.size,
-				_layout_y: 0,					// start at page top
-				// more: function(){},			// pipeline before layout complete 
-			};	
-			/*
-			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
-			 */
-			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']!=false;
-
-			// _.defer(function(that){
-				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
-					container, 
-					items,				// if null, will layout all .thumbs IMG in container
-					that.collection,
-					layoutOptions,
-					more
-				);
-				// } ;
-			// },that);
-			return;
-		},  // end layout.Typeset
-	},
-};
 
 var GalleryView = {
 	el: ".gallery",
@@ -77,8 +37,9 @@ var GalleryView = {
 		},  
 		'click .zoom-in': 'onZoom',
 		// delegated Photo/ShotView events
-		'click .body .thumb .show-hidden-shot': 'shotToggleHiddenshot', 
-		'click .body .thumb .rating': 'photoRatingClick', 
+		'click .body .thumb': 'photo_SetFocus',
+		'click .body .thumb .rating': 'photo_RatingClick', 
+		'click .body .thumb .show-hidden-shot': 'shot_ToggleHiddenshot', 
 	},
 	
 	ux_showWaiting: function() {
@@ -211,13 +172,18 @@ console.info("1. GV.pager.fetch().done()");
 		} 
 
 	},
+
 	// delegated event handlers, calls static method in target View
-	shotToggleHiddenshot: function(e){
-		return views.ShotView.delegated_toggleHiddenshot(e, this.collection);
-	}, 
-	photoRatingClick: function(e){
+	photo_SetFocus: function(e){
+		return views.PhotoView.delegated_setFocus(e, this.$('.body'));
+	},
+	photo_RatingClick: function(e){
 		return views.PhotoView.delegated_ratingClick(e, this.collection);
 	},
+	shot_ToggleHiddenshot: function(e){
+		return views.ShotView.delegated_toggleHiddenshot(e, this.collection);
+	}, 
+	
 
 	/**
 	 * Zoom action
@@ -668,7 +634,53 @@ var _getPageFromModel = function(that, m) {
 	var $page = $thumb.closest('.page');
 	return $page; 
 }
+
+/*
+ * View: Gallery (same as App?)
+ * properties:
+ * methods:
+ */
+
+var LayoutEngines = {
+	layout: {
+		Typeset: function(container, items, options, more){
+			var that = this,
+				layoutState,
+				displayOptions = that.collection.gallery_display_options_ui,
+				displayOptionSize = _.findWhere(displayOptions.size, {active:'active'});
+				
+			var layoutOptions = {
+				outerContainer: that.$el,
+				thumbsContainer: container || that.$('.body'),		// or .body .page[data-page=N]
+				targetHeight: displayOptionSize.size,
+				_layout_y: 0,					// start at page top
+				// more: function(){},			// pipeline before layout complete 
+			};	
+			/*
+			 * use ?no-image=1 to test layoutEngine WITHOUT JPGs
+			 */
+			if (snappi.qs['no-image']) layoutOptions.noImageSrc = snappi.qs['no-image']!=false;
+
+			// _.defer(function(that){
+				var layout = mixins.LayoutEngine.Typeset.run.call(that, 
+					container, 
+					items,				// if null, will layout all .thumbs IMG in container
+					that.collection,
+					layoutOptions,
+					more
+				);
+				// } ;
+			// },that);
+			return;
+		},  // end layout.Typeset
+	},
+};
+
 // put it all together at the bottom
 extend(GalleryView);
-var check;
+
+
+
+
+
 })( snappi.views, snappi.mixins );

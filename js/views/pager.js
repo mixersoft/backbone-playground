@@ -292,13 +292,21 @@ console.log("pager ux_blockUi");
 	* for testing memory/GC with multiple page load/release cycles
 	* usage:  from console, _LOOP(10);
 	*/
+	var LOOP = {
+		pause: false,
+		playing: new $.Deferred().resolve(), 
+	};
 	views.PagerView.loop = function(_remaining, state) {
 		state = state || {
 			action: 'load',
 			fetched: 0,
 			page: 0,
 		};
-		if (_.isUndefined(_remaining)) _remaining = 1;
+		if (!_.isNumber(_remaining) ) {
+			LOOP.pause = !LOOP.pause;
+			if (LOOP.pause === false) LOOP.playing.resolve();
+			return LOOP.pause;
+		}
 		if (_remaining<=0) return 'done';
 
 		var clickEvent = jQuery.Event("click");
@@ -348,16 +356,16 @@ console.log("1. Resolved: "+state.action+"  page="+state.page);
 		};
 
 		var repeat = function(state){
+			if (LOOP.pause) LOOP.playing = new $.Deferred();
 			state.page++;
 			var promise = nextAction(state);
 			var delay = state.action==='load' ? 2000 : 500;
 			_.delay(function(p){
-				promise.fail(
-					nextLoop
+				$.when(LOOP.playing).then(
+					function(){
+						promise.fail(nextLoop).done(repeat);
+					}
 				)
-				.done( 
-					repeat
-				);
 			}, delay, promise);
 		};
 

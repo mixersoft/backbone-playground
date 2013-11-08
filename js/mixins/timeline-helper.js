@@ -110,7 +110,7 @@ console.info("1. GV.collection.fetch()");
 	var serialXhr = options.xhr;
 	if (serialXhr) { // options.xhr set by onTimelineSync
 		console.log("1. GalleryView.pager.onTimelineChangePeriod(), xhr.promise.state="+serialXhr.state());
-		serialXhr.then(function(){
+		$.when(jqXhr, serialXhr).then(function(){
 console.info("1. GV $.when: all done after Pager.sync+GC.fetch");			
 		})
 	} else {	// TimelineSync already sync'd

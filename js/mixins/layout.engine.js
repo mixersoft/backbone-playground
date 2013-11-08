@@ -377,8 +377,11 @@ if (_DEBUG) console.time("Typeset._layout");
 									case 'timeline': 
 									case 'page':
 										var thumbsize_prefix = mixins.Href.getThumbsizePrefix(image);
-										if (image.tag.src.indexOf(thumbsize_prefix+'~')<0)
-											image.tag.src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+										if (image.tag.src.indexOf(thumbsize_prefix+'~')<0);
+											var src = mixins.Href.getImgSrc({rootSrc: image.tag.getAttribute('data-root-src') }, thumbsize_prefix, i);
+											if (snappi.qs['no-image']) 
+												src += '?'+new Date().getTime();	// do NOT cache JPG
+											image.tag.src = src;
 										break;
 								}
 								

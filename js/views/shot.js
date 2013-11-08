@@ -86,6 +86,7 @@ views.ShotView.delegated_toggleHiddenshot = function(e, collection){
 	var action = $shot.hasClass('showing') ? 'hide' : 'show';
 	switch (action) {
 		case 'show':
+		// TODO: use deferred pattern?
 			// triggers GallColl."fetchHiddenShots" 
 			// 		> Shot."fetchedHiddenshots"
 			//		> GallView."addedHiddenshots" 

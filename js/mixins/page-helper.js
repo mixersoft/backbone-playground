@@ -52,6 +52,7 @@ renderBody: function(container, options){
 		 */
 		var thumbs = container.find('> div');  // container.find('.thumb');
 		pageContainer.append(thumbs);
+		container.remove();
 		var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
 		/*
 		 * end

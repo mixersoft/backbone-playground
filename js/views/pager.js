@@ -1,4 +1,4 @@
-(function (views) {
+(function (views, mixins) {
 
 	views.PagerView = Backbone.View.extend({
 
@@ -7,7 +7,8 @@
 			'click .item.prev': 'gotoPrev',
 			'click .item.next': 'gotoNext',
 			'click a.last': 'gotoLast',
-			'click .item.link': 'gotoPage',
+			'click .page .item.link': 'gotoPage',
+			'click .page .item.active': 'gotoPage',
 			'click .howmany': 'changeCount',
 			'click a.sortAsc': 'sortByAscending',
 			'click a.sortDsc': 'sortByDescending',
@@ -20,33 +21,143 @@
 		
 		template_source: "#markup #PagerBootstrap.underscore",
 
+		ux_blockUi: function(){
+console.log("pager ux_blockUi");
+			return this.$el.addClass('xhr-fetching');
+		},
+		ux_showWaiting: function() {
+			var spinner = '<i class="fa fa-2x fa-spinner fa-spin"><i>';
+			var found = this.helper.getCurrentPeriod$(this); 
+			if (found) 
+				return found.html(spinner);
+				
+			if (!found) // page el not found, attach to pager
+				return this.$el.html(spinner);
+
+		},
+		ux_clearWaiting: function(){
+			this.trigger('ui-ready');
+			return true;	// noop
+			// should be cleared by Pager.render()
+		},
+		ux_unblockUi: function(){
+			return this.$el.removeClass('xhr-fetching');
+		},
+
 		initialize: function () {
 			if(!($.isFunction(this.template))) {
 				var source = $(this.template_source).html();	
 				// compile once, add to Class
 				views.PagerView.prototype.template = _.template(source);
-		    }
-		    var collection = this.collection;
+			}
+			var collection = this.collection;
 			var qs = snappi.qs;
-			if (qs.perpage) collection.perPage = collection.paginator_ui.perPage = parseInt(qs.perpage);
+			if (qs.perpage) 
+				collection.perPage = collection.paginator_ui.perPage = parseInt(qs.perpage);
 
-		    // this.listenTo(collection, 'reset', this.render);
-		    this.listenTo(collection, 'sync', this.render);
-		    this.listenTo(collection, 'scrollPage', this.renderCurrentPage);
-		    this.listenTo(collection, 'xhr-fetching', this.renderLoading);
+			// this.listenTo(collection, 'reset', this.render);
+			this.listenTo(collection, 'sync', this.render);
+			this.listenTo(collection, 'change:page', this.renderState);
+			this.listenTo(collection, 'xhr-fetching', this.renderLoading);
+
+			// Timeline XHR request, triggered by Backbone.sync()
+			this.listenTo(this.collection, 'request',  this.helper.uxBeforeXhr);	
+			this.listenTo(this.collection, 'xhr-ui-ready', function(){
+				if (this.$('.fa-spinner').length) this.renderState();
+				this.ux_clearWaiting(this.collection.currentPage);
+			});
 		},
 		render: function (collection, resp, options) {
-			// note: the 'model' comes from requestPager.collection.info()
+			this.listenToOnce(collection, 'layout-chunk', function(){
+				this.renderState();
+				// only on sync, not page nave
+				$(window).on('scroll', $.proxy(this.onContainerScroll, this));
+			});
+		},
+
+		// render pager, show fetched periods
+		renderState: function(options){
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
 			this.$el.html(html);
-			var fetched = _.keys(this.collection.fetchedServerPages);
 			_.each(this.$('.pagination .page .item'), function(item){
-				if (_.contains(fetched, $(item).text())) 
+				if (this.collection.fetchedServerPages[$(item).text()]) 
 					$(item).addClass('loaded');
-			});
+			}, this);
+			this.ux_clearWaiting();
+			if (options && !!options.silent) 
+				return;
+			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
+			if (page.length) 
+				mixins.UiActions.scrollIntoView(page);
+			return;
 		},
+
+		helper: {
+			uxBeforeXhr: function(model, xhr, options){
+// console.log("pager 'request' uxBeforeXhr()");				
+				this.ux_showWaiting();
+			},
+
+			getCurrentPeriod$: function(that){
+				try {
+					var selector = '.page .item[data-page="'+that.collection.currentPage+'"]',
+						$item = that.$(selector);
+					return $item.length ? $item : false;
+				} catch (ex){
+					return false;
+				}
+			},
+			scrollSpy : function(e) {
+				self = this;
+				if (self.$el.hasClass('xhr-fetching')) {
+					return;
+				}
+				
+				var OFFSET_H = 40,
+					target = self.$el,
+					collection = this.collection,
+					selfB = target.offset().top+target.height(),
+					windowT = $(window).scrollTop(),
+					windowB = windowT + $(window).height();
+					
+				// find current visible page
+				var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
+				if (!scrollDir) return;
+
+				visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
+					var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
+					var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
+					var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
+					var isTopBelowFold = item.offsetTop > windowB;
+					if (scrollDir=='up'){ // page up
+						if (isBottomBelowFold) return true;
+						if (isTopBelowWindowT) return true;
+					}
+					if (scrollDir=='down') {
+						if (isTopBelowWindowT) return true;
+						if (isBottomBelowFold) return true;
+					}
+				});
+				if (!visiblePg && scrollDir=='up') 
+					visiblePg = $('.gallery .body .page:first-child');
+				else if (!visiblePg && scrollDir=='down') 
+					visiblePg = $('.gallery .body .page:last-child');
+
+				collection.currentPage = $(visiblePg).data('page');
+				this.renderState({silent: true});	
+			},
+		},	// end helper
+
+		/**
+		 * Called on the scroll event of the container element.  Used only in the non-paginated mode.
+		 * When the scroll threshold is reached a new page of thumbs is requested.
+		 * @param event e - the scroll event object
+		 */
+		onContainerScroll : _.throttle(function(e){
+			this.helper.scrollSpy.call(this, e);
+		}, 500, {leading: true}),
 		
 
 		gotoFirst: function (e) {
@@ -71,10 +182,31 @@
 			this.collection.goTo(this.collection.information.lastPage, { merge: true, remove: false });
 		},
 
-		gotoPage: function (e) {
+		gotoPage: function (e, page) {
 			e.preventDefault();
-			var page = $(e.target).text();
-			this.collection.goTo(page,{ merge: true, remove: false });
+			if (e.ctrlKey) 
+				return this.releasePage(e, page);
+
+			var $target = $(e.target);
+			page = $target.length ? $target.text() : (page || 1);
+			if ($target.hasClass('active') && 
+				this.collection.fetchedServerPages[page]
+			) {
+				this.trigger('ui-ready');
+				return;
+			}
+			this.collection.goTo( page ,{ merge: true, remove: false });
+		},
+
+		releasePage: function(e, page) {
+			e.preventDefault();
+			if (e.ctrlKey) {
+				// remove
+				var $target = $(e.target);
+				page = $target.length ? $target.text() : (page || 1);
+				this.collection.trigger('release-page', page);
+				this.collection.trigger('xhr-ui-ready');
+			}
 		},
 
 		changeCount: function (e) {
@@ -152,19 +284,103 @@
 			this.preserveFilterValue(filter);
 		},
 		
-		renderCurrentPage: function(visiblePage, dir){ 
-			this.collection.currentPage = visiblePage;
-			this.render();
-		},
-		
-		renderLoading: function (page) {
-			_.find(this.$('.item.link'), function(v){
-				if (v.textContent==page) {
-					$(v).html('<i class="fa fa-2x fa-spinner fa-spin" data-page="'+page+'"><i>');
-					return true;
-				}
-			});
-		},
-
 	});
-})( snappi.views );
+	
+
+	/*
+	* static method
+	* for testing memory/GC with multiple page load/release cycles
+	* usage:  from console, _LOOP(10);
+	*/
+	var LOOP = {
+		pause: false,
+		playing: new $.Deferred().resolve(), 
+	};
+	views.PagerView.loop = function(_remaining, state) {
+		state = state || {
+			action: 'load',
+			fetched: 0,
+			page: 0,
+		};
+		if (!_.isNumber(_remaining) ) {
+			LOOP.pause = !LOOP.pause;
+			if (LOOP.pause === false) LOOP.playing.resolve();
+			return LOOP.pause;
+		}
+		if (_remaining<=0) return 'done';
+
+		var clickEvent = jQuery.Event("click");
+		var that = snappi.app.pager;	// instance of this View
+		var collection = snappi.app.collection;
+		var TIMEOUT = 10*60*1000;	// 10 minutes
+
+		var nextAction = function(state){
+			var deferred = new $.Deferred();
+			if (state.page > collection.totalPages) {
+				if (state.action==='load') {
+					state.fetched += $(".gallery .body .thumb").length;
+				}
+				return deferred.reject(state);	// loop complete
+			}
+			clickEvent.ctrlKey = state.action == 'release';
+			that.listenToOnce(that, 'ui-ready', function(){
+console.log("1. Resolved: "+state.action+"  page="+state.page);						
+				deferred.resolve(state); // _.defer(nextAction, null, cb);
+			});
+			_.delay(
+				function(clickEvent){
+					that.gotoPage.call(that, clickEvent, state.page);
+				},
+				0, clickEvent
+			);
+			return deferred.promise();	// wait until 'xhr-ui-ready' to resolve()
+		};
+
+		var nextLoop = function(state){
+			if (state.action === 'load'){
+				state.action = 'release';
+				state.page = 0;
+				$('html,body').scrollTop(0);
+				repeat(state);	
+				return;
+			} else {
+				_remaining--;
+				console.log("_LOOP complete, fetched="+state.fetched+", loops remaining="+_remaining);
+				$('html,body').scrollTop(0);
+				if (_remaining > 0){
+					state.action = 'load';
+					state.page = 0;
+					views.PagerView.loop(_remaining, state);
+				}
+			}
+		};
+
+		var repeat = function(state){
+			if (LOOP.pause) LOOP.playing = new $.Deferred();
+			state.page++;
+			var promise = nextAction(state);
+			var delay = state.action==='load' ? 2000 : 500;
+			_.delay(function(p){
+				$.when(LOOP.playing).then(
+					function(){
+						promise.fail(nextLoop).done(repeat);
+					}
+				)
+			}, delay, promise);
+		};
+
+		_.delay(function(){
+				console.log('LOOP timeout');
+				_remaining = 0;
+			}, 
+			TIMEOUT
+		);
+
+		// start the cycle
+		repeat(state);
+	};
+
+	window._LOOP = views.PagerView.loop;
+
+
+})( snappi.views, snappi.mixins );

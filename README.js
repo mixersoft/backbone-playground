@@ -10,7 +10,10 @@ var sample_Urls: {
 		],
 	'node/pager':[
 		'http://localhost:3000/bb/?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=wo:13&perpage=20&backend=node&sort=date-taken&pager=page',
-		'http://localhost:3000/bb/?role=USER&owner=12345678-1111-0000-0000-paris-------&perpage=20&backend=node&sort=date-taken&pager=page'
+		'http://localhost:3000/bb/?role=USER&owner=12345678-1111-0000-0000-paris-------&perpage=20&backend=node&sort=date-taken&pager=page',
+		// owner=2011
+		'http://localhost:3000/bb/?owner=51df59e2-d4dc-4a66-ab4a-0a460afc6d44&role=USER&perpage=10&backend=node&sort=date-taken&pager=page',
+
 		],		
 	'file':[
 		'http://github/backbone-playground/?backend=file&owner=2011&perpage=20',
@@ -54,7 +57,7 @@ var querystring_params = {
 		'node': { 
 			// REQUIRED: use http://localhost:3000/ to avoid CORS
 			'role': ['VISITOR', 'USER', 'EDITOR'], // default VISITOR
-			'owner': ['venice', 'mb', '2011', 'or valid userid'], // check &role for permissions
+			'owner': 'valid userid', // check &role for permissions
 			// WARNING: &role=USER&userid=[UUID] does an auto-login!!!
 			'userid': ['UUID', 'or &owner=value'], // nodejs editor.id, DEFAULT 'manager'
 			'ownerid': ['UUID', 'or &owner=value'], // nodejs default 'mb' User.id

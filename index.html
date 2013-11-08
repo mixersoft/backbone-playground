@@ -99,11 +99,13 @@
 	    				<div class="title truncate">
 	    					{{caption}}
 	    				</div>
-    					<div class="attribution-block hide">
-    						<span class="attribution">
-    							<span>by </span><a class="owner">Owner</a>
-							</span>
-						</div>
+<!--
+<div class="attribution-block">
+	<span class="attribution">
+		<span>by </span><a class="owner">Owner</a>
+	</span>
+</div>
+-->
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
 		    					{{#if shotCount}}<i class='btn-icon fa fa-reorder show-hidden-shot' title='click to hide duplicate shots'>{{shotCount}}</i>{{/if}}
@@ -136,12 +138,13 @@
 	    				<div class="title truncate">
 	    					{{caption}}
 	    				</div>
-    					<div class="attribution-block hide">
-    						<span class="attribution">
-    							<span>by </span><a class="owner">Owner</a>
-							</span>
-						</div>
-						<div class='bottom-row'> 
+<!--
+<div class="attribution-block">
+	<span class="attribution">
+		<span>by </span><a class="owner">Owner</a>
+	</span>
+</div>
+-->	    				
 							<span class="inline-icons left">
 		    					{{#if shotCount}}<icon class='btn-icon fa fa-reorder show-hidden-shot best' title='click to show {{shotCount}} duplicate shots'>{{shotCount}}</icon>{{/if}}
 		    					<span class="btn-icon score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='fa fa-star{{#unless score}}-o{{/unless}}'></icon></span>
@@ -166,9 +169,9 @@
 						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
 						<% _.each (pageSet, function (p) { %>
 							<% if (currentPage == p) { %>
-								<li class="item active"><%= p %></li>
+								<li class="item active" data-page="<%= p %>"><%= p %></li>
 							<% } else { %>
-								<li class="item link"><%= p %></li>
+								<li class="item link" data-page="<%= p %>"><%= p %></li>
 							<% } %>
 						<% }); %>
 						<% var state = (lastPage != currentPage && lastPage != 0) ? 'link' : 'disabled'; %> 
@@ -280,7 +283,7 @@
         <script src="js/vendor/underscore.js"></script>
         <script src="js/vendor/handlebars.js"></script>
         <script src="js/vendor/backbone.js"></script>
-        
+        <script src="js/vendor/async.js"></script>
         <!-- demo bootstrap data -->
         <script src="js/snappi-bootstrap.js"></script>
         

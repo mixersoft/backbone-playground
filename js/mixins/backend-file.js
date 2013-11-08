@@ -10,6 +10,13 @@ var File = {
 		var collection = this;
 		var deferred = new $.Deferred();
 		_.defer(function(){
+			collection.trigger('request');
+			if ( collection.fetchedServerPages && collection.fetchedServerPages[collection.currentPage] ) {
+				deferred.resolve().then(function(){
+					collection.trigger('change:page');
+				});
+				return deferred;
+			}
 			var paginatedModels = collection.parse();
 			options.parse = false;	// don't parse again in options.success()
 			collection.fetchedServerPages[collection.currentPage]=true;  
@@ -54,6 +61,8 @@ var File = {
 			
 			var parsed = this.parseShot_CC(json.response.castingCall); // from mixin
 			File.parsed = parsed;
+		} else {
+			serverPaging = collection.paginator_ui.serverPaging;
 		}
 		// slice response to match page/perpage 
 		var perpage = parseInt(collection.perPage || serverPaging.perpage),

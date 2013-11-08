@@ -8,6 +8,9 @@
 	var _lastScrollTop = 0;
         
 mixins.UiActions = {
+	log: function(msg){
+		if (window._DEBUG) console.log(msg);
+	}, 
 	
 	TIMINGS: {
 		xhr_ui_debounce: 300,			// ui debounce after XHR success 
@@ -37,7 +40,7 @@ mixins.UiActions = {
 			// console.log(e.hash);
 			var delta = target.offset().top-NAVBAR_OFFSET_H - $(window).scrollTop();
 			if (delta < 0 || delta > 50) {
-				$('html').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
+				$('html,body').animate({scrollTop: target.offset().top-NAVBAR_OFFSET_H}, 
 					300, 
 					function(){
 						_lastScrollTop = window.pageYOffset;
@@ -69,7 +72,7 @@ mixins.UiActions = {
 			if (delta < 0 || delta > 50) {
 				console.info("target="+target.data('period'));
 				console.info("animate scrollTop="+(windowT+delta)+", windowT="+windowT+", delta="+delta );
-				$('html').animate({scrollTop: windowT+delta}, 
+				$('html,body').animate({scrollTop: windowT+delta}, 
 					300, 
 					function(){
 						_lastScrollTop = window.pageYOffset;
@@ -79,6 +82,11 @@ mixins.UiActions = {
 		}
 		return target;
 	},
+
+	/**
+	*	XHR/async UX methods
+	*/
+	
 
 };	
 	

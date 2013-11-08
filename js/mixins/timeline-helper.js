@@ -4,73 +4,93 @@
 var Timeline = {
 	// called by GalleryView
 	GalleryView: {
-renderBody: function(container, options){
+
+/**
+*	@param $pageContainer, div.page which will contain .thumb
+*	@param $thumbs, jquery array of div > div.thumb, optional
+* 		$pageContainer.append($thumbs);
+*   @param options
+*		options.force - force reLayout()
+*		options.scroll - scrollIntoView after layout, false for hiddenshots
+*		options.offscreen - deprecated
+*/		
+renderBody: function($pageContainer, $thumbs, options){
 	options = options || {};
 	var that = this,
 		stale = options.force || false, 
-		collection = this.collection,
-		pageContainer;
-	
-	if (container && container.hasClass('page')) {
-		pageContainer = container; // container is already onscreen
-	} else {
-		pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
-		if (pageContainer && !(container && container.children().length)) {
-			container = pageContainer; // NO container, user current active pageContainer
-			// page already rendered, no new elements to add, refreshLayout()
-		} else if (pageContainer){
-			// pageContainer.html('');
-			// pageContainer.append(container.children());
-			stale = true;
-			// page already rendered, AND new elements to add, 
-		}
+		collection = this.collection;
+	var helper = Timeline['GalleryView'];
+
+	if (!$pageContainer || !$pageContainer.length) {
+		$pageContainer = helper.getPeriodContainer$(that, 'create');
+		// throw "where do I put the thumbs?";
 	}
-	if (pageContainer && container && container.children().length) {
-			// page already rendered, no new elements to add, 
-			// but refreshLayout() ?? 
-	} else if (!pageContainer) {
-		var $before = null, 
-			body = this.$('.body'),
-			pager = this.pager.toJSON();
-			
-		$before = this.Pager['Timeline']['GalleryView'].createPeriodContainers$(this, pager, body);
-		
-		pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this, 'create');
-		if (!$before) body.prepend(pageContainer);
-		else pageContainer.insertAfter($before);
+
+	var isOffscreen = !$pageContainer.parent().length;
+	if (isOffscreen) {
+		// offscreen, insert in the correct location
+		$pageContainer = helper.insertPageContainer(this);
 		stale = true;
+		// throw "insert me in the right place";
+	}
+
+
+	var hasThumbs = $pageContainer.children().length;
+	if (hasThumbs) {
+		// append, clear, or remove()?
+		$pageContainer.find('.empty-label').remove();
+		// hiddenshot will insert into div.shot-wrap, set options.force=true
+		stale = true;	// trigger reLayout()
+		// throw "what should we do if there are exitings thumbs?";
 	} 
-	
+
+	if ($thumbs) 
+		$pageContainer.append($thumbs);
+
 	if (stale === true){
-		var thumbs = container.find('> div');  // container.find('.thumb');
-		if (thumbs.length) {
-			/*
-			 * the actual layout render statement
-			 */
-			if (pageContainer !== container) {
-				// replace .empty-label
-				if (thumbs.length) pageContainer.html(thumbs);
-			}
-			if (options.scroll !== false) {	// false for hiddenshot, otherwise true
-				that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-					that.scrollIntoView(pageContainer, function(){
-						that.collection.trigger('xhr-ui-ready');
-					});
-					
-				});
-			}
-			this.layout['Typeset'].call(this, pageContainer, thumbs);
-			/*
-			 * end
-			 */
-			// a new page was added. cleanup GalleryView
-			this.$el.css('min-height', $(window).outerHeight()-160);
-		}
+		/*
+		 * the actual layout render statement
+		 */
+		var layoutState = that.layout['Typeset'].call(that, 
+			$pageContainer, 
+			null		// get from $pageContainer
+		);
+		/*
+		 * end
+		 */
+		// a new page was added. cleanup GalleryView
+		// that.$el.css('min-height', $('body').data('winH')-160);
+	}
+	if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+		that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
+			that.scrollIntoView($pageContainer, function(){
+				that.collection.trigger('xhr-ui-ready');
+			});
+			// console.log('GalleryView.renderBody() first chunk ready to view');				
+		});
 	}
 	_.defer(function(){
 		that.$('.fade-out').removeClass('fade-out');
 	});
+	return $pageContainer;
 },
+
+insertPageContainer: function(that){
+	var $before = null, 
+		body = that.$('.body'),
+		pager = that.pager.toJSON();
+	var $pageContainer;
+		
+	$before = Timeline['GalleryView'].createPeriodContainers$(that, pager, body);
+	
+	$pageContainer = Timeline['GalleryView'].getPeriodContainer$(that, 'create');
+	if (!$before)
+		body.prepend($pageContainer);
+	else 
+		$pageContainer.insertAfter($before);
+	return $pageContainer;
+},
+
 onTimelineSync : function(pager, resp, options) {
 console.log("1. GalleryView.pager.'sync'");
 	var settings = pager.toJSON(),
@@ -88,7 +108,7 @@ onTimelineChangePeriod : function(pager, changed, options) {
 console.log("1. GalleryView.pager.onTimelineChangePeriod() handles 'change:active', i="+pager.changed.active);
 	if (pager.helper.isFetched.call(pager, pager.changed.active)) {
 		// scroll to an already fetched period, should NOT trigger XHR fetch
-		var pageContainer = this.Pager['Timeline']['GalleryView'].getPeriodContainer$(this);
+		var pageContainer = Timeline['GalleryView'].getPeriodContainer$(this);
 		$('.pager').addClass('xhr-fetching');	
 		this.scrollIntoView(pageContainer, function(){
 			that.collection.trigger('xhr-ui-ready');
@@ -97,7 +117,7 @@ console.log("1. GalleryView.pager.onTimelineChangePeriod() handles 'change:activ
 	}
 
 
-	var fetchOptions = this.Pager['Timeline']['GalleryView'].getRestApiOptions(this);
+	var fetchOptions = Timeline['GalleryView'].getRestApiOptions(this);
 console.info("1. GV.collection.fetch()");	
 	var jqXhr = that.collection.fetch({
 		remove: false,
@@ -112,12 +132,12 @@ console.info("1. GV.collection.fetch()");
 		console.log("1. GalleryView.pager.onTimelineChangePeriod(), xhr.promise.state="+serialXhr.state());
 		$.when(jqXhr, serialXhr).then(function(){
 console.info("1. GV $.when: all done after Pager.sync+GC.fetch");			
-		})
+		});
 	} else {	// TimelineSync already sync'd
 		pager.trigger('request', pager, jqXhr, options);		// Pager.ux_showWaiting()
 		jqXhr.then(function(){
 console.info("1. GV $.when: all done after GV.fetch");
-		})
+		});
 	}
 	return jqXhr;
 },
@@ -137,19 +157,17 @@ templates: {
  * @param index int (optional), default active, unless period index provided 
  */
 getPeriodContainer$: function(that, create, index){
-	var helper = that.Pager['Timeline']['GalleryView'],
-		template = helper.templates.selector_PeriodContainer,
+	var template = Timeline['GalleryView'].templates.selector_PeriodContainer,
 		pager = that.pager.helper.getActive(that.pager, index),
 		$item = that.$( template( pager) );
 	if (!$item.length && create){
-		template = helper.templates.periodContainer; 
+		template = Timeline['GalleryView'].templates.periodContainer; 
 		$item = $( template( pager) );
 	}
 	return $item.length ? $item : false;
 },
 getPeriodContainerByTS$: function(that, TS_UTC, create) {
-	var helper = that.Pager['Timeline']['GalleryView'],
-		pager = that.pager.toJSON(), 
+	var pager = that.pager.toJSON(), 
 		index = false,
 		$item, template;
 	_.find(pager.periods, function(e, i, l){
@@ -159,11 +177,11 @@ getPeriodContainerByTS$: function(that, TS_UTC, create) {
 		} else return false;
 	}, this);	
 	if (index === false && create) {
-		template = helper.templates.periodContainer; 
+		template = Timeline['GalleryView'].templates.periodContainer; 
 		pager = that.pager.helper.getActive(pager);
 		$item = $( template( pager) );
 	} else {
-		template = helper.templates.selector_PeriodContainer;
+		template = Timeline['GalleryView'].templates.selector_PeriodContainer;
 		pager = that.pager.helper.getActive(pager, index);
 		$item = that.$( template( pager) );
 	}

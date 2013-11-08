@@ -473,17 +473,16 @@ console.info("1. GV.'render' > GV.addPage()");
 				// continue
 			case 'placeline':
 				respModelIds = respModelIds ||  _.pluck(resp,'id');
-				var addedOne = _.reduce(collection.models, function(out,model,i,l){
+				var $thumbs = _.reduce(collection.models, function(out, model,i,l){
 					if (_.contains(respModelIds, model.get('photoId'))) {
-						this.addOne(model, options);
-						out = true;
+						// this.addOne(model, options);
+						out = out.add( this.addOne(model, options) );	
 					}
 					return out;
-				}, false, this);
+				}, $(), this);
 
-				if (addedOne) {
-					$container = options.offscreen;
-					this.renderBody($container);
+				if ($thumbs.length) {
+					this.renderBody(null, $thumbs);
 				} else {
 					this.refreshLayout();
 				}
@@ -493,10 +492,10 @@ console.info("1. GV.'render' > GV.addPage()");
 				// TODO: model.get('clientPage') || model.get('requestPage')
 		if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
 				var p, 
-					$thumbs = $(),
 					pageModels = []; 
 				var start = (collection.currentPage-1) * collection.perPage,
 					end = Math.min(start + collection.perPage, collection.models.length);
+				var $thumbs = $();		
 				_.each(collection.models, function(model, i){
 					/*
 					 * TODO: requestPage changes onFilterChanged
@@ -512,14 +511,10 @@ console.info("1. GV.'render' > GV.addPage()");
 				var helpers = this['Pager']['Page']['GalleryView'];
 				var $pageContainer = helpers.getPeriodContainer$(this, 'create');
 		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-				return this.renderBody($pageContainer, $thumbs, {} );
-
-
-		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-				$container = offscreen ? options.offscreen : this.$('.body'); 
-				this.renderBody($container);
+				this.renderBody($pageContainer, $thumbs, {} );
 				break;
 		}
+		return
 	},
 	/**
 	 * addBack a removed model, must be added to the correct page

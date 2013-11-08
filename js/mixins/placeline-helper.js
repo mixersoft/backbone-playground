@@ -4,89 +4,112 @@
 var Placeline = {
 // called by GalleryView
 	'GalleryView' : {
+
+
 /**
  *
  * triggers 
  *		collection.'layout-chunk'
  *		collection.'layout-complete'
  */		
-renderBody: function(container, options){
+/**
+*	@param $pageContainer, div.page which will contain .thumb
+*	@param $thumbs, jquery array of div > div.thumb, optional
+* 		$pageContainer.append($thumbs);
+*   @param options
+*		options.force - force reLayout()
+*		options.scroll - scrollIntoView after layout, false for hiddenshots
+*		options.offscreen - deprecated
+*/		
+renderBody: function($pageContainer, $thumbs, options){
 	options = options || {};
 	var that = this,
 		stale = options.force || false, 
-		collection = this.collection,
-		pageContainer;
-	
-	if (container && container.hasClass('page')) {
-		pageContainer = container; // container is already onscreen
-	} else {
-		pageContainer = Placeline['GalleryView'].getPeriodContainer$(this);
-		if (pageContainer && !(container && container.children().length)) {
-			container = pageContainer; // NO container, user current active pageContainer
-			// page already rendered, no new elements to add, refreshLayout()
-		} else if (pageContainer){
-			// pageContainer.html('').append(container.children());
-			stale = true;
-			// page already rendered, AND new elements to add, 
-		}
+		collection = this.collection;
+	var helper = Placeline['GalleryView'];
+
+	if (!$pageContainer || !$pageContainer.length) {
+		$pageContainer = helper.getPeriodContainer$(that, 'create');
+		// throw "where do I put the thumbs?";
 	}
-	if (pageContainer && container && container.children().length) {
-			// page already rendered, no new elements to add, 
-			// but refreshLayout() ?? 
-	} else if (!pageContainer) {
-		var $before = null,
-			body = this.$('.body'),
-			placeline = this.pager.toJSON();
-			
-		$before = Placeline['GalleryView'].createPeriodContainers$(this, placeline, body);
-		pageContainer = Placeline['GalleryView'].getPeriodContainer$(this, 'create');
-		if (!$before) body.prepend(pageContainer);
-		else pageContainer.insertAfter($before);
+
+	var isOffscreen = !$pageContainer.parent().length;
+	if (isOffscreen) {
+		// offscreen, insert in the correct location
+		$pageContainer = helper.insertPageContainer(this);
 		stale = true;
+		// throw "insert me in the right place";
+	}
+
+
+	var hasThumbs = $pageContainer.children().length;
+	if (hasThumbs) {
+		// append, clear, or remove()?
+		$pageContainer.find('.empty-label').remove();
+		// hiddenshot will insert into div.shot-wrap, set options.force=true
+		stale = true;	// trigger reLayout()
+		// throw "what should we do if there are exitings thumbs?";
 	} 
-	
+
+	if ($thumbs) {
+		$pageContainer.append($thumbs);
+		// SORT thumbs
+	}
+
+	if (hasThumbs && $thumbs) {
+		var $sorted = _.reduce(that.collection.models, function(out, model, i,l){
+			return out.add($pageContainer.find('#'+model.get('id')).parent());
+		}, $());
+		$pageContainer.append($sorted);
+	}
+
 	if (stale === true){
-		var thumbs = container.find('> div');  // container.find('.thumb');
-		if (thumbs.length) {
-			/*
-			 * the actual layout render statement
-			 */
-			if (pageContainer !== container) {
-				// remove .empty-label
-				if (pageContainer.find('.thumb').length) {
-console.error("WARNING: just testing fetchZoom. pls fix placeline model first!!!");	
-// insert NEW thumbs in sorted order
-pageContainer.append(thumbs);
-var id, sort = _.reduce(this.collection.models, function(out, model, i,l){
-	out.append(pageContainer.find('#'+model.get('id')).parent());
-}, $('<div></div>'));
-pageContainer.append(sort.children());
-thumbs = pageContainer.children();
-				} else 
-					pageContainer.html(thumbs);
-			}
-			if (options.scroll !== false) {	// false for hiddenshot, otherwise true
-				that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-					that.scrollIntoView(pageContainer, function(){
-						that.collection.trigger('xhr-ui-ready');
-					});
-					
-				});
-			}
-			this.layout['Typeset'].call(this, pageContainer, thumbs);
-			/*
-			 * end
-			 */
-			// a new page was added. cleanup GalleryView
-			this.$el.css('min-height', $(window).outerHeight()-160);
-		}
+		/*
+		 * the actual layout render statement
+		 */
+		var layoutState = that.layout['Typeset'].call(that, 
+			$pageContainer, 
+			null		// get from $pageContainer
+		);
+		/*
+		 * end
+		 */
+		// a new page was added. cleanup GalleryView
+		// that.$el.css('min-height', $('body').data('winH')-160);
+	}
+	if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+		that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
+			that.scrollIntoView($pageContainer, function(){
+				that.collection.trigger('xhr-ui-ready');
+			});
+			// console.log('GalleryView.renderBody() first chunk ready to view');				
+		});
 	}
 	_.defer(function(){
 		that.$('.fade-out').removeClass('fade-out');
 	});
+	return $pageContainer;
 },
+
+insertPageContainer: function(that){
+	var $before = null, 
+		body = that.$('.body'),
+		pager = that.pager.toJSON();
+	var $pageContainer;
+		
+	$before = Placeline['GalleryView'].createPeriodContainers$(that, pager, body);
+	
+	$pageContainer = Placeline['GalleryView'].getPeriodContainer$(that, 'create');
+	if (!$before)
+		body.prepend($pageContainer);
+	else 
+		$pageContainer.insertAfter($before);
+	return $pageContainer;
+},
+
+
 onPlacelineSync : function(placeline, resp, options) {
-console.log("GalleryView.placeline.'sync'");
+	console.log("GalleryView.placeline.'sync'");
 	var settings = placeline.toJSON(),
 		active = settings.active || 0,
 		current = settings.periods[active];

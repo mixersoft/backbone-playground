@@ -66,8 +66,6 @@ var GalleryView = {
 	pager: null,		// models.Timeline
 	
 	templates: {
-		pageTemplate: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
-		periodTemplate: _.template('<% var period=periods[active].period %> <div class="page" data-zoom="<%=currentZoom%>" data-period="<%=period%>"></div>'),
 	},
 
 	events: {
@@ -190,6 +188,21 @@ console.info("1. GV.pager.fetch().done()");
 				break;
 			case 'page':
 				this.render();
+
+if (0) {
+				_.delay(function(that){
+console.info("removing all DOM elements....");
+					that.pager.undelegateEvents();
+					that.pager.remove();
+					that.displayOptions.undelegateEvents();
+					that.displayOptions.remove();
+					that.undelegateEvents();
+					that.remove();
+					$("body").children().remove();
+				}, 5000 , this);
+				return;
+}
+
 				collection.pager({ remove: false })
 					.done(function(){
 console.info("1. GV.pager.fetch().done()");			
@@ -359,20 +372,17 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	 */
 	refreshPages: function(newPages) {
 		var collection = this.collection,
-			body = this.$('.body'),
 			pageContainer, 
 			pageContainers=[],
 			$before;
 		
 		var pageNums = _.keys(newPages).sort();
 		// make sure we have the correct pageContainers in .body
+		// &pager=page only!!!
+		var helpers = this['Pager']['Page']['GalleryView'];
 		_.each(pageNums, function(p){
-			pageContainer = body.find('.page[data-page="'+p+'"]');
-			if (pageContainer.length) pageContainers[p] = pageContainer;
-			else {
-				pageContainers[p] = $(this.templates.pageTemplate({currentPage: p}));
-			}
-			if (p==1) body.prepend(pageContainers[p]);
+			pageContainers[p] = helpers.getPeriodContainer$(this, 'create', p); //body.find('.page[data-page="'+p+'"]');
+			if (p==1) this.$('.body').prepend(pageContainers[p]);
 			else $before.after(pageContainers[p]);
 			$before = pageContainers[p];
 		}, this);
@@ -382,7 +392,8 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		_.each(collection.models, function(model, i){
 			$thumb = this.$('#'+model.get('id')+'.thumb');
 			p = model.get('requestPage') || model.get('clientPage') || null;
-			if (pageContainer.data('page') != p) pageContainer = body.find('.page[data-page="'+p+'"]');
+			if (pageContainer.data('page') != p) 
+				pageContainer = helpers.getPeriodContainer$(this, false, p); 
 			
 			if (typeof clientPageCounter[p] != 'undefined') clientPageCounter[p]++;
 			else clientPageCounter[p] = 0; 
@@ -391,12 +402,6 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			else $before.after($thumb);
 			$before = $thumb;
 			
-		}, this);
-		
-		// remove empty pages
-		_.each(body.find('.page'), function(item){
-			if ($(item).find('.thumb').length===0) 
-				$(item).remove();
 		}, this);
 		
 		// refresh layout for each page
@@ -437,7 +442,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 			});
 		// get current page
 		var $page = _getPageFromModel(this, options.bestshot);
-		this.renderBody($page, {force: true, scroll: false});
+		this.renderBody($page, null, {force: true, scroll: false});
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, resp, xhr) {
@@ -487,7 +492,9 @@ console.info("1. GV.'render' > GV.addPage()");
 				// use audition.requestPage to manage paging
 				// TODO: model.get('clientPage') || model.get('requestPage')
 		if (_DEBUG) console.time("Backbone.addPage() render PhotoViews");			
-				var p, pageModels = []; 
+				var p, 
+					$thumbs = $(),
+					pageModels = []; 
 				var start = (collection.currentPage-1) * collection.perPage,
 					end = Math.min(start + collection.perPage, collection.models.length);
 				_.each(collection.models, function(model, i){
@@ -498,9 +505,16 @@ console.info("1. GV.'render' > GV.addPage()");
 					 */
 					p = model.get('clientPage') || model.get('requestPage') || 9999;
 					if (p == collection.currentPage) {
-						this.addOne(model, options);	
+						$thumbs = $thumbs.add( this.addOne(model, options) );	
 					}
 				}, this);
+
+				var helpers = this['Pager']['Page']['GalleryView'];
+				var $pageContainer = helpers.getPeriodContainer$(this, 'create');
+		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
+				return this.renderBody($pageContainer, $thumbs, {} );
+
+
 		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
 				$container = offscreen ? options.offscreen : this.$('.body'); 
 				this.renderBody($container);
@@ -577,20 +591,20 @@ console.log("addBack() page="+$pageContainer.data('period'));
 		if ($thumb.length==0) {
 			var ViewClass = (item instanceof snappi.models.Shot)?  views.ShotView : views.PhotoView;
 			thumb = new ViewClass({model:item, collection: this.collection});
-			if (options.offscreen ){
-				$parent = options.offscreen; 
-			} else $parent = this.$('.body');
 			
 			$thumb = thumb.render(options).$el;
-			// either 1) models.Shot && bestshot, or 
+
 			// 2a) models.Photo, or 2b) models.Photo && hiddenshot 
+			if (!options.offscreen) return $thumb;
+
 			if (ViewClass == views.ShotView) {
 				// bestshot, as determined by GalleryCollection.parse()
 				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
-				$parent.append($thumb.addClass('shot-wrap'));
+				options.offscreen.append($thumb.addClass('shot-wrap'));
 			} else if (ViewClass == views.PhotoView) {
 				// item instanceof models.Photo
-				if (!options.shotId) $parent.append($thumb);
+				if (!options.shotId) 
+					options.offscreen.append($thumb);
 				// hiddenshot if !!options.shotId
 				// > append in GallView.addedHiddenshots() 
 			}	
@@ -620,16 +634,16 @@ console.log("addBack() page="+$pageContainer.data('period'));
 	renderBody: function(container, options){
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				// this.renderBody_Period.apply(this, arguments);
-				this.Pager['Timeline']['GalleryView'].renderBody.apply(this, arguments);
+				var helper = 'Timeline';
 				break;
 			case 'placeline':
-				this.Pager['Placeline']['GalleryView'].renderBody.apply(this, arguments);
+				var helper = 'Placeline';
 				break;
 			case 'page':
-				this.Pager['Page']['GalleryView'].renderBody.apply(this, arguments);
+				var helper = 'Page';
 				break;
 		}
+		return this.Pager[helper]['GalleryView'].renderBody.apply(this, arguments);
 	},
 	
 	// debugging

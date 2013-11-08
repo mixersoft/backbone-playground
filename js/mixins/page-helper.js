@@ -4,84 +4,99 @@
 var Page = {
 	// called by GalleryView
 	GalleryView : {
-renderBody: function(container, options){
+templates: {
+	page: _.template('<div class="page" data-page="<%=currentPage%>"></div>'),
+	selector_Page:  _.template('.body .page[data-page="<%=currentPage%>"]'), 
+},
+/**
+*	@param $pageContainer, div.page which will contain .thumb
+*	@param $thumbs, jquery array of div > div.thumb, optional
+* 		$pageContainer.append($thumbs);
+*   @param options
+*		options.force - force reLayout()
+*		options.scroll - scrollIntoView after layout, false for hiddenshots
+*		options.offscreen - deprecated
+*/
+renderBody: function($pageContainer, $thumbs, options){
 	options = options || {};
 	var that = this,
 		stale = options.force || false, 
 		collection = this.collection;
-	
-	var pageContainer;
-	if (container && container.hasClass('page')) {
-		pageContainer = container;
-	} else {
-		pageContainer = this.$('.body .page[data-page="'+collection.currentPage+'"]');
-		if (pageContainer.length && !(container && container.children().length)) {
-			container = pageContainer;
-			// page already rendered, no new elements to add, refreshLayout()
-		} else {
-			pageContainer.html('');
-			// pageContainer.append(container.children());
-			stale = true;
-			// page already rendered, AND new elements to add, 
-		}
+
+	if (!$pageContainer || !$pageContainer.length) {
+		$pageContainer = Page['GalleryView'].getPeriodContainer$(that, 'create');
+		// throw "where do I put the thumbs?";
 	}
-	if (pageContainer.length && container && container.children().length) {
-			// page already rendered, no new elements to add, 
-			// but refreshLayout() ?? 
-	} else if (pageContainer.length===0) {
-		pageContainer = $(this.templates.pageTemplate(collection));
+
+	var isOffscreen = !$pageContainer.parent().length;
+	if (isOffscreen) {
+		// offscreen, insert in the correct location
+		// TODO: move to getPeriodContainer('create')??
 		var p, 
 			currentPage = collection.currentPage,
-			body = this.$('.body'),
+			body = that.$('.body'),
 			pages = body.find('.page');
+		// search from bottom
 		for (var i=pages.length-1; i>-1 ; i--) {
 			if (pages.eq(i).data('page')<currentPage) {
-				pageContainer.insertAfter(pages.eq(i));
+				$pageContainer.insertAfter(pages.eq(i));
 				currentPage = 'inserted';
 				break;	
 			}
 		}	
-		if (currentPage !== 'inserted') body.prepend(pageContainer);
+		if (currentPage !== 'inserted') body.prepend($pageContainer);
 		stale = true;
-		
+		// throw "insert me in the right place";
+	}
+
+
+	var hasThumbs = $pageContainer.children().length;
+	if (hasThumbs) {
+		// append, clear, or remove()?
+		$pageContainer.find('.empty-label').remove();
+		// hiddenshot will insert into div.shot-wrap, set options.force=true
+		stale = true;	// trigger reLayout()
+		// throw "what should we do if there are exitings thumbs?";
 	} 
-	
+
+	if ($thumbs) 
+		$pageContainer.append($thumbs);
+
 	if (stale === true){
 		/*
 		 * the actual layout render statement
 		 */
-		var thumbs = container.find('> div');  // container.find('.thumb');
-		pageContainer.append(thumbs);
-		container.remove();
-		var layoutState = this.layout['Typeset'].call(this, pageContainer, thumbs);
+		var layoutState = that.layout['Typeset'].call(that, 
+			$pageContainer, 
+			null		// get from $pageContainer
+		);
 		/*
 		 * end
 		 */
 		// a new page was added. cleanup GalleryView
-		this.$el.css('min-height', $(window).outerHeight()-160);
+		// that.$el.css('min-height', $('body').data('winH')-160);
 	}
 	if (options.scroll !== false) {	// false for hiddenshot, otherwise true
 		that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
-			// TODO: goal is to scroll to new page WITHOUT triggering onContainerScroll
-			// what is the best way? Stop the listener?
-			that.$el.addClass('debounce');
-			that.scrollIntoView(pageContainer, function(){
+			that.scrollIntoView($pageContainer, function(){
 				that.collection.trigger('xhr-ui-ready');
-				that.$el.removeClass('debounce');		
 			});
-			
-console.log('GalleryView.renderBody() first chunk ready to view');				
+			// console.log('GalleryView.renderBody() first chunk ready to view');				
 		});
 	}
 	_.defer(function(){
 		that.$('.fade-out').removeClass('fade-out');
 	});
-
-	// TODO: deprecate .debounce? use '.xhr-fetching' instead?
-	_.delay(function(that){
-		that.$el.removeClass('debounce');
-	}, 1000, this);
-	
+	return $pageContainer;
+},
+getPeriodContainer$: function(that, create, index){
+	index = index || that.collection.currentPage || 1;
+	var selector_Page = Page['GalleryView'].templates.selector_Page(that.collection);
+	var $item = that.$(selector_Page);
+	if (!$item.length && create){
+		$item = $(Page['GalleryView'].templates.page(that.collection));
+	}
+	return $item.length ? $item : false;
 },
 	},
 };

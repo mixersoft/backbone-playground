@@ -296,6 +296,6 @@ body.wait {
 
 
 .thumb.focus {
-    box-shadow: 0 0 20px 10px red;
+    outline: 1em solid rgba(255, 127, 0, 0.7);
     z-index: 100;
 }

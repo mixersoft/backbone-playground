@@ -121,6 +121,7 @@ var GalleryCollection =	{
 	 */
 	repaginate: function(perpage){
 		if (snappi.PAGER_STYLE !== 'page') return;
+console.warn("GalleryCollection.repaginate() not updated/working");
 		perpage = perpage || this.perPage;
 		// reset cached pages index because we don't know which serverPages 
 		// are completely loaded anymore

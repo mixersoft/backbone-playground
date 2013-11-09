@@ -312,7 +312,7 @@ console.log("pager ux_blockUi");
 		var clickEvent = jQuery.Event("click");
 		var that = snappi.app.pager;	// instance of this View
 		var collection = snappi.app.collection;
-		var TIMEOUT = 10*60*1000;	// 10 minutes
+		var TIMEOUT = 60*60*1000;	// 10 minutes
 
 		var nextAction = function(state){
 			var deferred = new $.Deferred();
@@ -324,7 +324,11 @@ console.log("pager ux_blockUi");
 			}
 			clickEvent.ctrlKey = state.action == 'release';
 			that.listenToOnce(that, 'ui-ready', function(){
-console.log("1. Resolved: "+state.action+"  page="+state.page);						
+var fetched = state.fetched;
+if (state.action=='load') fetched += $(".gallery .body .thumb").length;				
+var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", remaining="+_remaining;
+				console.log(msg);
+				$('.brand').html(msg);				
 				deferred.resolve(state); // _.defer(nextAction, null, cb);
 			});
 			_.delay(
@@ -345,7 +349,9 @@ console.log("1. Resolved: "+state.action+"  page="+state.page);
 				return;
 			} else {
 				_remaining--;
-				console.log("_LOOP complete, fetched="+state.fetched+", loops remaining="+_remaining);
+				var msg = "_LOOP complete, fetched="+state.fetched+", loops remaining="+_remaining;
+				console.log(msg);
+				$('.brand').html(msg);
 				$('html,body').scrollTop(0);
 				if (_remaining > 0){
 					state.action = 'load';

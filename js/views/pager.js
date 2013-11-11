@@ -293,7 +293,7 @@ console.log("pager ux_blockUi");
 	* usage:  from console, _LOOP(10);
 	*/
 	var LOOP = {
-		pause: false,
+		pause: null,
 		playing: new $.Deferred().resolve(), 
 	};
 	views.PagerView.loop = function(_remaining, state) {
@@ -312,7 +312,9 @@ console.log("pager ux_blockUi");
 		var clickEvent = jQuery.Event("click");
 		var that = snappi.app.pager;	// instance of this View
 		var collection = snappi.app.collection;
-		var TIMEOUT = 60*60*1000;	// 10 minutes
+		var TIMEOUT = 120 * 60*1000;	// in minutes
+		var DELAY_load = 5 * 1000;
+		if (snappi.qs.delay) DELAY_load = snappi.qs.delay * 1000;
 
 		var nextAction = function(state){
 			var deferred = new $.Deferred();
@@ -365,7 +367,7 @@ var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", rem
 			if (LOOP.pause) LOOP.playing = new $.Deferred();
 			state.page++;
 			var promise = nextAction(state);
-			var delay = state.action==='load' ? 2000 : 500;
+			var delay = state.action==='load' ? DELAY_load : 500;
 			_.delay(function(p){
 				$.when(LOOP.playing).then(
 					function(){
@@ -387,6 +389,17 @@ var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", rem
 	};
 
 	window._LOOP = views.PagerView.loop;
+	
+	// add click control for ipad testing, no console
+	$('.pager').delegate('.page .item.page-label', 'click', function(e){
+		if (LOOP.playing.state() === 'resolved' &&
+			LOOP.pause === null 
+		) {
+			LOOP.pause = false;
+			return _LOOP(10);
+		}
+		return _LOOP('toggle_pause');
+	})
 
 
 })( snappi.views, snappi.mixins );

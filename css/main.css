@@ -34,7 +34,7 @@ body {
     min-height: 680px;
 }
 .page {
-    overflow: hidden;
+    overflow: visible;
     position: relative;
 }
 .thumb {

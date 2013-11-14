@@ -21,7 +21,7 @@ var Cakephp = {
 	templates: {	// used by Backend['cakephp'] only
 		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
 		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=optional_hidden%><%=optional_rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
 		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
 		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot//min:typeset/.json'),
 	},
@@ -36,7 +36,8 @@ var Cakephp = {
 				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
 				page: collection.currentPage,
 				perpage: collection.perPage, 
-				rating: _.isString(qs.rating) ? '/rating:'+qs.rating : '',
+				optional_rating: _.isString(qs.rating) ? '/rating:'+qs.rating : '',
+				optional_hidden: _.isString(qs.hidden) ? '/hidden:'+qs.hidden : '',
 			};
 			if (/dateTaken|rating|score/.test(request.sort)) request.direction = 'ASC';
 			
@@ -107,10 +108,18 @@ if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_CC(response.response.castingCall); // from mixin
-if (_DEBUG) console.time("GalleryCollection: create models");			
+if (_DEBUG) console.time("GalleryCollection: create models");	
+		var bestshots = (snappi.qs.hidden || snappi.qs.raw) ? {} : false;
 		var photos = _.map(parsed, function(v, k, l) {
-			if (v.shotId) return new models.Shot(v);
-			else return new models.Photo(v);
+			if (v.shotId) {
+				if (bestshots && bestshots[v.shotId]) {
+					// TODO: for /hidden:1, need to identify bestshot!
+					// use sort order for now, add reference to bestshot
+					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: bestshots[v.shotId] });
+					return hiddenshot;
+				} else (bestshots[v.shotId] = v.photoId);
+				return new models.Shot(v);
+			} else return new models.Photo(v);
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		$('body').removeClass('wait');

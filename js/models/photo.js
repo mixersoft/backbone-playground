@@ -17,7 +17,6 @@
  * 	- caption
  *  - score
  * 	- hasMany Rating
- * 	- hasMany Shot
  * methods:
  * 	- rotate()
  */

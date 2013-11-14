@@ -558,10 +558,30 @@ console.log("addBack() page="+$pageContainer.data('period'));
 			// 2a) models.Photo, or 2b) models.Photo && hiddenshot 
 			if (!options.offscreen) return $thumb;
 
+			var shotId = item.get('shotId');
+			options._shots = options._shots || {};
+				options._waitForShot = options._waitForShot || {};
 			if (ViewClass == views.ShotView) {
 				// bestshot, as determined by GalleryCollection.parse()
-				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover, 
+				// wrap bestshot inside div.shot-wrap for .shot-wrap:hover,
 				options.offscreen.append($thumb.addClass('shot-wrap'));
+				options._shots[shotId] = $thumb;
+				if (options._waitForShot[shotId]) {
+					$thumb.append(options._waitForShot[shotId]).addClass('showing');
+					delete options._waitForShot[shotId];
+				}
+			} else if (item instanceof snappi.models.Hiddenshot) {
+				// models.Hiddenshot applies to ?hidden=1 or ?raw=1
+				// append $thumb directly to .shot-wrap, 
+				// do NOT append hiddenshots to $pageContainer
+				if (options._shots[shotId]) 
+					options._shots[shotId].append($thumb);
+				else {
+					options._waitForShot = options._waitForShot || {};
+					if (options._waitForShot[shotId]) 
+						options._waitForShot[shotId] = options._waitForShot[shotId].add($thumb);
+					else options._waitForShot[shotId] = $thumb;
+				}
 			} else if (ViewClass == views.PhotoView) {
 				// item instanceof models.Photo
 				if (!options.shotId) 

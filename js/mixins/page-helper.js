@@ -60,7 +60,7 @@ renderBody: function($pageContainer, $thumbs, options){
 	} 
 
 	if ($thumbs) 
-		$pageContainer.append($thumbs);
+		$pageContainer.append($thumbs.not('.hiddenshot'));
 
 	if (stale === true){
 		/*

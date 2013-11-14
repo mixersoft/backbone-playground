@@ -71,6 +71,10 @@ var Cakephp = {
 			switch (queryOptions.type){
 				case 'GET':
 					url = Cakephp.templates['url_photo_'+templateId](request);
+					queryOptions.timeout = 20000;
+					queryOptions.error = function(xhr, status, msg){
+						console.error(status+': '+msg);
+					}
 					break;
 				case 'PUT':	
 					// use model.save() instead

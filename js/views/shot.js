@@ -1,4 +1,4 @@
-// /js/views/photo.js
+// /js/views/shot.js
 
 (function ( views ) {
 	

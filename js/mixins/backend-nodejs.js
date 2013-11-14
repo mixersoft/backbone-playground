@@ -43,6 +43,8 @@ var Nodejs = {
 				request = _.defaults(qs, defaults);
 				request.page = collection.currentPage;		
 				request.perpage = collection.perPage;
+				// optional filters
+
 				url = _.template('http://<%=baseurl%>/asset.json?', Nodejs)+$.param(request); 
 				break;
 		}
@@ -77,10 +79,18 @@ if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");
 		this.totalRecords = serverPaging.total;
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_Assets(response); // from mixin
-if (_DEBUG) console.time("GalleryCollection: create models");			
+if (_DEBUG) console.time("GalleryCollection: create models");		
+		var bestshots = (1 || snappi.qs['show-hidden'] || snappi.qs.raw) ? {} : false;	
 		var photos = _.map(parsed, function(v, k, l) {
-			if (v.shotId) return new models.Shot(v);
-			else return new models.Photo(v);
+			if (v.shotId) {
+				if (bestshots && bestshots[v.shotId]) {
+					// TODO: for /hidden:1, need to identify bestshot!
+					// use sort order for now, add reference to bestshot
+					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: bestshots[v.shotId] });
+					return hiddenshot;
+				} else (bestshots[v.shotId] = v.photoId);
+				return new models.Shot(v);
+			} else return new models.Photo(v);
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
 		$('body').removeClass('wait');

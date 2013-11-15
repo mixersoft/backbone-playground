@@ -26,7 +26,6 @@ views.ShotView = views.PhotoView.extend({
 	    }
 	    views.PhotoView.prototype.initialize.call(this, options);
 	    this.collection = options.collection;
-	    this.listenTo(this.model, 'fetchedHiddenshots', this.onFetchedHiddenshots )
 	},
 	
 	render: function(options){
@@ -60,15 +59,14 @@ views.ShotView.delegated_toggleHiddenshot = function(e, collection){
 	var action = $shot.hasClass('showing') ? 'hide' : 'show';
 	switch (action) {
 		case 'show':
-		// TODO: use deferred pattern?
-			// triggers GallColl."fetchHiddenShots" 
-			// 		> Shot."fetchedHiddenshots"
-			//		> GallView."addedHiddenshots" 
-			//			> GallView.addOne(), GallView.renderBody()
-			collection.trigger('fetchHiddenShots', {
-				model: model,
+			return collection.fetchHiddenShots({
+					model: model,
+			})
+			.then(function(hiddenshotC, response, options){
+				// stuff that should be done by ShotView
+				$shot.addClass('showing');
+				return $.Deferred().resolve(action, $shot, hiddenshotC);
 			});
-			break;
 		case 'hide':
 			_.each(model.get('hiddenshot').models, function(model,k,l){
 				if (!(model instanceof snappi.models.Shot)) {
@@ -76,11 +74,7 @@ views.ShotView.delegated_toggleHiddenshot = function(e, collection){
 				}
 			});
 			$shot.removeClass('showing');
-			_.delay(function(){
-				$shot.find('.thumb.bestshot').trigger('click');
-				collection.trigger('pageLayoutChanged', null, {child: $shot});	
-			}, snappi.TIMINGS.thumb_fade_transition)
-			break;
+			return $.Deferred().resolve(action, $shot);
 	}
 };
 

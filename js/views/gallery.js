@@ -149,21 +149,6 @@ console.info("1. GV.pager.fetch().done()");
 				break;
 			case 'page':
 				this.render();
-
-if (0) {
-				_.delay(function(that){
-console.info("removing all DOM elements....");
-					that.pager.undelegateEvents();
-					that.pager.remove();
-					that.displayOptions.undelegateEvents();
-					that.displayOptions.remove();
-					that.undelegateEvents();
-					that.remove();
-					$("body").children().remove();
-				}, 5000 , this);
-				return;
-}
-
 				collection.pager({ remove: false })
 					.done(function(){
 console.info("1. GV.pager.fetch().done()");			
@@ -181,7 +166,34 @@ console.info("1. GV.pager.fetch().done()");
 		return views.PhotoView.delegated_ratingClick(e, this.collection);
 	},
 	shot_ToggleHiddenshot: function(e){
-		return views.ShotView.delegated_toggleHiddenshot(e, this.collection);
+		var that = this;
+		return views.ShotView.delegated_toggleHiddenshot(e, this.collection)
+			.done(function(action, $shot, hiddenshotC){
+				// GalleryView cleanup after XHR
+				var $thumb;
+				if (action==='show') {
+					var bestshot = hiddenshotC.shot_core.bestshot;
+					var bestshotPosition = $shot.find('.bestshot').css(['top','left']);
+					_.chain(hiddenshotC.models)
+						.filter(function(e,i,l){ return e !== bestshot })
+						.each(function(e,i,l){
+							$thumb = that.addOne(e);
+							$thumb.css(bestshotPosition);
+							$shot.append($thumb);
+						});
+					var $page = $shot.closest('.page');
+					// that.layoutPage($page);	// doesn't work
+					that.renderBody($page, null, {force: true, scroll: false});
+				} else if (action==='hide') {
+					// set focus to bestshot
+					_.delay(function(){
+						$shot.find('.thumb.bestshot').trigger('click'); // reset .thumb.focus
+						// call GalleryView.layoutPage()
+						var $page = $shot.closest('.page');
+						that.layoutPage($page);	// AFTER fade transition
+					}, snappi.TIMINGS.thumb_fade_transition)
+				}
+			});
 	}, 
 	
 
@@ -328,6 +340,7 @@ console.info("0 Timeline.'sync:currentZoom' success");
 	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
 	 */
 	layoutPage: function(pageContainer, options){
+		options = options || {};
 		if (!pageContainer && options.child) pageContainer = options.child.closest('.page');
 		var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null, options, options.more);
 	},
@@ -381,34 +394,6 @@ console.info("0 Timeline.'sync:currentZoom' success");
 		// Coll.fetch() > success() > Coll.set() > trigger."add" > View.add() > trigger."sync"
 		// sync called AFTER add, thumbViews added in sync
 		// console.log("GalleryView add ThumbView for new models, count="+this.collection.models.length);
-	},
-	/**
-	 * add Hiddenshots AFTER XHR fetch(), 
-	 * @param Object options, 
-	 *  options.shotId #[shotId].shot-wrap
-	 *  options.bestshot instanceof models.Shot 
-	 */
-	// TODO: change to addHiddenshots_complete ???
-	addedHiddenshots : function(models, options) {
-		var that = this, 
-			$thumb, 
-			$shot = this.$('#'+options.shotId);
-		if (!$shot.length) throw "Trying to insert into missing shot, shotId="+options.shotId;
-		$shot.addClass('showing');
-		var bestshotPosition = $shot.find('.bestshot').css(['top','left']);
-		_.chain(models)
-			.filter(function(e,i,l){ return e !== options.bestshot })
-			.each(function(e,i,l){
-				$thumb = that.addOne(e, options);
-				// options.shotId set in that.addedHiddenshots()
-				// add Hiddenshot with .fade.fade-out class
-				//TODO: move this to ShotView?
-				$thumb.addClass('fade').addClass('fade-out').css(bestshotPosition);
-				$shot.append($thumb);
-			});
-		// get current page
-		var $page = _getPageFromModel(this, options.bestshot);
-		this.renderBody($page, null, {force: true, scroll: false});
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, resp, xhr) {

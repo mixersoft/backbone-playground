@@ -166,7 +166,8 @@ console.warn("GalleryCollection.repaginate() not updated/working");
 	},
 	/**
 	 * get Hiddenshots and add to Collection, fired by ThumbnailView via click event
-	* @param {Object} options = {model: [models.Shot]}
+	* @param {Object} options = {model: models.Shot}
+	* returns deferred
 	* 
 	* url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
 	 */
@@ -174,30 +175,20 @@ console.warn("GalleryCollection.repaginate() not updated/working");
 		var model = options.model;
 		if (!(model instanceof models.Shot)) return;
 		var that = this;
-		var success = function(hiddenshotC, response, options){
-			// NOTE: model.get('hiddenshot') == collection
-			console.info("GalleryCollection received new Hiddenshots");
-			var bestshot = hiddenshotC.shot_core.bestshot;
-			that.add(hiddenshotC.models, {silent:false, merge:true, remove:false} );
-			// TODO: GalleryCollection. is not getting this event
-			that.trigger('addedHiddenshots', hiddenshotC.models, {
-				shotId : hiddenshotC.shot_core.id,
-				bestshot : hiddenshotC.shot_core.bestshot,
-				viewClass : 'PhotoView',
-				wrap: false, 
-			});
-			// us GalleryView.addedHiddenshots to add .showing class
-			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
-		};
 		var hiddenshotCollection = model.get('hiddenshot');
 		var hiddenshot_options = {
-			success: success,
+			// success: success,
 			dataType: hiddenshotCollection.backend.dataType,
-			// callback: '?',
 			merge: true,
 			remove: false,
 		};
-		hiddenshotCollection.fetch(hiddenshot_options);
+		return hiddenshotCollection.fetch(hiddenshot_options)
+			.then(function(resp, status, xhr){
+				// add hiddenshot models to GalleryCollection
+				var bestshot = hiddenshotCollection.shot_core.bestshot;
+				that.add(hiddenshotCollection.models, {silent:false, merge:true, remove:false} );
+				return $.Deferred().resolve(hiddenshotCollection, resp, options);
+			});
 	},
 
 	/**

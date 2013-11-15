@@ -48,7 +48,7 @@ views.PhotoView = Backbone.View.extend({
 	render: function(options){
 		options = options || {};
 		var m = this.model.toJSON(),
-			isHiddenshot = m.shotId && m.shotCount;
+			isHiddenshot = this.model instanceof snappi.models.Hiddenshot; // m.shotId && m.shotCount;
 		
 		if (isHiddenshot) {
 			var $wrap = $(this.template( m )),
@@ -56,7 +56,7 @@ views.PhotoView = Backbone.View.extend({
 			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
 			$wrap.remove();
 			$thumb.attr('id', m.photoId)
-				.addClass('thumb hiddenshot '+m.orientationLabel);	// required for no wrap
+				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel);	// required for no wrap
 		} else { // Photo
 			if (options.offscreen) {
 				m.top = options.offscreenTop;

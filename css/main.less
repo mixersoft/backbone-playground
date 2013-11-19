@@ -27,8 +27,8 @@ body {
 }
 
 .page { /* for position:absolute within */
+    overflow: visible; 
     position: relative; 
-    overflow: hidden; 
 }
 
 .thumb {
@@ -86,11 +86,12 @@ body {
       margin-top: 2px;
       overflow: visible;
       z-index: 50;
-      > * {
+      > .btn-icon {
         margin-left: 1em;
         cursor: pointer;
+        color: #005580;   /* same as a:hover*/
       }
-      > *:first-child {
+      > .btn-icon:first-child {
         margin-left: 0;
       }
       &.left {
@@ -100,7 +101,7 @@ body {
         float: right;
         text-align: right;
       }
-      a.rating {
+      .btn-icon.rating {
         white-space: nowrap;
         .icon-star {
           whitespace: nowrap;
@@ -108,17 +109,18 @@ body {
       }
     }
     
-    &:hover {   // .meta:hover
+    &:hover {   /* .meta:hover */
       transition: all .15s ease-in-out;
-      a:hover {
+      .btn-icon:hover {
       }
       .bottom-row {
       }
-      span.inline-icons {
+      .inline-icons {
       }
     }
   }
 }
+
 
 .gallery .header {
   margin-top: 10px;
@@ -129,6 +131,14 @@ body {
     z-index: 100;
     .pagination {
       margin: 0;
+      .item {
+        display: block;
+        padding: 0px 10px;
+        line-height: 20px;
+      }
+      .page-label {
+         padding: 2px 10px;
+      }
     }
   }
   // .display-options {
@@ -163,9 +173,21 @@ body.wait {
   cursor: wait !important;
 }
 
+@zoom1-color: darkred;
+@zoom2-color: darkorange;
+@zoom3-color: darkgoldenrod;
+@zoom4-color darkgreen: 
 
 .gallery {
   background-color: @grayLighter;
+  .page .empty-label{
+    text-align: center;
+    color: @grayLight;
+    font-weight: bold;
+    font-size: 1.2em;
+    line-height: 1.4;
+    cursor: pointer;
+  }
 }
 
 .truncate {
@@ -186,16 +208,17 @@ body.wait {
   background: fade(@black,60%);
     opacity: 1;
     transition: all .15s ease-in-out;
-    a:hover {
+    .btn-icon:hover {
       color: #FFF;
     }
-    // .bottom-row {
-    // }
-    // span.inline-icons {
-    // }
 }
 
 .thumb {
+  .focus {
+    box-shadow: 0 0 20px 10px red;
+    outline: 1em solid rgba(255, 127, 0, 0.7);
+    z-index: 100;
+  }
   .meta {
     @yellow: yellow;
     background: rgba(0,0,0,0);
@@ -203,9 +226,6 @@ body.wait {
     text-shadow: 1px 1px 0 black;
     .inline-icons {
       opacity: 0.6;
-      a {
-        text-decoration: none;
-      }
       .show-hidden-shot.best {
         color: @yellow;
       }
@@ -214,12 +234,29 @@ body.wait {
       }
     }
     
-    &:hover {   // .meta:hover
+    &:hover {   /* .meta:hover */
       background: fade(@black,60%);
       opacity: 1;
-      a:hover {
+      .btn-icon:hover {
         color: #FFF;
       }
+    }
+  }
+}
+
+
+
+.thumb {
+  &.highlight {
+    /* placeline CSS */
+    &.world {
+      box-shadow: 0 0 4px 4px @zoom1-color;
+    }
+    &.country {
+      box-shadow: 0 0 4px 4px @zoom2-color;
+    }
+    &.region {
+      box-shadow: 0 0 4px 4px @zoom3-color;
     }
   }
 }
@@ -232,30 +269,67 @@ body.wait {
 .pager {
   .pagination {
     color: #0088CC;
-    a, span {
-      .border-radius(0);      // reset twbootstrap value
-      color: inherit;
+    font-size: 0.8em;
+    .item {
+      background-color: #ffffff;
+      &.[data-zoom="world"] {
+        color: @zoom1-color;
+      }
+      &.[data-zoom="country"] {
+        color: @zoom2-color;
+      }
+      &.[data-zoom="region"] {
+        color: @zoom3-color;
+      }
+      &.[data-zoom="locality"] {
+        color: @zoom4-color;
+      }
+      &.zoom-inactive {
+        display:none;
+      }
     }
-    .disabled a, .disabled span {
-      background-color: #F5F5F5;
+    .page-label {
+      background-color: @grayLighter;
+      border: 1px solid #dddddd;  
     }
-    .loaded a, .loaded span  {
+    .link {
+      cursor: pointer;
+    }
+    .loaded {
       font-weight: bold;
       color: @blueDark;
     }
-    .pag-label {
-      background-color: @grayLighter;
+    .active {
+      background-color: #CDE5FF;
+      font-weight: bold;
+      color: @blueDark;
+      cursor: default;
+    }
+    .disabled {
+      background-color: #F5F5F5;
+      cursor: default;
     }
   }
 }
 
-// .display-options {
-// }
+
 
 .pager.vertical-right {
   background: fade(@black,20%);
   border-radius: 20px 0 0 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.gallery.pager-placeline .thumb .meta .bottom-row .inline-icons.left {
+  display: none;
+}
+
+
+.zoom-active {
+    opacity: 1;
+}
+.zoom-inactive {
+    opacity: 0.5;
 }
 
 /*
@@ -286,5 +360,14 @@ body.wait {
     -ms-transition-property: -ms-transform, opacity, top, left;
     -o-transition-property: -o-transform, opacity, top, left;
     transition-property: transform, opacity, top, left;
+  }
+}
+
+.fade {
+  transition: all 300ms linear 100ms;
+  transform: translate3d(0,0,0);
+  opacity: 1;
+  &.fade-out {
+    opacity: 0;  
   }
 }

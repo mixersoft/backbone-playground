@@ -17,12 +17,17 @@
  * 	- caption
  *  - score
  * 	- hasMany Rating
- * 	- hasMany Shot
  * methods:
  * 	- rotate()
  */
+// define Class hierarchy at the top, but use at the bottom
+var extend = function(classDef){
+	models.Photo = Backbone.Model.extend(
+		classDef
+	);
+}
 
-models.Photo = Backbone.Model.extend({
+var PhotoModel = {
 	defaults: {
 		
 	}, 
@@ -53,6 +58,41 @@ models.Photo = Backbone.Model.extend({
 			}
 			return scaled;
 		},
+		formatForCake : function(attrs) {
+			var key, formatted = {};
+			for (var m in attrs) {
+				for (var p in attrs[m]) {
+					key = _.template('data[<%=model%>][<%=prop%>]', {model:m, prop:p});
+					formatted[key] = attrs[m][p]; 
+				}
+			}
+			return formatted;
+		},
+		getAsWorkorder : function(attrs){
+			try {
+				var woAttrs = {},
+					type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(snappi.qs.type.split(':')[0]);	
+				switch (type){
+					case 0: 
+					case 1:
+						 attrs.Workorder = {
+						 	type: 'TasksWorkorder',
+						 	id: snappi.qs.type.split(':')[1],	
+						 }
+						break;
+					case 2: 
+					case 3:
+						 attrs.Workorder = {
+						 	type: 'Workorder',
+						 	id: snappi.qs.type.split(':')[1],	
+						 }
+						break;
+				}
+			} catch (ex) {
+				// not a workorder
+			}
+			return attrs;
+		},
 	},
 	
 	// backbone methods
@@ -66,8 +106,6 @@ models.Photo = Backbone.Model.extend({
 	initialize: function(attributes, options){
 		attributes = this.parse.apply(this, arguments);	// manually call for static JSON
 		this.set( attributes );
-		this.listenTo(this, 'request', this.request);
-		this.listenTo(this, 'change', this.change);
 	},
 	sync: function(method, model, options) {
 		options = _.extend(options,
@@ -82,52 +120,17 @@ models.Photo = Backbone.Model.extend({
 		switch (method) {
 			case 'patch': case 'put': // append Wo attrs if necessary
 				cakeAttrs['Asset'] = _.extend(cakeAttrs['Asset'], options.attrs)
-				cakeAttrs = this._getAsWorkorder(cakeAttrs);
+				cakeAttrs = this.helper.getAsWorkorder(cakeAttrs);
 			break;
 		}
 		if (useRestApi=true) options.attrs = cakeAttrs;  			// REST PUT
-		else options.data = this._formatForCakePhp(cakeAttrs);	// Cake POST
+		else options.data = this.helper.formatForCake(cakeAttrs);	// Cake POST
 		var beforeSend = options.beforeSend;
 		options.beforeSend = function(xhr, options){
 			if (!useRestApi) options.url += '/.json';	// for CakePhp form
 			if (beforeSend) return beforeSend.apply(this, arguments);
 		}
 	    Backbone.sync(method, model, options);
-	},
-	_formatForCakePhp : function(attrs) {
-		var key, formatted = {};
-		for (var m in attrs) {
-			for (var p in attrs[m]) {
-				key = _.template('data[<%=model%>][<%=prop%>]', {model:m, prop:p});
-				formatted[key] = attrs[m][p]; 
-			}
-		}
-		return formatted;
-	},
-	_getAsWorkorder : function(attrs){
-		try {
-			var woAttrs = {},
-				type = ['tw','TasksWorkorder','wo','Workorder'].indexOf(snappi.qs.type.split(':')[0]);	
-			switch (type){
-				case 0: 
-				case 1:
-					 attrs.Workorder = {
-					 	type: 'TasksWorkorder',
-					 	id: snappi.qs.type.split(':')[1],	
-					 }
-					break;
-				case 2: 
-				case 3:
-					 attrs.Workorder = {
-					 	type: 'Workorder',
-					 	id: snappi.qs.type.split(':')[1],	
-					 }
-					break;
-			}
-		} catch (ex) {
-			// not a workorder
-		}
-		return attrs;
 	},
 	// public methods
 	rating: function(value){
@@ -161,7 +164,9 @@ models.Photo = Backbone.Model.extend({
 		var check; // Photo.request
 	},
 	
-})
+}
 
+// put it all together at the bottom
+extend(PhotoModel);	
 
 })( snappi.models );

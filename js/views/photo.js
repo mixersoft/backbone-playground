@@ -13,31 +13,32 @@ views.PhotoView = Backbone.View.extend({
 	
 	template_source: "#markup #PhotoTemplate.handlebars",
 	
-	events: {
-		'click .rotate': 'onRotate',
-		'click .rating': 'onRatingClick',
-		'dblclick img': 'onShowPreview',
+	events: {	// delegate to GalleryView
+		// 'click .rotate': 'onRotate',
+		// 'click .rating': 'onRatingClick',
+		// 'dblclick img': 'onShowPreview',
+		// 'click .fa-heart': 'saveModelAsJson',
 	},
-	
-	register_handlebar_helpers : function(){
-		Handlebars.registerHelper('ratingStars', function(rating, options) {
-			var rating = rating || 0, out = "";
-			for(var i=1; i<=5; i++) {
-				out = out + "<icon class='icon-star"+(i>rating ? "-empty" : "")+"'></icon>";
-			}
-		  	return out;
-		});
-		Handlebars.registerHelper('fullText', function(string, options) {
-			if (string.length > options.length)
-			return options.fn();
-		});
+
+	// for creating flickr/placeline bootstrap file
+	saveModelAsJson: function(e){
+		e.preventDefault();
+		$(e.target).closest('.thumb').addClass('save');
+		var models = snappi.collections.paginatedGallery.models,
+			ids = [], 
+			asJson=[];
+		_.each($('.gallery .thumb.save'), function(e){
+			var id = $(e).attr('id');
+			var model = _.findWhere(models, {id:id})
+			model = model.toJSON();
+			model.zoom = 'world';
+			asJson.push(model);
+		})
+		$("#json").html(JSON.stringify(asJson));
 	},
-	
 	initialize: function(options){
 		if(!($.isFunction(this.template))) {
 			var source = $(this.template_source).html();	
-			// compile once, add to Class
-			this.register_handlebar_helpers();
 			views.PhotoView.prototype.template = Handlebars.compile(source);
 	    }
 	    this.listenTo(this.model, 'hide', this.onHide);
@@ -46,31 +47,22 @@ views.PhotoView = Backbone.View.extend({
 	
 	render: function(options){
 		options = options || {};
-		var m = this.model.toJSON();
-		if (options.wrap === false) {		// do NOT wrap hiddenshots
-			var $wrap = $(this.template( m ));
-			this.$el.html( $wrap.children() );
-			this.$el.attr('id', m.photoId).addClass('thumb');
-		} else {
+		var m = this.model.toJSON(),
+			isHiddenshot = this.model instanceof snappi.models.Hiddenshot; // m.shotId && m.shotCount;
+		
+		if (isHiddenshot) {
+			var $wrap = $(this.template( m )),
+				$thumb = this.$el;
+			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
+			$wrap.remove();
+			$thumb.attr('id', m.photoId)
+				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel);	// required for no wrap
+		} else { // Photo
 			if (options.offscreen) {
 				m.top = options.offscreenTop;
 			}
 			this.$el.html( this.template( m ) );
 		}
-		_.defer(function(that, model){
-			if (m.shotId && m.shotCount) {
-				// shot_index = views.ShotView.prototype.hashShotId(model.shotId);
-				// that.$el.addClass('shot-'+ shot_index);
-				if (m.bestshotId == m.photoId) { 
-					// that.$('.thumb').addClass('bestshot');
-					throw "Error: got models.Shot when expecting models.Photo";
-				} else if (that.$el.is('.thumb')) {
-					that.$el.addClass('hiddenshot');
-				} else {
-					that.$('.thumb').addClass('hiddenshot');
-				}
-			}
-		}, this, this.model);
 		return this;
 	},
 	
@@ -83,7 +75,8 @@ views.PhotoView = Backbone.View.extend({
 	onRotate: function(e){
 		e.preventDefault();
 	},
-	onRatingClick: function(e){
+	// use delegated event instead, called from GalleryView
+	XXXonRatingClick: function(e){
 		e.preventDefault();
 		var target = e.target,
 			value = $(target.parentNode).children().index(target)+1;
@@ -109,9 +102,37 @@ views.PhotoView = Backbone.View.extend({
 	},
 	
 	onHide : function(){
-		this.remove();
-	}
+		var that = this;
+		this.$el.addClass('fade-out');
+		_.delay(function(that){
+			that.undelegateEvents();
+			that.remove();
+			// trigger ONE pageLayout AFTER remove
+		}, snappi.TIMINGS.thumb_fade_transition, this)
+	},
+
+	
+
+
 });
 
+views.PhotoView.delegated_ratingClick = function(e, collection){
+	e.preventDefault();
+	collection = collection || this.collection;
+	var $thumb = $(e.currentTarget).closest('.thumb');
+	var modelId;
+	if ($thumb.parent().hasClass('shot-wrap')) modelId = $thumb.parent().attr('id');
+	else modelId = $thumb.attr('id');
+	var model = _.findWhere(collection.models, {id: modelId});
+
+	var star = e.target;
+	var value = $(star.parentNode).children().index(star)+1;
+	model.rating(value);
+};
+
+views.PhotoView.delegated_setFocus = function(e, $gallery){
+	if ($gallery) $gallery.find('.thumb.focus').removeClass('focus');
+	$(e.currentTarget).addClass('focus');
+}
 
 })( snappi.views );

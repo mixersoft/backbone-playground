@@ -1,12 +1,14 @@
 // /js/collections/gallery.js
 
 (function (collections, models, mixins, paginator) {
-
+	"use strict";
 // define Class hierarchy at the top, but use at the bottom
 var extend = function(classDef){
-	var options = _.extend({}, 
+	var options = _.extend( {}, 
 		mixins.RestApi,
+		// mixins.FlickrPlaces,
 		mixins.Href, 
+		mixins.BackendHelpers,
 		classDef,
 		setup_Paginator, 
 		setup_DisplayOptions 
@@ -14,7 +16,7 @@ var extend = function(classDef){
 	collections.GalleryCollection = paginator.requestPager.extend(
 		options
 	);
-}
+};
 
 /*
  * Collection: GalleryCollection
@@ -28,35 +30,85 @@ var extend = function(classDef){
 	
 var GalleryCollection =	{
 	
-	model : models.Photo,	// snappi.models.Shot	
+	// model : models.Photo,
 	
-	events: {
-		// 'repaginate':'repaginate',		// doesn't work for Collections
-	},
-	
-	initialize: function(){
+	initialize: function(models, options){
 		// HACK: support for either node or cakephp backend, see Backend static class
 		// this.backend = snappi.qs.backend=='node' ? _useNodeBackend : _useCakephpBackend;
 		switch (snappi.qs.backend) {
 			case 'node': case 'nodejs': 
-				this.backend = Backend['nodejs']; break;
+				this.backend = this.Backend['Nodejs']; break;
+			case 'flickr': 
+				this.backend = this.Backend['Flickr']; 
+				this.sync = this.Backend['Flickr'].sync;
+				this.sortBy_0 = 'longitude';
+				this.sortBy_1 = 'dateTaken';
+				break;
 			case 'file':  
-				this.backend = Backend['file']; break;
+				this.backend = this.Backend['File']; 
+				this.sync = this.Backend['File'].sync;
+				break;
 			case 'cake': case 'cakephp': 
 			default:
-				this.backend = Backend['cakephp']; break;		
+				this.backend = this.Backend['Cakephp']; break;		
 		}
 		
 		this.paginator_core.dataType = this.backend.dataType;
 		if (snappi.qs.page) this.paginator_ui.currentPage = snappi.qs.page;
 		if (snappi.qs.perpage) this.paginator_ui.perPage = snappi.qs.perpage;
+		if (snappi.qs.rating) {
+			this.gallery_display_options_ui['rating'][0].label = snappi.qs.rating;
+		}
+		if (options && options.sort) this.pager_ui.direction = options.sort;
 		// end
-		
 		this.listenTo(this, 'repaginate', this.repaginate);
 		this.listenTo(this, 'fetchHiddenShots', this.fetchHiddenShots);
 		this.listenTo(this, 'request', this.request);
+		// this.listenTo(this, 'filterChanged', this.filterChanged);
+		this.listenTo(this, 'change:direction', function(dir){
+			this.pager_ui.direction = dir; 
+			return "how do we listing to a change in TimelineView???";
+		});
 	},
 	
+	// comparator: function( photo ){
+		// return photo.get('dateTaken');
+	// },
+	sortBy_0: 'dateTaken', 
+	sortBy_1: 'score', 
+	comparator: function( a, b, sortBy ){
+		sortBy = sortBy || this.sortBy_0;
+
+		var aVal = a.get(sortBy),
+			bVal = b.get(sortBy),
+			ret;
+
+		if (aVal < bVal) ret = -1;
+		else if (aVal > bVal) ret = 1;
+		else 
+			return (!sortBy && this.sortBy_1) ? this.comparator(a,b, this.sortBy_1) : 0;
+		// check models.Timeline.get('direction)
+		if (this.pager_ui.direction == 'desc') ret *= -1;
+		return ret;
+	},
+
+
+	request: function(collection, xhr, queryOptions){
+		var index;
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				index = "timeline should know";
+				break;
+			case 'placeline':
+				index = "placeline should know";
+				break;
+			case 'page':
+				index = this.currentPage;
+				break;
+		}
+		this.trigger('xhr-fetching', index);
+		if (_DEBUG) console.time("GalleryCollection.fetch()");
+	},
 	/**
 	 * repaginate models for client side paging
 	 * - adds shot.clientPage
@@ -64,9 +116,12 @@ var GalleryCollection =	{
 	 * 
 	 * when page boundaries change, it's not clear that 
 	 * are inserted into this.models in the correct sort order
+	 * NOTE: only tested for pager=page, backend=cake
 	 *  
 	 */
 	repaginate: function(perpage){
+		if (snappi.PAGER_STYLE !== 'page') return;
+console.warn("GalleryCollection.repaginate() not updated/working");
 		perpage = perpage || this.perPage;
 		// reset cached pages index because we don't know which serverPages 
 		// are completely loaded anymore
@@ -81,7 +136,8 @@ var GalleryCollection =	{
 		var p, activePaging;
 		_.each(this.models, function(model){
 			// estimate clientPage based on serverPage math
-			if (p = model.get('clientPage')) {
+			p = model.get('clientPage');
+			if (p) {
 				activePerpage = this.perPage;
 			} else {
 				p = model.get('requestPage');
@@ -110,49 +166,267 @@ var GalleryCollection =	{
 	},
 	/**
 	 * get Hiddenshots and add to Collection, fired by ThumbnailView via click event
- 	 * @param {Object} options = {model: [models.Shot]}
- 	 * 
- 	 * url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
+	* @param {Object} options = {model: models.Shot}
+	* returns deferred
+	* 
+	* url form: http://dev.snaphappi.com/photos/hiddenShots/[shotId]/Usershot/.json
 	 */
 	fetchHiddenShots: function(options) {
 		var model = options.model;
 		if (!(model instanceof models.Shot)) return;
 		var that = this;
-		var success = function(hiddenshotC, response, options){
-			// NOTE: model.get('hiddenshot') == collection
-			console.info("GalleryCollection received new Hiddenshots");
-			var bestshot = hiddenshotC.shot_core.bestshot;
-			that.add(hiddenshotC.models, {silent:false, merge:true, remove:false} );
-			// TODO: GalleryCollection. is not getting this event
-			that.trigger('addedHiddenshots', hiddenshotC.models, {
-				shotId : hiddenshotC.shot_core.id,
-				bestshot : hiddenshotC.shot_core.bestshot,
-				viewClass : 'PhotoView',
-				wrap: false, 
-			});
-			model.trigger('fetchedHiddenshots', hiddenshotC, response, options);	// ThumbnailView is listening
-		}
 		var hiddenshotCollection = model.get('hiddenshot');
 		var hiddenshot_options = {
-			success: success,
+			// success: success,
 			dataType: hiddenshotCollection.backend.dataType,
-			// callback: '?',
 			merge: true,
 			remove: false,
 		};
-		hiddenshotCollection.fetch(hiddenshot_options);
+		return hiddenshotCollection.fetch(hiddenshot_options)
+			.then(function(resp, status, xhr){
+				// add hiddenshot models to GalleryCollection
+				var bestshot = hiddenshotCollection.shot_core.bestshot;
+				that.add(hiddenshotCollection.models, {silent:false, merge:true, remove:false} );
+				return $.Deferred().resolve(hiddenshotCollection, resp, options);
+			});
+	},
+
+	/**
+	 * get Zoom and add to Collection, fired by ThumbnailView via click event
+	 * @param {Object} pivot = {
+			place_id: mPhoto.place_id,
+			lat: mPhoto.latitude,
+			lon: mPhoto.longitude,
+			accuracy: mPhoto.accuracy,
+			currentZoom: currentZoom,
+			dir: 'zoom-in',
+			pivot: thumb,
+			pivot_model: mPhoto,	// ???: this needed?
+		}
+	 * 
+	 */
+	// TODO: move to backend_flickr
+	fetchZoom: function(pivot, options) {
+		var collection = this;
+
+		var newZoom = collection.backend.getZoom(pivot.currentZoom, pivot.dir);
+		var req_getPlaceInfo = collection.backend.getReq('zoomOut', {
+			place_id:pivot.place_id
+		});
+		var options_placeInfo = req_getPlaceInfo.xhrOptions;
+		options_placeInfo.url = req_getPlaceInfo.url;
+		options_placeInfo.data = req_getPlaceInfo.data;
+		options_placeInfo.cache = true;
+		var success = options.success;
+
+		var collectionOptions = {};
+		var syncingCollectionFn = function(){
+			return collection.fetch({
+				remove: false,
+				data: collectionOptions,
+				success: function(collection, response, options){
+					var check;
+					// insert around options.pivot
+					if (_.isFunction(success)) success.apply(collection, arguments);
+				},
+				complete: function(){
+					collection.trigger('xhr-fetched');
+					if (_.isFunction(options.complete)) options.complete.apply(collection, arguments);
+				},
+			})
+		};
+		var syncingPlaceline = $.ajax(options_placeInfo)
+			.success(function(resp){
+				var curPlaces = resp.place,
+					curPlace = curPlaces[newZoom],
+					options_Zoom = {
+						place_id: curPlace.place_id
+					};
+				collectionOptions = _.defaults(options_Zoom, options.fetchOptions);
+				// set models.Placeline.active
+				if (options.placeline) {
+					var periods = options.placeline.get('periods');
+					var found = _.find(options.placeline.get('periods'), function(e,i,l){
+						if (e.place_id==options_Zoom.place_id) {
+							found = i;
+							options.placeline.set('active',i,{silent:true});
+							return true;
+						}
+					});
+					if (!found) {
+						console.warn("no period found for zoom="+ newZoom +", place_id="+curPlace.place_id);
+						// ex: zoomOnPivot massachusetts, but not in place_db['region']
+						// HACK: add MISSING period to Placeline.periods
+						var addPeriod = {
+							longitude: curPlace.longitude,
+							place_id: curPlace.place_id, 
+							period: curPlace.place_id, 
+							place_type: newZoom,
+							place_type_id: mixins.FlickrPlaces['FlickrApi'].lookups.place_type_id[newZoom],
+							latitude: curPlace.latitude,
+							label: curPlace._content,
+							name: curPlace._content,
+						};
+						// TODO: trigger Placeline.trigger('insertPeriod', addPeriod)
+						var insertAt = _.sortedIndex(periods, addPeriod, 'longitude');
+						periods.splice(insertAt, 0, addPeriod);
+						options.placeline.set('active',insertAt,{silent:true});
+						options.placeline.trigger('sync', options.placeline);
+					}
+				}
+			})
+			.fail(function(){
+				console.error('Error: placeline sync failed');
+			})
+			.then(function(){
+				return syncingCollectionFn();
+			})
+			.done(function(){
+				console.info("1. Placeline Zoom all done");
+			})
+
+			
+
+
+		return;
+	},
+
+	filterFn : {
+		rating: function(model, changed){
+			var remove = model.get('rating') < changed.rating;
+			return remove;
+		},
+		zoom: function(){
+			return false;
+		},
+	},
+	filterChanged: function (changed, galleryView) {
+		console.info("GalleryView.onTimelineChangeFilter() Filter changed");
+		// update TimelineView to reflect current filter
+		// might have to filter collection.models, too
+		// isFetched() should compare filter  
+		var that = this;
+		// previous = this.pager.previousAttributes(),
+		// CHECK if filter requires a fetch
+		//		for all pages, set page stale=true;
+		var filtered, remove, id, 
+			options = {}, 
+			keep_models = [],
+			remove_models = [];
+
+		if (changed.fetch===false) {
+			_.filter(that.models,function(model,i,l){
+				// handle filtered.changed.rating='off'
+				
+				// find first remove
+				remove = _.find(changed, function(v,key,l){
+					if (that.filterFn[key]) 
+						return that.filterFn[key](model, changed);
+					else return false;
+				});
+				
+				if (remove) {
+					model.trigger('hide');
+					remove_models.push(model);
+					// TODO: get the page of thumbView for addBack
+				} else 
+					keep_models.push(model);
+			}, that);
+			// do in GalleryCollection
+			options = {silent:true};
+			that.remove(remove_models, options);
+			filtered = _.union(that.filteredModels||[], remove_models);
+			that.filteredModels = filtered;
+			
+			// render page
+			_.delay(function(){
+				that.trigger('refreshLayout');	
+			}, snappi.TIMINGS.thumb_fade_transition+100);
+		} else {
+			// Timeline.validate_ChangeFilter() already marked all pages a stale
+			
+			// filter filtered models, then addback
+			_.filter(that.filteredModels,function(model,i,l){
+				// handle filtered.changed.rating='off'
+				
+				// find first remove
+				remove = _.find(changed, function(v,key,l){
+					if (that.filterFn[key]) 
+						return that.filterFn[key](model, changed);
+					else return false;
+				});
+				
+				if (remove) {
+					remove_models.push(model);
+				} else 
+					keep_models.push(model);
+			}, that);
+			that.filteredModels = remove_models;
+			// why is this Triggered?
+			
+			var addBack_photoIds = _.map(keep_models, function(v,k,l){
+				return v.get('photoId');
+			});
+			that.add(keep_models, {merge: true, sort: true});
+			galleryView.trigger('addBack', that, addBack_photoIds);
+			
+			// render page, then remove .fade-out 
+			_.defer(function(){
+				galleryView.$('.page .thumb.fade-out').removeClass('fade-out');
+				that.trigger('refreshLayout');	
+			});
+			
+			// check if fetch still required
+			// is filter complete after addBack?
+			
+// NOTE: only tested for pager=timeline	
+var pagerHelper;
+switch (snappi.PAGER_STYLE) {
+	case 'timeline': 
+		pagerHelper = galleryView.Pager['Timeline'];
+		break;
+	case 'placeline':
+	case 'page':
+	break;
+}			
+			options = pagerHelper['GalleryView'].getRestApiOptions(galleryView);
+console.log(options.filters);
+			// fetch() > Coll."sync" > success(), View.addPage() > complete()
+			that.fetch({
+				remove: false,
+				data: options,
+				success: function(){
+console.info("Collection.filterChanged success()");
+					// don't let addPage() add offscreen
+					// how?					
+				},
+				complete: function() {
+console.info("Collection.filterChanged complete()");					
+					// timeline.fetched[] already marked as true
+					// no one currently listening, maybe TimelineView?
+					that.trigger('xhr-fetched');
+				},
+			});
+		}
 	}
 };
 
 var setup_DisplayOptions = {
+	// override GalleryDisplayOptions.ui_defaults
 	gallery_display_options_ui: {
 		'size': [
 			{label:'S', size: 100, active:'active' },
 			{label:'M', size: 160,  },
 			{label:'L', size: 240, },
 		],
+		'rating': [
+			{label: 0, active:'active' },
+		],
+	}, 
+	pager_ui: {
+		direction: 'desc',
 	}
-}
+};
 
 var setup_Paginator = {
 	// properties for use with Backbone.Paginator	
@@ -203,257 +477,7 @@ var setup_Paginator = {
 	server_api: {	
 		// custom parameters appended to querystring via queryAttributes
 	},
-	request: function(collection, xhr, queryOptions){
-		var check; // GalleryCollection
-		this.trigger('xhr-fetch-page', this.currentPage);
-		if (_DEBUG) console.time("GalleryCollection.fetch()");
-	},
-}
-
-/*
- * Backend - static class, wrapper for different dev backends
- * 	'cakephp': original cakephp backend. DEFAULT
- * 		- a lot of bloat, but AAA properly implemented
- * 		- ex:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
- * 	'nodejs': nodejs, minimal REST API implemented in node.js, 
- * 		- use hostname=nodejs host, ?backend=node 
- * 		- GET eliminates a lot of bloat
- * 		- PUT/PATCH partially implemented using CakePHP backend
- * 		- WARNING: still USES BACKDOOR AUTHENTICATION, not appropriate for PRODUCTION release
- * 		- ex: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
- * 	'bootstrap': uses JS file with static JSON
- * 		- use ?bootstrap=[2011|mb|venice]
- * 		- see /js/snappi-bootstrap.js    
- */
-var Backend = function(){}
-Backend.file = {
-	url: function(){ // hijack xhr, just add new models
-		this.listenToOnce(this, 'request', function(collection, xhr, queryOptions){
-			var collection = this, 
-				models = collection.parse();
-			collection.fetchedServerPages[collection.currentPage]=true  
-			_.each(models, function(item){
-				collection.models.push(item);
-			});
-			collection.trigger('sync', collection.models);
-		});
-		return false;
-	},
-	parsed: null,	// just parse once
-	parse: function(json){
-		var collection = this;
-		if (!Backend['file'].parsed) {
-			var paging = json.response.castingCall.CastingCall.Auditions,
-				serverPaging = {
-					page: collection.currentPage || snappi.qs.page || paging.Page,
-					perpage: snappi.qs.perpage || paging.Perpage,
-					pages: paging.Pages,
-					total: paging.Total,
-					count: snappi.qs.perpage || paging.Audition.length,
-					targetHeight: 160,
-				};
-				
-			// config image server for this request
-			snappi.mixins.Href.imgServer({
-				baseurl: paging.Baseurl,
-			});
-				
-			// for clientPaging	
-			this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
-			this.paginator_ui.serverPaging = serverPaging;
-			
-			
-			// for requestPaging template
-			if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
-			this.currentPage = serverPaging.page;
-			this.totalRecords = serverPaging.total;
-			this.totalPages = serverPaging.pages;
-			
-			
-			var parsed = this.parseShot_CC(json.response.castingCall); // from mixin
-			Backend['file'].parsed = parsed;
-		}
-		// slice response to match page/perpage 
-		var start = ((collection.currentPage || serverPaging.page) -1) * collection.perPage,
-			end = start + collection.perPage ,
-			photos = [],
-			i=-1;
-		_.each(Backend['file'].parsed, function(v, k, l) {
-			if (++i < start) return true;
-			if (i >= end) return false;
-			v.requestPage = Math.ceil(i/collection.perPage);
-			if (v.shotId) photos.push(new models.Shot(v));
-			else photos.push(new models.Photo(v));
-		});
-		return photos;
-	},
-}
-// template: http://localhost:3000/asset.json?userid=5013ddf3-069c-41f0-b71e-20160afc480d&type=Workorder:11&perpage=1000
-Backend.nodejs = {
-	dataType: 'json',
-	baseurl: 'localhost:3000', // nodejs.hostname
-	url: function(){
-		var collection = this, 
-			qs = snappi.qs,	
-			defaults = {
-				sort: 'score',
-				direction : 'desc',
-				userid: '5013ddf3-069c-41f0-b71e-20160afc480d', // manager
-				ownerid: "51cad9fb-d130-4150-b859-1bd00afc6d44", // melissa-ben
-			},
-			request = _.defaults(qs, defaults);
-			// override with live data
-			request.page = collection.currentPage;
-			request.perpage = collection.perPage;
-			 
-		var url = _.template('http://<%=baseurl%>/asset.json?', Backend['nodejs'])+$.param(request);
-		// var url = _.template('/asset.json?', Backend['nodejs'])+$.param(request);
-		return url;
-	},
-	parse: function(response){
-if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");		
-
-		var paging = response.request;
-			serverPaging = {
-				page: parseInt(paging.page),
-				perpage: parseInt(paging.perpage),
-				pages: parseInt(paging.pages),
-				total: parseInt(paging.total),
-				count: response.assets.length,
-				// targetHeight: 160,
-			};
-			
-		// config image server for this request
-		snappi.mixins.Href.imgServer({
-			baseurl: paging.baseurl,
-		});
-			
-		// for clientPaging	
-		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
-		this.paginator_ui.serverPaging = serverPaging;
-		
-		
-		// for requestPaging template
-		if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
-		this.fetchedServerPages[serverPaging.page]=true  
-		this.totalRecords = serverPaging.total;
-		this.totalPages = serverPaging.pages;
-		var parsed = this.parseShot_Assets(response), // from mixin
-			photos = [];
-if (_DEBUG) console.time("GalleryCollection: create models");			
-		_.each(parsed, function(v, k, l) {
-			if (v.shotId) photos.push(new models.Shot(v));
-			else photos.push(new models.Photo(v));
-		});
-if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
-		$('body').removeClass('wait');
-		return photos;
-	},
-}
-
-// template:  http://snappi-dev/person/photos/51cad9fb-d130-4150-b859-1bd00afc6d44/page:2/perpage:32/sort:score/direction:desc/.json?debug=0
-Backend.cakephp = {
-	dataType: 'jsonp',
-	templates: {	// used by Backend['cakephp'] only
-		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot//min:typeset/.json'),
-	},
-	url:  function(){
-		var collection = this, 
-			qs = collection.parseQueryString();		
-		var templateId, type, 
-			request = {
-				hostname: collection.hostname(),
-				sort: qs.sort || 'score',
-				direction: qs.direction || qs.dir || 'ASC',
-				ownerid : qs.owner || "51cad9fb-d130-4150-b859-1bd00afc6d44",
-				page: collection.currentPage,
-				perpage: collection.perPage, 
-				rating: _.isString(qs.rating) ? '/rating:'+qs.rating : '',
-			}
-			if (/dateTaken|rating|score/.test(request.sort)) request.direction = 'ASC';
-			
-		// adjust for request by workorder, 
-		type = !!qs.type && ['owner', 'odesk', 'tw','TasksWorkorder','wo','Workorder'].indexOf(qs.type.split(':')[0]);
-			
-		switch (type){
-			case false:
-			case -1: // guest access, default, show public photos for userid
-				templateId = 'guest';		// ?owner=[uuid] || "51cad9fb-d130-4150-b859-1bd00afc6d44"
-				if (qs.owner && /^[a-z]+$/i.test(qs.owner)) {
-					templateId = 'odesk';   // same as ?type=odesk&owner=paris
-				}
-				break;
-			case 0: // guest access, show public photos for userid
-				templateId = 'owner'; 
-				delete request.ownerid;		// ?type=owner, fetch /my/photos, ignore &owner=[] param
-				break;
-			case 1:
-				templateId = 'odesk';		// ?type=odesk&owner=paris or ?type=demo&owner=paris  
-				break; 
-			default: // workorder access, 
-				request.id = qs.type.split(':')[1];
-				request.controller = type>3 ? 'workorders' : 'tasks_workorders';
-				templateId = 'workorder'; 	// ?type=wo:17 or ?type=workorder:17
-				break;
-		}
-		return function(){ // return as function to modify queryOptions using this  
-			var queryOptions = this, 
-				url;
-			switch (queryOptions.type){
-				case 'GET':
-					url = Backend['cakephp'].templates['url_photo_'+templateId](request);
-					break;
-				case 'PUT':	
-					// use model.save() instead
-				default:
-			}
-			return url;
-		};
-	},
-	parse: function(response) {
-if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");		
-
-		var paging = response.response.castingCall.CastingCall.Auditions,
-			serverPaging = {
-				page: paging.Page,
-				perpage: paging.Perpage,
-				pages: paging.Pages,
-				total: paging.Total,
-				count: paging.Audition.length,
-				targetHeight: 160,
-			};
-			
-		// config image server for this request
-		snappi.mixins.Href.imgServer({
-			baseurl: paging.Baseurl,
-		});
-			
-		// for clientPaging	
-		this.paginator_ui.totalPages = Math.ceil(serverPaging.total / this.paginator_ui.perPage); 
-		this.paginator_ui.serverPaging = serverPaging;
-		
-		
-		// for requestPaging template
-		if (!this.fetchedServerPages) this.fetchedServerPages = {}; 
-		this.fetchedServerPages[serverPaging.page]=true  
-		this.totalRecords = serverPaging.total;
-		this.totalPages = serverPaging.pages;
-		var parsed = this.parseShot_CC(response.response.castingCall), // from mixin
-			photos = [];
-if (_DEBUG) console.time("GalleryCollection: create models");			
-		_.each(parsed, function(v, k, l) {
-			if (v.shotId) photos.push(new models.Shot(v));
-			else photos.push(new models.Photo(v));
-		});
-if (_DEBUG) console.timeEnd("GalleryCollection: create models");		
-		$('body').removeClass('wait');
-		return photos;
-	},
-}
+};
 
 
 // put it all together at the bottom

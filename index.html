@@ -9,7 +9,7 @@
 
 		
 		<link href="css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
-		<link href="css/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+		<link href="css/vendor/font-awesome-4.0.0/css/font-awesome.min.css" rel="stylesheet">
         <style>
             body {
                 padding-top: 60px;
@@ -18,7 +18,7 @@
         </style>
         <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
         <!-- <link rel="stylesheet" href="css/main.less"  type="text/less"> -->
-		<!-- <script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script> -->
+		<!-- // <script type="text/javascript" src="js/vendor/less-1.4.1.min.js"></script> -->
 		<link rel="stylesheet" href="css/main.css">
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
     </head>
@@ -71,7 +71,9 @@
         		<aside class='display-options'></aside>
         	</div>
         	<div class='body clearfix'></div>
-        	<div class='footer'></div>
+        	<div class='footer'>
+        		<div id='json'></div>
+        	</div>
         </div>   <!-- /.gallery -->
 
 		<div class="container">
@@ -83,43 +85,7 @@
         
         <div id="markup" class="hide">
         	<script id="PhotoTemplate" class='handlebars' type="text/x-handlebars-template">
-	        	<div id="{{photoId}}" class="thumb {{orientationLabel}}" style="{{top}}{{position}}">
-	        		<div class="crop-wrap">
-	        			<div class="crop">	        				<img class="" src="" 
-	        					data-w0="{{origW}}"
-	        					data-h0="{{origH}}"
-	        					data-root-src="{{rootSrc}}"
-	        				>
-	    				</div>
-	    			</div>
-	    			<div class="meta">
-	    				<div class="title truncate">
-	    					{{caption}}
-	    				</div>
-    					<div class="attribution-block hide">
-    						<span class="attribution">
-    							<span>by </span><a class="owner">Owner</a>
-							</span>
-						</div>
-						<div class='bottom-row'> 
-							<span class="inline-icons left">
-		    					{{#if shotCount}}<a class='show-hidden-shot' href="#" title='click to hide duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{score}}">{{score}}<icon class='icon-star'></icon></span>
-		    					<a href="#" class='rating' title='rating: {{rating}}'>
-		    						{{#ratingStars rating}}{{/ratingStars}}
-		    					</a>
-	    					</span>
-							<span class="inline-icons right">
-								<a href="#" title='favorite (planned)'><icon class='icon-heart active'></icon></a>
-								<a href="#" title='taken: {{dateTaken}}'><icon class='icon-info-sign'></icon></a>	
-								<a href="#" title='show full screen (planned)'><icon class='icon-resize-full'></icon></a>
-							</span>
-						</div>
-					</div>
-				</div>
-			</script>
-			<script id="ShotTemplate" class='handlebars' type="text/x-handlebars-template">
-	        	<div id="{{photoId}}" class="thumb {{orientationLabel}}" style="{{top}}{{position}}">
+	        	<div id="{{photoId}}" class="thumb fade fade-out {{zoom}} {{orientationLabel}}" style="{{top}}{{position}}">
 	        		<div class="crop-wrap">
 	        			<div class="crop">
 	        				<img class="" src="" 
@@ -133,23 +99,63 @@
 	    				<div class="title truncate">
 	    					{{caption}}
 	    				</div>
-    					<div class="attribution-block hide">
-    						<span class="attribution">
-    							<span>by </span><a class="owner">Owner</a>
-							</span>
-						</div>
+<!--
+<div class="attribution-block">
+	<span class="attribution">
+		<span>by </span><a class="owner">Owner</a>
+	</span>
+</div>
+-->
 						<div class='bottom-row'> 
 							<span class="inline-icons left">
-		    					{{#if shotCount}}<a class='show-hidden-shot best' href="#" title='click to show {{shotCount}} duplicate shots'><icon class='icon-reorder'>{{shotCount}}</icon></a>{{/if}}
-		    					<span class="score" title="score: {{score}}">{{score}}<icon class='icon-star'></icon></span>
-		    					<a href="#" class='rating' title='rating: {{rating}}'>
+		    					{{#if shotCount}}<i class='btn-icon fa fa-reorder show-hidden-shot' title='click to hide duplicate shots'>{{shotCount}}</i>{{/if}}
+		    					<span class="btn-icon score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<i class='fa fa-star{{#unless score}}-o{{/unless}}'></i></span>
+		    					<span class='btn-icon rating' title='rating: {{rating}}'>
 		    						{{#ratingStars rating}}{{/ratingStars}}
-		    					</a>
+		    					</span>
 	    					</span>
 							<span class="inline-icons right">
-								<a href="#" title='favorite (planned)'><icon class='icon-heart active'></icon></a>
-								<a href="#" title='taken: {{dateTaken}}'><icon class='icon-info-sign'></icon></a>	
-								<a href="#" title='show full screen (planned)'><icon class='icon-resize-full'></icon></a>
+								<i class='btn-icon fa fa-heart active' title='favorite or views (planned)'>{{views}}</i>
+								<i class='btn-icon fa fa-info-circle'  title='taken: {{dateTaken}}'></i>	
+								<i class='btn-icon zoom-in fa fa-arrow-right' title='show full screen (planned)'></i>
+							</span>
+						</div>
+					</div>
+				</div>
+			</script>
+			<script id="ShotTemplate" class='handlebars' type="text/x-handlebars-template">
+	        	<div id="{{photoId}}" class="thumb fade fade-out {{zoom}} {{orientationLabel}}" style="{{top}}{{position}}">
+	        		<div class="crop-wrap">
+	        			<div class="crop">
+	        				<img class="" src="" 
+	        					data-w0="{{origW}}"
+	        					data-h0="{{origH}}"
+	        					data-root-src="{{rootSrc}}"
+	        				>
+	    				</div>
+	    			</div>
+	    			<div class="meta">
+	    				<div class="title truncate">
+	    					{{caption}}
+	    				</div>
+<!--
+<div class="attribution-block">
+	<span class="attribution">
+		<span>by </span><a class="owner">Owner</a>
+	</span>
+</div>
+-->	    				
+							<span class="inline-icons left">
+		    					{{#if shotCount}}<icon class='btn-icon fa fa-reorder show-hidden-shot best' title='click to show {{shotCount}} duplicate shots'>{{shotCount}}</icon>{{/if}}
+		    					<span class="btn-icon score" title="score: {{#if score}}{{score}}{{else}}0{{/if}}">{{#if score}}{{score}}{{else}}0{{/if}}<icon class='fa fa-star{{#unless score}}-o{{/unless}}'></icon></span>
+		    					<span class='btn-icon rating' title='rating: {{rating}}'>
+		    						{{#ratingStars rating}}{{/ratingStars}}
+		    					</span>
+	    					</span>
+							<span class="inline-icons right">
+								<icon class='btn-icon fa fa-heart active' title='favorite (planned)'></icon>
+								<icon class='btn-icon fa fa-info-circle'  title='taken: {{dateTaken}}'></icon>	
+								<icon class='btn-icon zoom-in fa fa-arrow-right' title='show full screen (planned)'></icon>
 							</span>
 						</div>
 					</div>
@@ -158,72 +164,126 @@
 			<script id="PagerBootstrap" class='underscore' type="text/html">
 				<div class='pagination pagination-centered pagination-small'>
 					<ul class='page'>
-						<li><span class='pag-label'>Page</span></li>
-						<% var state = (currentPage == 1) ? 'disabled' : ''; %> 
-						<li class="<%= state %>">
-							<% if (state=='disabled') { %>
-								<span>&laquo;</span>
-							<% } else { %>
-								<a href="#" class='prev'>&laquo;</a>
-							<% }  %>
-						</li>
+						<li class="item page-label">Page</li>
+						<% var state = (currentPage == 1) ? 'disabled' : 'link'; %> 
+						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
 						<% _.each (pageSet, function (p) { %>
 							<% if (currentPage == p) { %>
-								<li class="active"><span><%= p %></span></li>
+								<li class="item active" data-page="<%= p %>"><%= p %></li>
 							<% } else { %>
-								<li><a href="#" class='page'><%= p %></a></li>
+								<li class="item link" data-page="<%= p %>"><%= p %></li>
 							<% } %>
 						<% }); %>
-						<% var state = (lastPage != currentPage && lastPage != 0) ? '' : 'disabled'; %> 
-						<li class="<%= state %>">
-							<% if (state=='disabled') { %>
-								<span>&raquo;</span>
-							<% } else { %>
-								<a href="#" class='next'>&raquo;</a>
-							<% }  %>
-						</li>
+						<% var state = (lastPage != currentPage && lastPage != 0) ? 'link' : 'disabled'; %> 
+						<li class="item next <%= state %>"><i class='fa fa-2x fa-arrow-circle-down'></i></li>
 					</ul>
 					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
 					<ul class='perpage howmany'>
-						<li><span class='pag-label'>Per Page</span></li>
+						<li class="item page-label">Per Page</li>
 						<% _.each ([20,50,100], function (p,i) { %>
 							<% if (perPage == p) { %>
-								<li class="active"><span><%= p %></span></li>
+								<li class="item active"><%= p %></li>
 							<% } else { %>
-								<li><a href="#" class=''><%= p %></a></li>
+								<li class='item link'><%= p %></li>
 							<% } %>
 						<% }); %>
 					</ul>
 					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-					<ul class="showing"><li><span class='pag-label'><%= showing %>/<%= totalRecords %> Photos</span></li></ul>
+					<ul class="showing">
+						<li class='item page-label'>
+							<%= showing %>/<%= totalRecords %> Photos
+						</li>
+					</ul>
 				</div>
 			</script>
-			<script id="GalleryDisplayOptions" class='underscore' type="text/html">
+			<script id="Timeline" class='underscore' type="text/html">
+				<div class='pagination pagination-centered pagination-small'>
+					<ul class='page'>
+						<li class="item page-label">Period</li>
+						<% var state = (active == 0) ? 'disabled' : 'link'; %> 
+						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
+						<% _.each (periods, function (e,i,l) { 
+								var isFetched = fetched[e.period+'-'+currentZoom];
+								var state = (active == i) ? 'active' : 'link';
+								state += isFetched ? ' loaded' : '';
+								var icon = isFetched ? 'fa-dot-circle-o' : 'fa-circle-o' ;
+							%>
+							<li class="item period-<%= e.period %> <%= state %>" data-zoom="<%= currentZoom %>"><%= e.label %></li>
+						<% }); %>
+						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
+						<li class="item next <%= state %>"><i class='fa fa-2x fa-arrow-circle-down'></i></li>
+					</ul>
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<ul class='perpage howmany'>
+						<li class="item page-label">Zoom</li>
+						<% _.each (['Year', 'Month', 'Event'], function (p,i) { %>
+							<% if (currentZoom == p.toLowerCase()) { %>
+								<li class="item active"><%= p %></li>
+							<% } else { %>
+								<li class='item link'><%= p %></li>
+							<% } %>
+						<% }); %>
+					</ul>
+				</div>
+			</script>
+			<script id="Placeline" class='underscore' type="text/html">
+				<div class='pagination pagination-centered pagination-small'>
+					<ul class='zoom'>
+						<li class="item page-label">Zoom</li>
+						<% _.each (['world','country', 'region', 'locality'], function (p,i) { %>
+							<% if (currentZoom == p.toLowerCase()) { %>
+								<li class="item active"><%= p %></li>
+							<% } else { %>
+								<li class='item link'><%= p %></li>
+							<% } %>
+						<% }); %>
+					</ul>
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<ul class='page'>
+						<li class="item page-label">Place</li>
+						<% var state = (active == 0) ? 'disabled' : 'link'; %> 
+						<li class="item prev <%= state %>"><i class='fa fa-2x fa-arrow-circle-up'></i></li>
+						<% _.each (periods, function (e,i,l) { 
+								var isFetched = fetched[e.period+'-'+e.place_type];
+								var state = (active == i) ? 'active' : 'link';
+								state += isFetched ? ' loaded' : '';
+								var icon = isFetched ? 'fa-dot-circle-o' : 'fa-circle-o' ;
+								var zoomActive = e.place_type==currentZoom ? 'zoom-active' : 'zoom-inactive';
+							%>
+							<li class="item <%= state %> <%= zoomActive %>" data-period="<%= e.period %>" data-zoom="<%= e.place_type %>" title="<%= e.label %>"><i class="fa fa-2x <%= icon %>"></i></li>
+						<% }); %>
+						<% var state = (active < periods.length-1) ? 'link' : 'disabled'; %> 
+						<li class="item next <%= state %>"><i class='fa fa-2x fa-arrow-circle-down'></i></li>
+					</ul>
+				</div>
+			</script>
+			<script id="GalleryDisplayOptions" class='handlebars' type="text/x-handlebars-template">
 				<div class='text-center'>
 					<div class="btn-group style">
-						<button class="btn btn-small disabled">Style</button>
-						<% _.each(style, function(o){ 	%>
-							<button class="btn btn-primary btn-small {{o.active}} {{o.disabled}} ">{{o.label}}</button>
-						<% }); %>
+					{{#buttonGroupButtons style "Style"}}
+						<button class="btn btn-primary btn-small {{active}} {{disabled}}">{{label}}</button>
+					{{/buttonGroupButtons}}
 					</div>
-					<div class="btn-group size">
-						<button class="btn btn-small disabled">Size</button>
-						<% _.each(size, function(o){ 	%>
-							<button class="btn btn-primary btn-small {{o.active}} {{o.disabled}} ">{{o.label}}</button>
-						<% }); %>
+					<div class="btn-group style">
+					{{#buttonGroupButtons size "Size"}}
+						<button class="btn btn-primary btn-small {{active}} {{disabled}}">{{label}}</button>
+					{{/buttonGroupButtons}}
+					</div>
+					<div class="btn-group filter" data-filter="rating">
+					{{#buttonGroupButtons rating "Rating"}}
+						<button class="btn btn-primary btn-small {{active}} {{disabled}}">{{#ratingStars label}}{{/ratingStars}}</button>
+					{{/buttonGroupButtons}}
 					</div>
 				</div>
 			</script>
         </div>
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
-
+        <script src="js/vendor/jquery-1.10.1.min.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
         <script src="js/vendor/underscore.js"></script>
         <script src="js/vendor/handlebars.js"></script>
         <script src="js/vendor/backbone.js"></script>
-        
+        <!-- // <script src="js/vendor/async.js"></script> -->
         <!-- demo bootstrap data -->
         <script src="js/snappi-bootstrap.js"></script>
         
@@ -232,22 +292,36 @@
 		
 		<!-- mixins & libs -->
 		<script src="js/mixins/snappi.js"></script>
+		<script src="js/mixins/template.js"></script>
 		<script src="js/mixins/uiactions.js"></script>
 		<script src="js/mixins/layout.engine.js"></script>
+		<script src="js/mixins/flickr-places.js"></script>
+		<script src="js/mixins/page-helper.js"></script>
+		<script src="js/mixins/timeline-helper.js"></script>
+		<script src="js/mixins/placeline-helper.js"></script>
+		<script src="js/mixins/backend-file.js"></script>
+		<script src="js/mixins/backend-cakephp.js"></script>
+		<script src="js/mixins/backend-nodejs.js"></script>
+		<script src="js/mixins/backend-flickr.js"></script>
 
 		<!--Backbone.Paginator-->
 		<script src="js/vendor/backbone.paginator-0.9.0-dev.js"></script>
 
 		<!--Models/Collections-->
+		<script src="js/models/timeline.js"></script>
+		<script src="js/models/placeline.js"></script>
 		<script src="js/models/photo.js"></script>
 		<script src="js/collections/hiddenshot.js"></script>
 		
         <script src="js/models/shot.js"></script>
+        <script src="js/models/hiddenshot.js"></script>
         <script src="js/models/rating.js"></script>
         
         <script src="js/collections/gallery.js"></script>
 
 		<!--Views-->
+		<script src="js/views/timeline.js"></script>
+		<script src="js/views/placeline.js"></script>
         <script src="js/views/photo.js"></script>
         <script src="js/views/shot.js"></script>
         <script src="js/views/pager.js"></script>

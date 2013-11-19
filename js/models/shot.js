@@ -44,7 +44,8 @@ var extend = function(classDef){
 
 var Shot = {
 	
-	url: function(options){
+	urlRoot: function(options){
+		return '/shot';
 		options = options || this.toJSON();
 		return this.templates['url_shot'](options);
 	},
@@ -82,15 +83,22 @@ var Shot = {
 			hiddenshot: new HiddenshotCollection([this])
 		})
 	},
+	
+	destroy: function(){
+		// Any events you wish to switch off ( if you have any )
+		var hiddenshot = this.get('hiddenshot');
+		hiddenshot.stopListening().destroy();
+		Backbone.Model.prototype.destroy.apply(this, options);  
+	}
 };
 
 /*
  *  protected methods
  */
 var _overloadClassAttrs = function(childClass, parentClass, attrs) {
-	for (var i in attrs) {
-		childClass.prototype[attrs[i]] = _.extend(parentClass.prototype[attrs[i]] || {}, childClass.prototype[attrs[i]]);
-	} 
+	_.each(attrs, function(e,i,l) {
+		childClass.prototype[e] = _.extend(parentClass.prototype[e] || {}, childClass.prototype[e]);
+	}); 
 }
 
 

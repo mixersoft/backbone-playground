@@ -80,16 +80,24 @@ if (_DEBUG) console.timeEnd("GalleryCollection.fetch()");
 		this.totalPages = serverPaging.pages;
 		var parsed = this.parseShot_Assets(response); // from mixin
 if (_DEBUG) console.time("GalleryCollection: create models");		
-		var bestshots = (1 || snappi.qs['show-hidden'] || snappi.qs.raw) ? {} : false;	
+		var shots = (1 || snappi.qs['show-hidden'] || snappi.qs.raw) ? {} : false;	
 		var photos = _.map(parsed, function(v, k, l) {
 			if (v.shotId) {
-				if (bestshots && bestshots[v.shotId]) {
+				if (shots && shots[v.shotId]) {
 					// TODO: for /hidden:1, need to identify bestshot!
 					// use sort order for now, add reference to bestshot
-					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: bestshots[v.shotId] });
+					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: shots[v.shotId].get('photoId') });
+					// add hiddenshots to bestshots
+					var hiddenshotC = shots[v.shotId].get('hiddenshot');
+					var current_count = hiddenshotC.models.push(hiddenshot);
+					// if (current_count === hiddenshotC.shot_core.count) 
+					// 	hiddenshotC.shot_core.stale = false; // don't have shot_extras yet
 					return hiddenshot;
-				} else (bestshots[v.shotId] = v.photoId);
-				return new models.Shot(v);
+				} else {
+					var shot = new models.Shot(v);
+					shots[v.shotId] = shot;
+					return shot;
+				}
 			} else return new models.Photo(v);
 		});
 if (_DEBUG) console.timeEnd("GalleryCollection: create models");		

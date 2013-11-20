@@ -49,18 +49,19 @@ views.PhotoView = Backbone.View.extend({
 		options = options || {};
 		var m = this.model.toJSON(),
 			isHiddenshot = this.model instanceof snappi.models.Hiddenshot; // m.shotId && m.shotCount;
-		
+		if (options.offscreen) {
+			m.top = options.offscreenTop;
+		}
+
 		if (isHiddenshot) {
 			var $wrap = $(this.template( m )),
 				$thumb = this.$el;
 			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
-			$wrap.remove();
 			$thumb.attr('id', m.photoId)
-				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel);	// required for no wrap
+				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel)
+				.get(0).style.cssText = $wrap.get(0).style.cssText;	// required for no wrap
+			delete $wrap;	// how do you destroy a DOM element	
 		} else { // Photo
-			if (options.offscreen) {
-				m.top = options.offscreenTop;
-			}
 			this.$el.html( this.template( m ) );
 		}
 		return this;

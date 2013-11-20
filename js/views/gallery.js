@@ -552,7 +552,7 @@ console.log("addBack() page="+$pageContainer.data('period'));
 				options.offscreen.append($thumb.addClass('shot-wrap'));
 				options._shots[shotId] = $thumb;
 				if (options._waitForShot[shotId]) {
-					$thumb.append(options._waitForShot[shotId]).addClass('showing');
+					$thumb.addClass('showing').append(options._waitForShot[shotId]);
 					delete options._waitForShot[shotId];
 				}
 			} else if (item instanceof snappi.models.Hiddenshot) {

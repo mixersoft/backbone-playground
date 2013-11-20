@@ -73,12 +73,27 @@ var File = {
 			keep = _.first(_.keys(hash), end),
 			photos = [],
 			attr, m;
+		var shots = (1 || snappi.qs['show-hidden'] || snappi.qs.raw) ? {} : false;		
 		for (var i=start;i<keep.length;i++){	// use i to calc requestPage
 			attr = hash[keep[i]];
 			attr.requestPage = Math.ceil( i / perpage );
-			if (attr.shotId) m = new models.Shot(attr);
-			else m = new models.Photo(attr);
-			photos.push(m);
+			if (attr.shotId) {
+				if (shots && shots[attr.shotId]) {
+					// TODO: for /hidden:1, need to identify bestshot!
+					// use sort order for now, add reference to bestshot
+					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: shots[attr.shotId].get('photoId') });
+					// add hiddenshots to bestshots
+					var hiddenshotC = shots[attr.shotId].get('hiddenshot');
+					var current_count = hiddenshotC.models.push(hiddenshot);
+					// if (current_count === hiddenshotC.shot_core.count) 
+					// 	hiddenshotC.shot_core.stale = false; // don't have shot_extras yet
+					photos.push(hiddenshot); // return hiddenshot;
+				} else {
+					var shot = new models.Shot(attr);
+					shots[attr.shotId] = shot;
+					photos.push(shot); // return shot;
+				}
+			} else photos.push(new models.Photo(attr)); // return new models.Photo(attr);
 		};
 		return photos;
 	},

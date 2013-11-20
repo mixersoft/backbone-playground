@@ -81,7 +81,7 @@ var File = {
 				if (shots && shots[attr.shotId]) {
 					// TODO: for /hidden:1, need to identify bestshot!
 					// use sort order for now, add reference to bestshot
-					var hiddenshot =  new models.Hiddenshot(v, {bestshotId: shots[attr.shotId].get('photoId') });
+					var hiddenshot =  new models.Hiddenshot(attr, {bestshotId: shots[attr.shotId].get('photoId') });
 					// add hiddenshots to bestshots
 					var hiddenshotC = shots[attr.shotId].get('hiddenshot');
 					var current_count = hiddenshotC.models.push(hiddenshot);

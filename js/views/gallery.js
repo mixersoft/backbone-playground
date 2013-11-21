@@ -79,9 +79,18 @@ var GalleryView = {
 		 * NOTE: get containerWidth BEFORE rendering Views, to avoid an unnecssary layout/paint
 		 */
 		// TODO: update on window.resize
-		this.$el.data('outerW', this.$('.body').outerWidth());
-		$('body').data('winH', $(window).height());
-		$('body').data('winW', $(window).width());
+		// this.$el.data('outerW', this.$('.body').outerWidth());
+		// $('body').data('winH', $(window).height());
+		// $('body').data('winW', $(window).width());
+
+		$(window).on('resize', _.bind(_.debounce(function(){
+			var OFFSET_W = 80;	// margin/padding
+			$('body').data('winH', $(window).height())
+				.data('winW', $(window).width());
+			this.$el.data('outerW', $(window).width()-OFFSET_W);	
+			this.refreshLayout();
+		}, 500, {leading: false}), this));
+		$(window).trigger('resize');
 
 		// timeline controls collection
 		this.$el.addClass('pager-'+snappi.PAGER_STYLE);
@@ -137,9 +146,12 @@ var GalleryView = {
 				this.render();
 				// trigger initial sync
 // rename: getXhrFetchOptions() > getRestApiOptions() - options for api call
+
+
 				_.defer(function(that){
 var options = that.Pager['Timeline']['GalleryView'].getRestApiOptions(that);
 console.info("1. GV.pager.fetch()");
+
 var fetching = that.pager.fetch({data: options})
 	.done(function(){
 console.info("1. GV.pager.fetch().done()");			

@@ -74,6 +74,20 @@ renderBody: function($pageContainer, $thumbs, options){
 	});
 	return $pageContainer;
 },
+/**
+ * Zoom action
+ *		- starts from PhotoView .click
+ *		- somehow trigger change in Pager, models.Placeline??
+ *		- why does the Pager need to know? for pageUp/Dn actions
+ *		- 
+ * trigger changeZoom event on placeline, 
+ * see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
+ * placelineView/Model knows currentZoom/next zoom
+ * placeline checks e.currentTarget to know where to insert new page
+*/
+onZoom:  function(e){
+
+},
 
 insertPageContainer: function(that){
 	var $before = null, 
@@ -130,9 +144,12 @@ console.info("1. GV.collection.fetch()");
 	var serialXhr = options.xhr;
 	if (serialXhr) { // options.xhr set by onTimelineSync
 		console.log("1. GalleryView.pager.onTimelineChangePeriod(), xhr.promise.state="+serialXhr.state());
+		var both = new $.Deferred();
 		$.when(jqXhr, serialXhr).then(function(){
-console.info("1. GV $.when: all done after Pager.sync+GC.fetch");			
+console.info("1. GV $.when: all done after Pager.sync+GC.fetch");
+			both.resolve(jqXhr);  // with jqXhr arguments??			
 		});
+		return both;
 	} else {	// TimelineSync already sync'd
 		pager.trigger('request', pager, jqXhr, options);		// Pager.ux_showWaiting()
 		jqXhr.then(function(){
@@ -211,9 +228,13 @@ createPeriodContainers$: function(that, pager, $body) {
 	});
 	return Timeline['GalleryView'].getPeriodContainer$(that, false, pager.active);
 },
-getRestApiOptions: function(that){
+/*
+* @param that instanceof views.GalleryView, or snappi.app
+* @param active int, fetch a specific page, independent of models.Pager
+*/
+getRestApiOptions: function(that, active){
 	var pager = that.pager,
-		period = pager.get('periods')[pager.get('active')],
+		period = pager.get('periods')[active || pager.get('active')],
 		options = {
 			page: 1,		// should be able to paginate within a period
 			perpage: 20,	// for collection, but not pager

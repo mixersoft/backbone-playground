@@ -147,6 +147,17 @@ var GalleryView = {
 				// trigger initial sync
 // rename: getXhrFetchOptions() > getRestApiOptions() - options for api call
 
+// // preload remaining periods in the background 
+// // use event because we don't get deferred = onTimelineChanged()
+// this.listenTo(collection,'layout-complete', function(){
+// 	var that = snappi.app;
+// 	var next = that.pager.get('active');
+// 	if (next < that.pager.get('periods').length-1) 
+// 		that.pager.set('active', next+1);
+// 	else 
+// 		that.stopListening(collection, 'layout-complete');
+// });
+// // done with preload
 
 				_.defer(function(that){
 var options = that.Pager['Timeline']['GalleryView'].getRestApiOptions(that);
@@ -208,73 +219,6 @@ console.info("1. GV.pager.fetch().done()");
 			});
 	}, 
 	
-
-	/**
-	 * Zoom action
-	 *		- starts from PhotoView .click
-	 *		- somehow trigger change in Pager, models.Placeline??
-	 *		- why does the Pager need to know? for pageUp/Dn actions
-	 *		- 
-	 * trigger changeZoom event on placeline, 
-	 * see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
-	 * placelineView/Model knows currentZoom/next zoom
-	 * placeline checks e.currentTarget to know where to insert new page
-	*/
-	// TODO: move to Placeline['GalleryView']
-	onZoom: function(e){
-		e.preventDefault();
-		
-		var that = this, 
-			thumb = null,
-			mPhoto = 'should be models.Photo',
-			helpers = this['Pager']['Placeline']['GalleryView'],
-			currentZoom = this.pager.get('currentZoom'); // TODO: get from data-zoom
-
-		thumb = $(e.currentTarget).closest('.thumb');
-		var pageDataZoom = thumb.closest('.page').data('zoom');
-		mPhoto = _.findWhere(this.collection.models, { id: thumb.attr('id') });
-		mPhoto = mPhoto.toJSON();
-
-		var pivot = {
-			place_id: mPhoto.place_id,
-			lat: mPhoto.latitude,
-			lon: mPhoto.longitude,
-			accuracy: mPhoto.accuracy,
-			currentZoom: pageDataZoom,	// timeline zoom
-			// pageDataZoom: pageDataZoom,
-			dir: 'zoom-in',
-			pivot: thumb,
-			pivot_model: mPhoto,	// ???: this needed?
-		};
-
-		// bind 'sync:currentZoom'
-		var success = function(places){
-			// add request to Placeline.periods
-			var fetchOptions = helpers.getXhrPivotOptions(that);
-
-			// fetch photos to reflect currentZoom
-			that.collection.fetchZoom(pivot, {
-				placeline: that.pager,
-				fetchOptions: fetchOptions,
-				success: function(collection, response, options){
-					var check;
-console.info("0 Timeline.'sync:currentZoom' success");					
-				},
-				complete: function(){
-					that.collection.listenToOnce(that.collection, 'layout-complete', function(){
-						_.defer(function(){
-							// hide/filter GView based on currentZoom
-							// should be AFTER Timeline.sync
-							// thumb.get(0).scrollIntoView();			
-						});
-					});
-				},
-			});
-		};
-		that.listenToOnce(that.pager, 'sync:currentZoom', success);
-		that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.pager, pivot);
-
-	},
 
 	
 	render: function(){
@@ -638,6 +582,37 @@ console.log("addBack() page="+$pageContainer.data('period'));
 			// $(el).find('img').get(0).parsed = _.findWhere(models, {id: id}).toJSON();
 		}, this);
 	},
+
+	/**
+	 * Zoom action
+	 *		- starts from PhotoView .click
+	 *		- somehow trigger change in Pager, models.Placeline??
+	 *		- why does the Pager need to know? for pageUp/Dn actions
+	 *		- 
+	 * trigger changeZoom event on placeline, 
+	 * see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
+	 * placelineView/Model knows currentZoom/next zoom
+	 * placeline checks e.currentTarget to know where to insert new page
+	*/
+	onZoom: function(e) {
+		var helper;
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+				helper = this.Pager['Timeline']['GalleryView'];
+				break;
+			case 'placeline': 
+				helper = this.Pager['Placeline']['GalleryView'];
+				break;
+			case 'page':
+				console.warn("incomplete: no onZoom method for Pager=page") 
+				break;
+		} 
+		helper.onZoom.apply(this, arguments);
+	},
+
+
+
+
 };
 
 /*

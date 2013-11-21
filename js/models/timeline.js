@@ -87,7 +87,11 @@ var TimelineModel = {
 			model = model || this.toJSON();
 			i = i || model.active;
 			period = model.periods[i];
-			return period.period+'-'+model.currentZoom;
+			try {
+				return period.period+'-'+model.currentZoom;
+			} catch (ex) {
+				throw "Timeline period out of bounds";
+			}
 		},
 		isFetched: function(i, model){
 			model = model || this.toJSON();

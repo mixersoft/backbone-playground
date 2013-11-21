@@ -90,6 +90,71 @@ renderBody: function($pageContainer, $thumbs, options){
 	});
 	return $pageContainer;
 },
+/**
+ * Zoom action
+ *		- starts from PhotoView .click
+ *		- somehow trigger change in Pager, models.Placeline??
+ *		- why does the Pager need to know? for pageUp/Dn actions
+ *		- 
+ * trigger changeZoom event on placeline, 
+ * see: GalleryView.onPlacelineChangePeriod() (placeline Helper)
+ * placelineView/Model knows currentZoom/next zoom
+ * placeline checks e.currentTarget to know where to insert new page
+*/
+onZoom:  function(e){
+	e.preventDefault();
+	
+	var that = this, 
+		thumb = null,
+		mPhoto = 'should be models.Photo',
+		helpers = this['Pager']['Placeline']['GalleryView'],
+		currentZoom = this.pager.get('currentZoom'); // TODO: get from data-zoom
+
+	thumb = $(e.currentTarget).closest('.thumb');
+	var pageDataZoom = thumb.closest('.page').data('zoom');
+	mPhoto = _.findWhere(this.collection.models, { id: thumb.attr('id') });
+	mPhoto = mPhoto.toJSON();
+
+	var pivot = {
+		place_id: mPhoto.place_id,
+		lat: mPhoto.latitude,
+		lon: mPhoto.longitude,
+		accuracy: mPhoto.accuracy,
+		currentZoom: pageDataZoom,	// timeline zoom
+		// pageDataZoom: pageDataZoom,
+		dir: 'zoom-in',
+		pivot: thumb,
+		pivot_model: mPhoto,	// ???: this needed?
+	};
+
+	// bind 'sync:currentZoom'
+	var success = function(places){
+		// add request to Placeline.periods
+		var fetchOptions = helpers.getXhrPivotOptions(that);
+
+		// fetch photos to reflect currentZoom
+		that.collection.fetchZoom(pivot, {
+			placeline: that.pager,
+			fetchOptions: fetchOptions,
+			success: function(collection, response, options){
+				var check;
+console.info("0 Timeline.'sync:currentZoom' success");					
+			},
+			complete: function(){
+				that.collection.listenToOnce(that.collection, 'layout-complete', function(){
+					_.defer(function(){
+						// hide/filter GView based on currentZoom
+						// should be AFTER Timeline.sync
+						// thumb.get(0).scrollIntoView();			
+					});
+				});
+			},
+		});
+	};
+	that.listenToOnce(that.pager, 'sync:currentZoom', success);
+	that['Pager']['Placeline']['GalleryView'].zoomOnPivot(that.pager, pivot);
+
+},
 
 insertPageContainer: function(that){
 	var $before = null, 

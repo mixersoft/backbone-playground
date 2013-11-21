@@ -58,8 +58,8 @@ views.PhotoView = Backbone.View.extend({
 				$thumb = this.$el;
 			$thumb.html( $wrap.children() );  // do NOT wrap .thumb
 			$thumb.attr('id', m.photoId)
-				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel)
-				.get(0).style.cssText = $wrap.get(0).style.cssText;	// required for no wrap
+				.addClass('thumb hiddenshot fade fade-out '+m.orientationLabel);
+			this.el.style.cssText = $wrap.get(0).style.cssText;	// required for no wrap
 			delete $wrap;	// how do you destroy a DOM element	
 		} else { // Photo
 			this.$el.html( this.template( m ) );
@@ -132,8 +132,12 @@ views.PhotoView.delegated_ratingClick = function(e, collection){
 };
 
 views.PhotoView.delegated_setFocus = function(e, $gallery){
-	if ($gallery) $gallery.find('.thumb.focus').removeClass('focus');
-	$(e.currentTarget).addClass('focus');
+	if ($gallery) $gallery.find('.page .focus').removeClass('focus');
+	var $target = $(e.currentTarget);
+	$target.addClass('focus');
+	if ($target.parent().hasClass('shot-wrap')) 
+		$target.parent().addClass('focus');
+
 }
 
 })( snappi.views );

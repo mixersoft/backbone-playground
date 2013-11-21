@@ -424,7 +424,7 @@ var setup_DisplayOptions = {
 		],
 	}, 
 	pager_ui: {
-		direction: 'desc',
+		direction: 'asc',
 	}
 };
 

@@ -19,10 +19,10 @@
 var Cakephp = {
 	dataType: 'jsonp',
 	templates: {	// used by Backend['cakephp'] only
-		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=optional_rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=optional_rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_guest: _.template('http://<%=hostname%>/person/photos/<%=ownerid%><%=optional_rating%><%=optional_hidden%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_odesk: _.template('http://<%=hostname%>/person/odesk_photos/<%=ownerid%><%=optional_rating%><%=optional_hidden%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
 		url_photo_owner: _.template('http://<%=hostname%>/my/photos<%=optional_hidden%><%=optional_rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
-		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=rating%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
+		url_photo_workorder: _.template('http://<%=hostname%>/<%=controller%>/photos/<%=id%><%=optional_rating%><%=optional_hidden%>/perpage:<%=perpage%>/page:<%=page%>/sort:<%=sort%>/direction:<%=direction%>/min:typeset/.json'),
 		url_shot: _.template('http://<%=hostname%>/photos/hiddenShots/<%=shotId%>/Usershot//min:typeset/.json'),
 	},
 	url:  function(){

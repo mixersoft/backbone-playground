@@ -122,7 +122,7 @@ Backend.nodejs = {
 			.map(function(e,i,l){
 				e.shotId = collection.shot_core.id; 
 				e.bestshotId = bestshotId; 
-				return new models.Photo(e);	
+				return new models.Hiddenshot(e);	
 			}).value();
 
 		var shot_extras = collection.parseShotExtras_Assets(response.assets, bestshotId);
@@ -155,7 +155,7 @@ Backend.cakephp = {
 			.map(function(e,i,l){
 				e.shotId = that.shot_core.id; 
 				e.bestshotId = bestshotId; 
-				return new models.Photo(e);	
+				return new models.Hiddenshot(e);	
 			}).value();
 
 

@@ -296,6 +296,19 @@ console.log("pager ux_blockUi");
 		pause: null,
 		playing: new $.Deferred().resolve(), 
 	};
+
+	views.PagerView.releasePage = function(p){
+		var that = snappi.app;  // global 
+		var $page = that.$('.body .page[data-page="'+p+'"]');
+		var models = _.each( $page.find('.thumb'), function(e,i,l){
+			var modelId = $(e).hasClass('bestshot') ? e.parentNode.id : e.id;
+			var model = _.findWhere(that.models, {id: modelId});
+			if (model) model.trigger('hide');
+		}, that.collection);
+		$page.html('<div class="empty-label">Released Page '+p+'</div>');
+		that.collection.fetchedServerPages[p] = false;
+	}
+
 	views.PagerView.loop = function(_remaining, state) {
 		state = state || {
 			action: 'load',
@@ -313,29 +326,38 @@ console.log("pager ux_blockUi");
 		var that = snappi.app.pager;	// instance of this View
 		var collection = snappi.app.collection;
 		var TIMEOUT = 120 * 60*1000;	// in minutes
-		var DELAY_load = 5 * 1000;
+		var DELAY_load = 3 * 1000;
 		if (snappi.qs.delay) DELAY_load = snappi.qs.delay * 1000;
+
+
 
 		var nextAction = function(state){
 			var deferred = new $.Deferred();
 			if (state.page > collection.totalPages) {
 				if (state.action==='load') {
-					state.fetched += $(".gallery .body .thumb").length;
+					// state.fetched += $(".gallery .body .thumb").length;
 				}
 				return deferred.reject(state);	// loop complete
 			}
 			clickEvent.ctrlKey = state.action == 'release';
 			that.listenToOnce(that, 'ui-ready', function(){
-var fetched = state.fetched;
-if (state.action=='load') fetched += $(".gallery .body .thumb").length;				
-var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", remaining="+_remaining;
+				// pager.currentPeriod .thumb.length
+				var $current = snappi.app.Pager['Page']['GalleryView'].getPeriodContainer$(snappi.app);
+if (state.action=='load') state.fetched += $current.find(".thumb").length;			
+var msg = "next: "+state.action+"  page="+state.page+", fetched="+state.fetched+", remaining="+_remaining;
 				console.log(msg);
 				$('.brand').html(msg);				
 				deferred.resolve(state); // _.defer(nextAction, null, cb);
 			});
 			_.delay(
 				function(clickEvent){
+					// fetch new page
 					that.gotoPage.call(that, clickEvent, state.page);
+					// release pages outside padding
+					var padding = 3;
+					var releasePage = state.page-padding;
+					if (releasePage < 0) releasePage = collection.totalPages - releasePage;
+					views.PagerView.releasePage(releasePage);
 				},
 				0, clickEvent
 			);
@@ -343,7 +365,7 @@ var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", rem
 		};
 
 		var nextLoop = function(state){
-			if (state.action === 'load'){
+			if ( 0 && state.action === 'load'){
 				state.action = 'release';
 				state.page = 0;
 				$('html,body').scrollTop(0);

@@ -530,7 +530,7 @@ console.log("addBack() page="+$pageContainer.data('period'));
 	 */
 	addOne : function( item, options ) {
 		options = options || {};
-		var thumb, $thumb = this.$('#'+item.get('id')+'.thumb');
+		var thumb, $thumb = this.$('#'+item.get('photoId')+'.thumb');
 		// ???: how can you tell if a model already has a rendered View?
 		// add a back reference?
 		var $parent, $shotEl;

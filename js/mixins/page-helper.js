@@ -59,8 +59,10 @@ renderBody: function($pageContainer, $thumbs, options){
 		// throw "what should we do if there are exitings thumbs?";
 	} 
 
-	if ($thumbs) 
+	if ($thumbs) {
 		$pageContainer.append($thumbs.not('.hiddenshot'));
+		stale = true;
+	}
 
 	if (stale === true){
 		/*
@@ -97,6 +99,65 @@ getPeriodContainer$: function(that, create, index){
 		$item = $(Page['GalleryView'].templates.page(that.collection));
 	}
 	return $item.length ? $item : false;
+},
+
+/*
+ *	render/release
+ */
+/**
+ * render thumb in viewport+buffer
+ * release thumb outside 
+ * @param that GalleryView
+ */ 
+// snappi.app.Pager['Page']['GalleryView'].renderViewport();
+renderViewport: function(that){
+	that = that || snappi.app;
+	var viewportPages = that.getViewportPages(2);
+	var dfd = new $.Deferred();
+	var pages = viewportPages.pages;
+	var collection = that.collection;
+	_.each(pages.filter('.released'), function(el, i, l){
+		// models = getPageModels( el, that.collection)
+		var $pageContainer = $(el);
+		var page = parseInt($(el).data('page')),
+			pageModels = []; 
+		var start = page * collection.perPage,
+			end = Math.min(start + collection.perPage, collection.models.length);
+		var $thumbs = $();		
+		_.each(collection.models, function(model, i){
+			/*
+			 * TODO: requestPage changes onFilterChanged
+			 * add collection.comparator and repaginate or sort algo
+			 * requestPage set in mixins.RestApi.parseShot_Assets()
+			 */
+			var p = model.get('clientPage') || model.get('requestPage') || 9999;
+			if (p == page) {
+				pageModels.push(model);
+				// $thumbs = $thumbs.add( this.addOne(model, options) );	
+			}
+		}, this);
+		that.addThumbs(pageModels, $pageContainer, {scroll:false});
+		$pageContainer.has('.thumb').removeClass('released');
+	});
+
+	_.defer(function(){
+		var releasePages = that.$('.body .page')
+			.not(viewportPages.pages)
+			.has('.thumb')
+			.addClass('released');
+		var models = [];
+		_.each( releasePages.find('.thumb'), function(el,i,l){
+				var modelId = $(el).hasClass('bestshot') ? el.parentNode.id : el.id;
+				// TODO: find faster way to get model from vThumb.$el
+				var model = _.findWhere(collection.models, {id: modelId});
+				if (model) {
+					model.trigger('hide');
+					models.push(model);
+				}
+			});
+		var check;
+	});
+	return dfd;
 },
 	},
 };

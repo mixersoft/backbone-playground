@@ -252,11 +252,12 @@ body.wait {
     transition-property: height, width;
 }
 .gallery .body, .gallery .body .thumb {
-    transition-duration: 0.8s;
+    /*transition-duration: 0.8s;*/
 }
 .gallery .body .thumb {
     transition-property: transform, opacity, top, left;
 }
+
 .fade {
     opacity: 1;
     transform: translate3d(0px, 0px, 0px);
@@ -264,6 +265,12 @@ body.wait {
 }
 .fade.fade-out {
     opacity: 0;
+}
+
+.scrolling .fade, .scrolling .fade.fade-out {
+    transform: none;
+    transition: none !important;
+    opacity: 1;
 }
 
 

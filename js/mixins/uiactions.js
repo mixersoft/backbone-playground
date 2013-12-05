@@ -83,6 +83,47 @@ mixins.UiActions = {
 		return target;
 	},
 
+	/*
+	 * viewport actions
+	 */
+	/**
+	* get .page in current viewport
+	* @param padding int, include n=padding before/after elements 
+	* @return {pages: $(), range{from: int, to: int}}
+	*/ 
+	getViewportPages: function(padding){
+		padding = padding || 0;
+		var windowT = $(window).scrollTop(),
+			windowH = $(window).height(),
+			windowB = windowT + windowH;
+		var $visiblePages = $();
+		var range = {};
+		_.find($('.gallery .body .page'), function(el,i,l){
+			var pageT = el.offsetTop;
+			var pageB = pageT + el.offsetHeight;
+			if ( pageB >= windowT && pageT <= windowB ) {
+				if ($visiblePages.length === 0 ) {
+					range.from = i-padding;	
+					if (padding){
+						$visiblePages = $visiblePages.add(l.slice(Math.max(i-padding,0), i));
+					}
+				}
+				
+				$visiblePages = $visiblePages.add($(el));
+				if (pageB >= windowB || i === l.length-1) {
+					if (padding){
+						$visiblePages = $visiblePages.add(l.slice(i+1, i+padding+1));
+					}
+					range.to = Math.min(i+padding, l.length-1);
+					return true;
+				}
+			}
+		});
+		return {pages: $visiblePages, range: range};
+	},
+
+
+
 	/**
 	*	XHR/async UX methods
 	*/

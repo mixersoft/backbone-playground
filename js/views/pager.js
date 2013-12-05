@@ -157,6 +157,7 @@ console.log("pager ux_blockUi");
 		 */
 		onContainerScroll : _.throttle(function(e){
 			this.helper.scrollSpy.call(this, e);
+			snappi.app.Pager['Page']['GalleryView'].renderViewport();
 		}, 500, {leading: true}),
 		
 

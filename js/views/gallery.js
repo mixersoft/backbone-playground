@@ -82,7 +82,7 @@ var GalleryView = {
 		// this.$el.data('outerW', this.$('.body').outerWidth());
 		// $('body').data('winH', $(window).height());
 		// $('body').data('winW', $(window).width());
-
+		var that = this;
 		$(window).on('resize', _.bind(_.debounce(function(){
 			var OFFSET_W = 80;	// margin/padding
 			$('body').data('winH', $(window).height())
@@ -91,6 +91,13 @@ var GalleryView = {
 			this.refreshLayout();
 		}, 500, {leading: false}), this));
 		$(window).trigger('resize');
+		// only on sync, not page nave
+		$(window).on('scroll', function(){
+			_.debounce(function(){ that.$el.addClass('scrolling');
+			}, 500, true)();
+			_.debounce(function(){ that.$el.removeClass('scrolling');
+			}, 500, false)();
+		});
 
 		// timeline controls collection
 		this.$el.addClass('pager-'+snappi.PAGER_STYLE);
@@ -120,7 +127,7 @@ var GalleryView = {
 		this.listenTo(collection, 'reset', this.addAll);
 		this.listenTo(collection, 'refreshLayout', this.refreshLayout);
 		this.listenTo(collection, 'repaginated', this.refreshPages);
-		this.listenTo(collection, 'add', this.add);
+		// this.listenTo(collection, 'add', this.add);
 		this.listenTo(collection, 'sync', this.addPage);
 		this.listenTo(this, 'addBack', this.addBack);
 		this.listenTo(collection, 'addedHiddenshots', this.addedHiddenshots);
@@ -140,6 +147,7 @@ var GalleryView = {
 			$page.html('<div class="empty-label">Released Page '+p+'</div>').height(28);
 			this.collection.fetchedServerPages[p] = false;
 		});
+
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
 			case 'placeline':
@@ -346,10 +354,51 @@ console.info("1. GV.pager.fetch().done()");
 	addAll : function(models, options) {
 		var bootstrap;
 	},
-	add : function(models, options) {
-		// Coll.fetch() > success() > Coll.set() > trigger."add" > View.add() > trigger."sync"
-		// sync called AFTER add, thumbViews added in sync
-		// console.log("GalleryView add ThumbView for new models, count="+this.collection.models.length);
+	/*
+	 * add with models, NOT from XHR response
+	 */
+	addThumbs : function(models, $pageContainer, options) {
+		/*
+		 *  GV.renderViewport >  complete() 
+		 */
+console.info("3. GV.'renderViewport' > GV.add()");		 
+		var $thumb, 
+			offscreen = true;
+		// check if pageContainer already exists
+		
+		if (offscreen) {
+			options = _.defaults(options || {}, {
+				offscreen : $('<div class="body"></div>'),	// build page in orphaned el
+			});
+		}
+
+		switch (snappi.PAGER_STYLE) {
+			case 'timeline': 
+			case 'placeline':
+				var $thumbs = _.reduce(models, function(out, model,i,l){
+					out = out.add( this.addOne(model, options) );	
+					return out;
+				}, $(), this);
+
+				if ($thumbs.length) {
+					this.renderBody($pageContainer, $thumbs, options);
+				} else {
+					this.refreshLayout();
+				}
+				break;
+			case 'page': 
+				// use audition.requestPage to manage paging
+				// TODO: model.get('clientPage') || model.get('requestPage')
+		// if (_DEBUG) console.time("Backbone.add() render PhotoViews");			
+				var $thumbs = _.reduce(models, function(out, model,i,l){
+					out = out.add( this.addOne(model, options) );	
+					return out;
+				}, $(), this);
+		// if (_DEBUG) console.timeEnd("Backbone.add() render PhotoViews");
+				this.renderBody($pageContainer, $thumbs, options );
+				break;
+		}
+		return; 
 	},
 	// called by B.Paginator.nextPage() > B.Paginator.pager() > 'sync'
 	addPage : function(models, resp, xhr) {
@@ -418,7 +467,7 @@ console.info("1. GV.'render' > GV.addPage()");
 				var helpers = this['Pager']['Page']['GalleryView'];
 				var $pageContainer = helpers.getPeriodContainer$(this, 'create');
 		if (_DEBUG) console.timeEnd("Backbone.addPage() render PhotoViews");
-				this.renderBody($pageContainer, $thumbs, {} );
+				this.renderBody($pageContainer, $thumbs, options );
 				break;
 		}
 		return
@@ -547,22 +596,35 @@ console.log("addBack() page="+$pageContainer.data('period'));
 		// also called from PagerView.changeCount()
 	},
 
+
+
+
+
+
+
+
+
+
+
+
+
 	/*
 	 * render [.thumb] into gallery body by page, i.e. .body > .page[data-page="N"] >.thumb
  	 * @param {jquery} container, jquery obj holding rendered items, may be offscreen
  	 * 		if offscreen, will also append to this.$('.body')
  	 * @param Object options, default={force: false, scroll: true}
 	 */
-	renderBody: function(container, options){
+	renderBody: function(container, $thumbs, options){
+		var helper;
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
-				var helper = 'Timeline';
+				helper = 'Timeline';
 				break;
 			case 'placeline':
-				var helper = 'Placeline';
+				helper = 'Placeline';
 				break;
 			case 'page':
-				var helper = 'Page';
+				helper = 'Page';
 				break;
 		}
 		return this.Pager[helper]['GalleryView'].renderBody.apply(this, arguments);

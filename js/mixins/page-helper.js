@@ -70,7 +70,8 @@ renderBody: function($pageContainer, $thumbs, options){
 		 */
 		var layoutState = that.layout['Typeset'].call(that, 
 			$pageContainer, 
-			null		// get from $pageContainer
+			null,
+			options
 		);
 		/*
 		 * end
@@ -93,7 +94,8 @@ renderBody: function($pageContainer, $thumbs, options){
 },
 getPeriodContainer$: function(that, create, index){
 	index = index || that.collection.currentPage || 1;
-	var selector_Page = Page['GalleryView'].templates.selector_Page(that.collection);
+
+	var selector_Page = Page['GalleryView'].templates.selector_Page({currentPage: index});
 	var $item = that.$(selector_Page);
 	if (!$item.length && create){
 		$item = $(Page['GalleryView'].templates.page(that.collection));
@@ -109,16 +111,24 @@ getPeriodContainer$: function(that, create, index){
  * release thumb outside 
  * @param that GalleryView
  */ 
-// snappi.app.Pager['Page']['GalleryView'].renderViewport();
+// snappi.app.Pager['Page']['GalleryView']._waitForShot();
 renderViewport: function(that){
 	that = that || snappi.app;
 	var viewportPages = that.getViewportPages(2);
 	var dfd = new $.Deferred();
 	var pages = viewportPages.pages;
 	var collection = that.collection;
-	_.each(pages.filter('.released'), function(el, i, l){
+	var renderPages = pages.filter('.released');
+	
+	_.each(renderPages, function(el, i, l){
 		// models = getPageModels( el, that.collection)
 		var $pageContainer = $(el);
+		// if (!$pageContainer.hasClass('released')){
+		// 	if ($pageContainer.find('.thumb img').eq(0).attr('src')) 
+		// 		return;	// skip
+		// 	else
+		// 		var check;
+		// }
 		var page = parseInt($(el).data('page')),
 			pageModels = []; 
 		var start = page * collection.perPage,
@@ -136,7 +146,7 @@ renderViewport: function(that){
 				// $thumbs = $thumbs.add( this.addOne(model, options) );	
 			}
 		}, this);
-		that.addThumbs(pageModels, $pageContainer, {scroll:false});
+		that.addThumbs(pageModels, $pageContainer, {scroll:false, offscreenTop:'', 'throttle-layout': false});
 		$pageContainer.has('.thumb').removeClass('released');
 	});
 

@@ -78,7 +78,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
 			// ??? clone and render offscreen to limit to 1 browser layout/paint operation? 
 			if (!options.complete) options = engine.initialize(options);
 			if (options.outerContainer.hasClass(options.classes.throttle)){
-				console.warn('throttle LayoutEngine.Typeset.run()  ');
+				console.warn('throttle LayoutEngine.Typeset.run() for container='+container.data('page'));
 				return false;
 			}
 			/* 
@@ -94,7 +94,8 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             /*
              * this is where the work is done
              */
-            options.outerContainer.addClass(options.classes.throttle);
+            if (options['throttle-layout']!==false)
+            	options.outerContainer.addClass(options.classes.throttle);
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.thumbSelector);
             if (items.length && !items.eq(0).hasClass('thumb')) {

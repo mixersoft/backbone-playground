@@ -77,6 +77,7 @@ console.log("pager ux_blockUi");
 
 		// render pager, show fetched periods
 		renderState: function(options){
+			var that = this;
 			var paging = this.collection.info();
 			paging.showing = this.collection.models.length;
 			var html = this.template(paging);
@@ -89,8 +90,14 @@ console.log("pager ux_blockUi");
 			if (options && !!options.silent) 
 				return;
 			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
-			if (page.length) 
-				mixins.UiActions.scrollIntoView(page);
+			if (page.length) {
+				that.$el.addClass('xhr-fetching'); // disable scrollSpy update
+				mixins.UiActions.scrollIntoView(page,  function(){
+					that.$el.removeClass('xhr-fetching');
+					// use viewport AFTER scrollIntoView
+					snappi.app.Pager['Page']['GalleryView'].renderViewport();
+				});
+			}
 			return;
 		},
 
@@ -183,20 +190,30 @@ console.log("pager ux_blockUi");
 			this.collection.goTo(this.collection.information.lastPage, { merge: true, remove: false });
 		},
 
+		helper_IsFetched: function(page){
+			return this.collection.fetchedServerPages[page];
+		},
+
 		gotoPage: function (e, page) {
 			e.preventDefault();
 			if (e.ctrlKey) 
 				return this.releasePage(e, page);
 
 			var $target = $(e.target);
-			page = $target.length ? $target.text() : (page || 1);
-			if ($target.hasClass('active') && 
-				this.collection.fetchedServerPages[page]
-			) {
-				this.trigger('ui-ready');
+			page = $target.length ? parseInt($target.text()) : (page || 1);
+			// instead of GC.fetch, try model.set(), 
+			// check 'change:page' to fetch or scroll
+			// model.Page (virtual) isFetched()
+			if (this.helper_IsFetched(page)) {
+				var that = snappi.app; // use GV.listenTo to bind to GV
+				var pageContainer = that.Pager['Page']['GalleryView'].getPeriodContainer$(that, null, page);
+				that.collection.currentPage = page;
+				that.collection.trigger('change:page');
 				return;
+			} else {
+				this.collection.goTo( page ,{ merge: true, remove: false });
 			}
-			this.collection.goTo( page ,{ merge: true, remove: false });
+			
 		},
 
 		releasePage: function(e, page) {

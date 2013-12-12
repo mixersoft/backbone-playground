@@ -120,6 +120,7 @@ var GalleryView = {
 				
 				break;
 			case 'page': 
+				this.listenTo(this.collection, 'change:page', this['Pager']['Page']['GalleryView'].onChangePage);
 				break;
 		} 
 
@@ -698,6 +699,7 @@ var _getPageFromModel = function(that, m) {
 var LayoutEngines = {
 	layout: {
 		Typeset: function(container, items, options, more){
+			options = options || {};
 			var that = this,
 				layoutState,
 				displayOptions = that.collection.gallery_display_options_ui,
@@ -708,6 +710,7 @@ var LayoutEngines = {
 				thumbsContainer: container || that.$('.body'),		// or .body .page[data-page=N]
 				targetHeight: displayOptionSize.size,
 				_layout_y: 0,					// start at page top
+				'throttle-layout': options['throttle-layout']!==false
 				// more: function(){},			// pipeline before layout complete 
 			};	
 			/*

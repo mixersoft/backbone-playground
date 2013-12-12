@@ -79,7 +79,9 @@ renderBody: function($pageContainer, $thumbs, options){
 		// a new page was added. cleanup GalleryView
 		// that.$el.css('min-height', $('body').data('winH')-160);
 	}
-	if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+	if (options.scroll !== false) {	
+	// false for hiddenshot, renderViewport()
+	// otherwise true
 		that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
 			that.scrollIntoView($pageContainer, function(){
 				that.collection.trigger('xhr-ui-ready');
@@ -87,6 +89,7 @@ renderBody: function($pageContainer, $thumbs, options){
 			// console.log('GalleryView.renderBody() first chunk ready to view');				
 		});
 	}
+	
 	_.defer(function(){
 		that.$('.fade-out').removeClass('fade-out');
 	});
@@ -118,8 +121,8 @@ renderViewport: function(that){
 	var dfd = new $.Deferred();
 	var pages = viewportPages.pages;
 	var collection = that.collection;
-	var renderPages = pages.filter('.released');
-	
+	var renderPages = pages.filter('.released, .throttle-layout');
+console.info('renderViewport: START, length='+renderPages.length);	
 	_.each(renderPages, function(el, i, l){
 		// models = getPageModels( el, that.collection)
 		var $pageContainer = $(el);
@@ -146,6 +149,7 @@ renderViewport: function(that){
 				// $thumbs = $thumbs.add( this.addOne(model, options) );	
 			}
 		}, this);
+console.info('renderViewport: '+page);
 		that.addThumbs(pageModels, $pageContainer, {scroll:false, offscreenTop:'', 'throttle-layout': false});
 		$pageContainer.has('.thumb').removeClass('released');
 	});

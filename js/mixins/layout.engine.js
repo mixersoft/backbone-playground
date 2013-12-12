@@ -96,6 +96,14 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
              */
             if (options['throttle-layout']!==false)
             	options.outerContainer.addClass(options.classes.throttle);
+            else {
+            	if (container.hasClass(options.classes.throttle)) {
+            		console.warn('throttle LayoutEngine.Typeset.run() for RENDERVIEWPORT container='+container.data('page'));
+            		return false;
+            	}
+            	container.addClass(options.classes.throttle);
+            	console.info('Typeset run: '+container.data('page'));
+            }
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.thumbSelector);
             if (items.length && !items.eq(0).hasClass('thumb')) {
@@ -120,8 +128,9 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
            
             var lines;
             var _layoutComplete = function(){
+            	container.removeClass(options.classes.throttle);
+				options.outerContainer.removeClass(options.classes.throttle);
             	if (_.isFunction(more)) {
-            		options.outerContainer.removeClass(options.classes.throttle);
             		more = more();
             	}
             	if (!more) {

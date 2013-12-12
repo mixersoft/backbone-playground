@@ -362,7 +362,7 @@ console.info("1. GV.pager.fetch().done()");
 		/*
 		 *  GV.renderViewport >  complete() 
 		 */
-console.info("3. GV.'renderViewport' > GV.add()");		 
+// console.info("3. GV.'renderViewport' > GV.add()");		 
 		var $thumb, 
 			offscreen = true;
 		// check if pageContainer already exists

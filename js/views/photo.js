@@ -64,6 +64,7 @@ views.PhotoView = Backbone.View.extend({
 		} else { // Photo
 			this.$el.html( this.template( m ) );
 		}
+		this.$el.data('model', this.model);
 		return this;
 	},
 	
@@ -102,14 +103,23 @@ views.PhotoView = Backbone.View.extend({
 		console.info("Photoview: onHideHiddenshotComplete completed");
 	},
 	
-	onHide : function(){
+	onHide : function(noDelay){
 		var that = this;
-		this.$el.addClass('fade-out');
-		_.delay(function(that){
+		if (noDelay) { // called by releasePage, PhotoView is offscreen
 			that.undelegateEvents();
 			that.remove();
-			// trigger ONE pageLayout AFTER remove
-		}, snappi.TIMINGS.thumb_fade_transition, this)
+			if (that.el.parentElement && that.el.childElementCount>0) {
+				var check;  // still have hidden shots?
+				console.info("DEBUG: why do I still have hiddenshots after Bb.remove()")
+			}
+		} else {
+			this.$el.addClass('fade-out');
+			_.delay(function(that){
+				that.undelegateEvents();
+				that.remove();
+				// trigger ONE pageLayout AFTER remove
+			}, snappi.TIMINGS.thumb_fade_transition, this);
+		}
 	},
 
 	

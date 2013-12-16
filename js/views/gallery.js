@@ -357,6 +357,7 @@ console.info("1. GV.pager.fetch().done()");
 	},
 	/*
 	 * add with models, NOT from XHR response
+	 * called by renderViewport() to re-render a released page
 	 */
 	addThumbs : function(models, $pageContainer, options) {
 		/*
@@ -388,6 +389,13 @@ console.info("1. GV.pager.fetch().done()");
 				}
 				break;
 			case 'page': 
+				var now = new Date().getTime();
+				if (now - $pageContainer.data('rendered') < 500) {
+					console.info('DEBUG: throttled addThumbs for page='+$pageContainer.data('page'));
+					break;
+				} else 
+					$pageContainer.data('rendered', now);
+
 				// use audition.requestPage to manage paging
 				// TODO: model.get('clientPage') || model.get('requestPage')
 		// if (_DEBUG) console.time("Backbone.add() render PhotoViews");			

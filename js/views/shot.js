@@ -38,6 +38,8 @@ views.ShotView = views.PhotoView.extend({
 		this.$el.html( this.template( m ) );
 		this.$el.attr('id', m.shotId);
 		this.$('.thumb').addClass('bestshot ' + m.orientationLabel);
+		this.$el.data('model', this.model);
+		this.$el.data('view', this);
 		return this;
 	},
 });

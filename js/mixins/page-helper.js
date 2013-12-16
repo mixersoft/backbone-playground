@@ -117,12 +117,14 @@ getPeriodContainer$: function(that, create, index){
 // snappi.app.Pager['Page']['GalleryView']._waitForShot();
 renderViewport: function(that){
 	that = that || snappi.app;
-	var viewportPages = that.getViewportPages(2);
+	var VIEWPORT_PADDING = 0;
+	var viewportPages = that.getViewportPages(VIEWPORT_PADDING);
 	var dfd = new $.Deferred();
 	var pages = viewportPages.pages;
 	var collection = that.collection;
 	var renderPages = pages.filter('.released, .throttle-layout');
-console.info('renderViewport: START, length='+renderPages.length);	
+	// var renderPages = pages.filter('.released');
+console.warn('rendering Pages: '+$.map(renderPages, function(page){return $(page).data('page')}));		
 	_.each(renderPages, function(el, i, l){
 		// models = getPageModels( el, that.collection)
 		var $pageContainer = $(el);
@@ -150,28 +152,54 @@ console.info('renderViewport: START, length='+renderPages.length);
 			}
 		}, this);
 console.info('renderViewport: '+page);
-		that.addThumbs(pageModels, $pageContainer, {scroll:false, offscreenTop:'', 'throttle-layout': false});
+		// throttle this in GV.addThumbs()
+		that.addThumbs(pageModels, $pageContainer, {
+			scroll:false, 
+			offscreenTop:'', 
+			'throttle-layout': false
+		});
 		$pageContainer.has('.thumb').removeClass('released');
 	});
-
-	_.defer(function(){
-		var releasePages = that.$('.body .page')
-			.not(viewportPages.pages)
-			.has('.thumb')
-			.addClass('released');
-		var models = [];
-		_.each( releasePages.find('.thumb'), function(el,i,l){
-				var modelId = $(el).hasClass('bestshot') ? el.parentNode.id : el.id;
-				// TODO: find faster way to get model from vThumb.$el
-				var model = _.findWhere(collection.models, {id: modelId});
-				if (model) {
-					model.trigger('hide');
-					models.push(model);
-				}
-			});
-		var check;
-	});
+	if (!Page['GalleryView'].releaseViewport)
+		Page['GalleryView'].releaseViewport = _.debounce(
+			function(){
+				Page['GalleryView'].releaseViewport0(that, VIEWPORT_PADDING);
+			}, 3000, false);	// 3 sec delay
+	Page['GalleryView'].releaseViewport();
 	return dfd;
+},
+// plain function call, must _.debounce()
+releaseViewport0: function(that, VIEWPORT_PADDING){
+	var viewportPages = that.getViewportPages(VIEWPORT_PADDING);
+	var releasePages = that.$('.body .page')
+		.not(viewportPages.pages)
+		.has('.thumb')
+		.addClass('released');
+	var models = [];
+console.warn('releasing Pages: '+$.map(releasePages, function(page){return $(page).data('page')}));		
+	_.each( releasePages.find('.thumb'), function(el,i,l){
+			var shot = $(el).data('view');
+			if (shot) {
+				return shot.onHide(true);
+			}
+
+			var model = $(el).data('model');
+			if (!model) {
+				var modelId = $(el).hasClass('bestshot') ? el.parentNode.id : el.id;
+				model = _.findWhere(that.collection.models, {id: modelId});
+			}
+
+			if (model) {
+				model.trigger('hide', "no-delay");
+				models.push(model);
+			}
+		});
+	// DEBUG: not deleting shot wrapper correctly
+	if (releasePages.children().length) {
+		console.warn("WARNING: manually removing child elements AFTER hide");
+		releasePages.children().remove();
+		// throw "there should be nothing here";
+	}
 },
 	},
 };

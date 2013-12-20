@@ -140,14 +140,8 @@ console.warn('rendering Pages: '+$.map(renderPages, function(page){return $(page
 	_.each(renderPages, function(el, i, l){
 		// models = getPageModels( el, that.collection)
 		var $pageContainer = $(el);
-		var page = parseInt($pageContainer.data('page')),
-		var start = page * collection.perPage,
-			end = Math.min(start + collection.perPage, collection.models.length);
-
+		var page = parseInt($pageContainer.data('page'));
 		var pageModels = Page['GalleryView'].getModelsForPeriod(collection, $pageContainer);
-
-console.info('renderViewport: '+page);
-		// throttle this in GV.addThumbs()
 		// WARNING: if hiddenshot is included in pageModels
 		// it will render correctly, but not close properly
 		that.addThumbs(pageModels, $pageContainer, {

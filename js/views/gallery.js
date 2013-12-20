@@ -18,6 +18,29 @@ var extend = function(classDef){
 	);
 };
 
+/*
+ * debounce based on unique hashFn(args) 
+ * modified from _.debounce, 
+ * 
+ */
+var _debounceTimers = {};
+var _debounceByArgs = function(func, wait, immediate, hashFn) {
+	var timeout = _debounceTimers;
+	return function() {
+		var context = this, args = arguments;
+		var id = _.isFunction(hashFn) 
+			? hashFn.apply(context, args) 
+			: JSON.stringify(args);
+		var later = function() {
+			timeout[id] = null;
+			if (!immediate) func.apply(context, args);
+		};
+		var callNow = immediate && !timeout[id];
+		clearTimeout(timeout[id]);
+		timeout[id] = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};
 
 var GalleryView = {
 	el: ".gallery",
@@ -306,11 +329,19 @@ console.info("1. GV.pager.fetch().done()");
 	 * @param $pageContainer 
 	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
 	 */
-	layoutPage: function($pageContainer, options){
-		options = options || {};
-		if (!$pageContainer && options.child) $pageContainer = options.child.closest('.page');
-		var layoutState = this.layout['Typeset'].call(this, $pageContainer, null, options, options.more);
-	},
+	layoutPage: _debounceByArgs(
+			function($pageContainer, options){
+				options = options || {};
+				if (!$pageContainer && options.child) $pageContainer = options.child.closest('.page');
+				var layoutState = this.layout['Typeset'].call(this, $pageContainer, null, options, options.more);
+			}, 
+			1000, 	// delay
+			true,	// immediate
+			// timer hash function
+			function($pageContainer, options){
+				return $pageContainer.data('period') || $pageContainer.data('page');
+			}
+		),
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
 	 * @param Object newPages, {[pageIndex]:[count]} 

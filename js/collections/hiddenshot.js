@@ -116,12 +116,15 @@ Backend.nodejs = {
 		var collection = this,
 			parsed = collection.parseShot_Assets(response), // from mixin
 			bestshotId = collection.shot_core.bestshot.get('photoId');
-			
+		var shotRequestPage = collection.shot_core.bestshot.get('requestPage');
+
 		var photos = _.chain(parsed)
 			.filter(function(v,k,l){ return v.photoId!==bestshotId })
 			.map(function(e,i,l){
 				e.shotId = collection.shot_core.id; 
 				e.bestshotId = bestshotId; 
+				// add requestPage from parent
+				e.requestPage = shotRequestPage;
 				return new models.Hiddenshot(e);	
 			}).value();
 

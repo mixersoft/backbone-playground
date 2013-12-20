@@ -68,16 +68,10 @@ renderBody: function($pageContainer, $thumbs, options){
 		/*
 		 * the actual layout render statement
 		 */
-		var layoutState = that.layout['Typeset'].call(that, 
-			$pageContainer, 
-			null,
-			options
-		);
+		 var dfd = that.layoutPage($pageContainer, options);
 		/*
 		 * end
 		 */
-		// a new page was added. cleanup GalleryView
-		// that.$el.css('min-height', $('body').data('winH')-160);
 	}
 	if (options.scroll !== false) {	
 	// false for hiddenshot, renderViewport()
@@ -109,6 +103,24 @@ getPeriodContainer$: function(that, create, index){
 /*
  *	render/release
  */
+// ???: should I just have a collection or collections?
+/*
+ * get models for a given page, 
+ *	will return hiddenshot models correctly, BUT
+ *  WARNING: hiddenshot models are RENDERED, but will not close correctly
+ */
+getModelsForPeriod: function( collection, $period ){
+	var models = {};
+	var page = $period.data('page');
+	// requestPage set via GC.parse(), or hiddenshot.parse()
+	_.each(collection.models, function(model, i){
+		var p = model.get('clientPage') || model.get('requestPage') || 9999;
+		if (p == page) {
+			models[model.get('photoId')] = model;
+		}
+	}, this);
+	return models;
+},
 /**
  * render thumb in viewport+buffer
  * release thumb outside 
@@ -117,42 +129,27 @@ getPeriodContainer$: function(that, create, index){
 // snappi.app.Pager['Page']['GalleryView']._waitForShot();
 renderViewport: function(that){
 	that = that || snappi.app;
-	var VIEWPORT_PADDING = 0;
+	var VIEWPORT_PADDING = 2;
 	var viewportPages = that.getViewportPages(VIEWPORT_PADDING);
 	var dfd = new $.Deferred();
 	var pages = viewportPages.pages;
 	var collection = that.collection;
-	var renderPages = pages.filter('.released, .throttle-layout');
-	// var renderPages = pages.filter('.released');
+	// var renderPages = pages.filter('.released, .throttle-layout');
+	var renderPages = pages.filter('.released');
 console.warn('rendering Pages: '+$.map(renderPages, function(page){return $(page).data('page')}));		
 	_.each(renderPages, function(el, i, l){
 		// models = getPageModels( el, that.collection)
 		var $pageContainer = $(el);
-		// if (!$pageContainer.hasClass('released')){
-		// 	if ($pageContainer.find('.thumb img').eq(0).attr('src')) 
-		// 		return;	// skip
-		// 	else
-		// 		var check;
-		// }
-		var page = parseInt($(el).data('page')),
-			pageModels = []; 
+		var page = parseInt($pageContainer.data('page')),
 		var start = page * collection.perPage,
 			end = Math.min(start + collection.perPage, collection.models.length);
-		var $thumbs = $();		
-		_.each(collection.models, function(model, i){
-			/*
-			 * TODO: requestPage changes onFilterChanged
-			 * add collection.comparator and repaginate or sort algo
-			 * requestPage set in mixins.RestApi.parseShot_Assets()
-			 */
-			var p = model.get('clientPage') || model.get('requestPage') || 9999;
-			if (p == page) {
-				pageModels.push(model);
-				// $thumbs = $thumbs.add( this.addOne(model, options) );	
-			}
-		}, this);
+
+		var pageModels = Page['GalleryView'].getModelsForPeriod(collection, $pageContainer);
+
 console.info('renderViewport: '+page);
 		// throttle this in GV.addThumbs()
+		// WARNING: if hiddenshot is included in pageModels
+		// it will render correctly, but not close properly
 		that.addThumbs(pageModels, $pageContainer, {
 			scroll:false, 
 			offscreenTop:'', 

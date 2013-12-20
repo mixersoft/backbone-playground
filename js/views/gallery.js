@@ -83,14 +83,15 @@ var GalleryView = {
 		// $('body').data('winH', $(window).height());
 		// $('body').data('winW', $(window).width());
 		var that = this;
-		$(window).on('resize', _.bind(_.debounce(function(){
+		$(window).on('resize', _.bind(_.debounce(function(e, init){
 			var OFFSET_W = 80;	// margin/padding
 			$('body').data('winH', $(window).height())
 				.data('winW', $(window).width());
 			this.$el.data('outerW', $(window).width()-OFFSET_W);	
+			if (init==='init') return;
 			this.refreshLayout();
 		}, 500, {leading: false}), this));
-		$(window).trigger('resize');
+		$(window).trigger('resize', 'init');
 		// only on sync, not page nave
 		$(window).on('scroll', function(){
 			_.debounce(function(){ that.$el.addClass('scrolling');
@@ -302,12 +303,13 @@ console.info("1. GV.pager.fetch().done()");
 	},
 	/**
 	 * layout a single page, this.$('.body .page')
+	 * @param $pageContainer 
 	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
 	 */
-	layoutPage: function(pageContainer, options){
+	layoutPage: function($pageContainer, options){
 		options = options || {};
-		if (!pageContainer && options.child) pageContainer = options.child.closest('.page');
-		var layoutState = this.layout['Typeset'].call(this, $(pageContainer), null, options, options.more);
+		if (!$pageContainer && options.child) $pageContainer = options.child.closest('.page');
+		var layoutState = this.layout['Typeset'].call(this, $pageContainer, null, options, options.more);
 	},
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate

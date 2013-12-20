@@ -54,9 +54,10 @@
 				});
 				break;
 			case 'page': 
-				collection = new snappi.collections.GalleryCollection({
-					// default sort: 'asc'
-				});
+				collection = new snappi.collections.GalleryCollection(null, 
+					{
+						// default sort: 'asc'
+					});
 				snappi.app = new snappi.views.GalleryView({
 					collection : collection
 				});

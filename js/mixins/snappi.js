@@ -14,7 +14,7 @@
 		parseShot_CC: function(cc){
 			var i, oSrc, score, id, audition, 
 				parsedAuditions,
-				page = cc.CastingCall.Auditions.Page,
+				page = parseInt(cc.CastingCall.Auditions.Page),
 				auditions = cc.CastingCall.Auditions.Audition;
 				
 			parsedAuditions = _.reduce(auditions, function(hash, row, i, l){	
@@ -106,7 +106,8 @@
 				};
 				// extras
 				// for collections page management
-				if (response.request && response.request.page) photo.requestPage = response.request.page; 
+				if (response.request && response.request.page) 
+					photo.requestPage = parseInt(response.request.page); 
 				
 				// adjust for ExifOrientation
 				// TODO: add math to include photo.rotate

@@ -154,7 +154,7 @@ console.info("1. Timeline.'request' jqXhr.done()");
 		        var visiblePg, scrollDir = mixins.UiActions.detectScrollDirection();
 		        if (!scrollDir) return;
 
-		         visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
+		        visiblePg = _.find($('.gallery .body .page').has('.thumb'), function(item, i ,l){
 		        	var isBottomBelowFold =  (item.offsetTop + item.offsetHeight) > windowB;
 		        	var isBottomAboveFold =  (item.offsetTop + item.offsetHeight) <= windowB;
 		        	var isTopBelowWindowT = item.offsetTop-OFFSET_H > windowT;	
@@ -185,7 +185,7 @@ console.info("1. Timeline.'request' jqXhr.done()");
 		        if (pagerIndex==-1) 
 		        	return;
 		        this.model.set('active', pagerIndex, {silent:true});
-        		this.renderState();	
+        		this.renderState({silent:true});	
 
 		    },
 
@@ -201,9 +201,15 @@ console.info("1. Timeline.'request' jqXhr.done()");
 		},
 		
 		// render timeline, show fetched periods
-		renderState: function(){
+		renderState: function(options){
 			var model = this.model.helper.setFetched(this.model); 
 			this.$el.html(this.template(model));
+			// renderViewport() here
+
+			this.ux_clearWaiting();
+			if (options && !!options.silent) 
+				return;
+
 		},
 		
 		/**
@@ -213,6 +219,7 @@ console.info("1. Timeline.'request' jqXhr.done()");
 	     */
 	    onContainerScroll : _.throttle(function(e){
 	    	this.helper.scrollSpy.call(this, e);
+	    	snappi.app.Pager['Timeline']['GalleryView'].renderViewport();
 	    }, 200, {leading: false}),
 	    		
 		

@@ -44,24 +44,25 @@ renderBody: function($pageContainer, $thumbs, options){
 		// throw "what should we do if there are exitings thumbs?";
 	} 
 
-	if ($thumbs) 
+	if ($thumbs) {
 		$pageContainer.append($thumbs.not('.hiddenshot'));
+		stale = true;
+	}
 
 	if (stale === true){
 		/*
 		 * the actual layout render statement
 		 */
-		var layoutState = that.layout['Typeset'].call(that, 
-			$pageContainer, 
-			null		// get from $pageContainer
-		);
+		var dfd = that.layoutPage($pageContainer, options);
 		/*
 		 * end
 		 */
 		// a new page was added. cleanup GalleryView
 		// that.$el.css('min-height', $('body').data('winH')-160);
 	}
-	if (options.scroll !== false) {	// false for hiddenshot, otherwise true
+	if (options.scroll !== false) {	
+	// false for hiddenshot, renderViewport()
+	// otherwise true
 		that.listenToOnce(that.collection, 'layout-chunk', function(i, height){
 			that.scrollIntoView($pageContainer, function(){
 				that.collection.trigger('xhr-ui-ready');
@@ -259,6 +260,103 @@ getRestApiOptions: function(that, active){
 	options = _.defaults(options, aaa_options, pager.xhr_defaults);
 	return options;
 },
+
+/*
+ *	render/release
+ */
+// ???: should I just have a collection or collections?
+/*
+ * get models for a given page, 
+ *	will return hiddenshot models correctly, BUT
+ *  WARNING: hiddenshot models are RENDERED, but will not close correctly
+ */
+getModelsForPeriod: function( collection, $pageContainer ){
+	var pager = this.pager.toJSON();
+	var models = {};
+	var period = _.findWhere(pager.periods, {period: $pageContainer.data('period') });
+	if (period.from_TS_UTC && period.to_TS_UTC) {
+		_.each(collection.models, function(model, i){
+			var dateTakenTS = model.get('TS_UTC');
+			if (period.from_TS_UTC <= dateTakenTS 
+				&& dateTakenTS <= period.to_TS_UTC) {
+				models[model.get('photoId')] = model;
+			}
+		}, this);
+	}
+	return models;
+},
+/**
+ * render thumb in viewport+buffer
+ * release thumb outside 
+ * @param that GalleryView
+ */ 
+// snappi.app.Pager['Page']['GalleryView']._waitForShot();
+renderViewport: function(that){
+	that = that || snappi.app;
+	var VIEWPORT_PADDING = 2;
+	var viewportPages = that.getViewportPages(VIEWPORT_PADDING);
+	var dfd = new $.Deferred();
+	var pages = viewportPages.pages;
+	var collection = that.collection;
+	// var renderPages = pages.filter('.released, .throttle-layout');
+	var renderPages = pages.filter('.released');
+console.warn('rendering Pages: '+$.map(renderPages, function(page){return $(page).data('period')}));		
+	_.each(renderPages, function(el, i, l){
+		// models = getPageModels( el, that.collection)
+		var $pageContainer = $(el);
+		var page = $pageContainer.data('period');
+		var pageModels = Timeline['GalleryView'].getModelsForPeriod.call(that, collection, $pageContainer);
+		// WARNING: if hiddenshot is included in pageModels
+		// it will render correctly, but not close properly
+		that.addThumbs(pageModels, $pageContainer, {
+			scroll:false, 
+			offscreenTop:'', 
+			'throttle-layout': false
+		});
+		$pageContainer.has('.thumb').removeClass('released');
+	});
+	if (!Timeline['GalleryView'].releaseViewport)
+		Timeline['GalleryView'].releaseViewport = _.debounce(
+			function(){
+				Timeline['GalleryView'].releaseViewport0(that, VIEWPORT_PADDING);
+			}, 3000, false);	// 3 sec delay
+	Timeline['GalleryView'].releaseViewport();
+	return dfd;
+},
+// plain function call, must _.debounce()
+releaseViewport0: function(that, VIEWPORT_PADDING){
+	var viewportPages = that.getViewportPages(VIEWPORT_PADDING);
+	var releasePages = that.$('.body .page')
+		.not(viewportPages.pages)
+		.has('.thumb')
+		.addClass('released');
+	var models = [];
+console.warn('releasing Pages: '+$.map(releasePages, function(page){return $(page).data('period')}));		
+	_.each( releasePages.find('.thumb'), function(el,i,l){
+			var shot = $(el).data('view');
+			if (shot) {
+				return shot.onHide(true);
+			}
+
+			var model = $(el).data('model');
+			if (!model) {
+				var modelId = $(el).hasClass('bestshot') ? el.parentNode.id : el.id;
+				model = _.findWhere(that.collection.models, {id: modelId});
+			}
+
+			if (model) {
+				model.trigger('hide', "no-delay");
+				models.push(model);
+			}
+		});
+	// DEBUG: not deleting shot wrapper correctly
+	if (releasePages.children().length) {
+		console.warn("WARNING: manually removing child elements AFTER hide");
+		releasePages.children().remove();
+		// throw "there should be nothing here";
+	}
+},
+
 
 	}// end GalleryView	
 

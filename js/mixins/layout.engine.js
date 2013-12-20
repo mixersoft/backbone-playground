@@ -102,7 +102,7 @@ if("undefined"===typeof Typeset){var Typeset={}}Typeset.LinkedList=(function(und
             		return false;
             	}
             	container.addClass(options.classes.throttle);
-            	console.info('Typeset run: '+container.data('page'));
+            	console.info('Typeset run: '+ (container.data('page')||container.data('period')));
             }
             // sanity checks
             if (!items || items.length === 0) items = container.find(options.thumbSelector);

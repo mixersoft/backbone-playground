@@ -89,13 +89,15 @@ console.log("pager ux_blockUi");
 			this.ux_clearWaiting();
 			if (options && !!options.silent) 
 				return;
+
+			// scroll GV into View after 'change:page'
+			// same as GV.Pager.Timeline.onTimelineChangePeriod()
+			// anything BUT scrollSpy
 			var page = $(".gallery .body .page[data-page="+this.collection.currentPage+"]");
 			if (page.length) {
 				that.$el.addClass('xhr-fetching'); // disable scrollSpy update
 				mixins.UiActions.scrollIntoView(page,  function(){
 					that.$el.removeClass('xhr-fetching');
-					// use viewport AFTER scrollIntoView
-					snappi.app.Pager['Page']['GalleryView'].renderViewport();
 				});
 			}
 			return;
@@ -361,7 +363,7 @@ var msg = "next: "+state.action+"  page="+state.page+", fetched="+fetched+", rem
 		};
 
 		var nextLoop = function(state){
-			if (state.action === 'load'){
+			if (false && state.action === 'load'){
 				state.action = 'release';
 				state.page = 0;
 				$('html,body').scrollTop(0);

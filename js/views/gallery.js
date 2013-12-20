@@ -326,8 +326,12 @@ console.info("1. GV.pager.fetch().done()");
 	},
 	/**
 	 * layout a single page, this.$('.body .page')
+	 * - use _debounceByArgs() to debounce by $pageContainer, see hashFn below
+	 * - WARNING: layout['Typeset']() calls layout[Typeset].run(), 
+	 *			which ALSO uses 'throttle-layout' to debounce
 	 * @param $pageContainer 
 	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
+	 * 
 	 */
 	layoutPage: _debounceByArgs(
 			function($pageContainer, options){

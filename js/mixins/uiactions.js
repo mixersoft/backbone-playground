@@ -98,7 +98,8 @@ mixins.UiActions = {
 			windowB = windowT + windowH;
 		var $visiblePages = $();
 		var range = {};
-		_.find($('.gallery .body .page'), function(el,i,l){
+		var allPages = $('.gallery .body .page');
+		_.find(allPages.not(allPages.has('.empty-label')), function(el,i,l){
 			var pageT = el.offsetTop;
 			var pageB = pageT + el.offsetHeight;
 			if ( pageB >= windowT && pageT <= windowB ) {

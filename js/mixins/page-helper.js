@@ -192,7 +192,7 @@ console.warn('releasing Pages: '+$.map(releasePages, function(page){return $(pag
 		// throw "there should be nothing here";
 	}
 },
-	},
+	}// end GalleryView	
 };
 
 var Pager = _.extend(mixins.PagerHelpers && mixins.PagerHelpers['Pager']  || {}, {

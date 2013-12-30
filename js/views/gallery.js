@@ -18,30 +18,6 @@ var extend = function(classDef){
 	);
 };
 
-/*
- * debounce based on unique hashFn(args) 
- * modified from _.debounce, 
- * 
- */
-var _debounceTimers = {};
-var _debounceByArgs = function(func, wait, immediate, hashFn) {
-	var timeout = _debounceTimers;
-	return function() {
-		var context = this, args = arguments;
-		var id = _.isFunction(hashFn) 
-			? hashFn.apply(context, args) 
-			: JSON.stringify(args);
-		var later = function() {
-			timeout[id] = null;
-			if (!immediate) func.apply(context, args);
-		};
-		var callNow = immediate && !timeout[id];
-		clearTimeout(timeout[id]);
-		timeout[id] = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
-};
-
 var GalleryView = {
 	el: ".gallery",
 	
@@ -326,26 +302,27 @@ console.info("1. GV.pager.fetch().done()");
 	},
 	/**
 	 * layout a single page, this.$('.body .page')
-	 * - use _debounceByArgs() to debounce by $pageContainer, see hashFn below
+	 * - use _.debounceByHasher() to debounce by $pageContainer, see hashFn below
 	 * - WARNING: layout['Typeset']() calls layout[Typeset].run(), 
 	 *			which ALSO uses 'throttle-layout' to debounce
 	 * @param $pageContainer 
 	 * @param options Object, options.more() pipeline multiple layoutPages return false when no more
 	 * 
 	 */
-	layoutPage: _debounceByArgs(
-			function($pageContainer, options){
-				options = options || {};
-				if (!$pageContainer && options.child) $pageContainer = options.child.closest('.page');
-				var layoutState = this.layout['Typeset'].call(this, $pageContainer, null, options, options.more);
-			}, 
-			1000, 	// delay
-			true,	// immediate
-			// timer hash function
-			function($pageContainer, options){
-				return $pageContainer.data('period') || $pageContainer.data('page');
-			}
-		),
+	layoutPage: _.debounceByHasher(	// see: mixins/util.js
+		function($pageContainer, options){
+			options = options || {};
+			if (!$pageContainer && options.child) $pageContainer = options.child.closest('.page');
+			var layoutState = this.layout['Typeset'].call(this, $pageContainer, null, options, options.more);
+		}, 
+		1000, 	// delay
+		true,	// immediate
+		// timer hash function
+		function($pageContainer, options){
+			return 'GVLayoutPage:'+$pageContainer.data('period') || $pageContainer.data('page');
+		}
+	),
+	
 	/**
 	 * put ThumbViews into the correct .body .page after repaginate
 	 * @param Object newPages, {[pageIndex]:[count]} 
@@ -414,6 +391,7 @@ console.info("1. GV.pager.fetch().done()");
 		switch (snappi.PAGER_STYLE) {
 			case 'timeline': 
 			case 'placeline':
+			case 'page':
 				var $thumbs = _.reduce(models, function(out, model,i,l){
 					out = out.add( this.addOne(model, options) );	
 					return out;
@@ -424,24 +402,6 @@ console.info("1. GV.pager.fetch().done()");
 				} else {
 					this.refreshLayout();
 				}
-				break;
-			case 'page': 
-				var now = new Date().getTime();
-				if (now - $pageContainer.data('rendered') < 500) {
-					console.info('DEBUG: throttled addThumbs for page='+$pageContainer.data('page'));
-					break;
-				} else 
-					$pageContainer.data('rendered', now);
-
-				// use audition.requestPage to manage paging
-				// TODO: model.get('clientPage') || model.get('requestPage')
-		// if (_DEBUG) console.time("Backbone.add() render PhotoViews");			
-				var $thumbs = _.reduce(models, function(out, model,i,l){
-					out = out.add( this.addOne(model, options) );	
-					return out;
-				}, $(), this);
-		// if (_DEBUG) console.timeEnd("Backbone.add() render PhotoViews");
-				this.renderBody($pageContainer, $thumbs, options );
 				break;
 		}
 		return; 
